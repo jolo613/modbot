@@ -1,0 +1,17 @@
+{
+  "name": "modbot",
+  "version": "1.0.0",
+  "description": "Bot for the Twitch Moderator Discord",
+  "main": "app.js",
+  "scripts": {
+    "test": "nodemon app"
+  },
+  "author": "Twijn",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^12.5.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.7"
+  }
+}
