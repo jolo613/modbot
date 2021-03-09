@@ -9,7 +9,9 @@
   "author": "Twijn",
   "license": "ISC",
   "dependencies": {
-    "discord.js": "^12.5.1"
+    "discord.js": "^12.5.1",
+    "mysql": "^2.18.1",
+    "tmi.js": "^1.7.3"
   },
   "devDependencies": {
     "nodemon": "^2.0.7"
