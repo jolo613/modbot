@@ -40,12 +40,12 @@ client.on('message', async message => {
     let cmd = client.commands.get(command);
     
     if (!cmd.hasOwnProperty("permission") || message.guild.member(message.author.id).hasPermission(cmd.permission)) {
-        try {
-            cmd.execute(message, args);
-        } catch (error) {
-            console.error(error);
-            message.reply('There was an error trying to execute that command!');
-        }
+    try {
+        cmd.execute(message, args);
+    } catch (error) {
+        console.error(error);
+        message.reply('There was an error trying to execute that command!');
+    }
     } else {
         message.reply(`Insufficient permission! You need \`${cmd.permission}\``);
     }
