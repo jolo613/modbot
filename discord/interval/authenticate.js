@@ -52,17 +52,21 @@ module.exports = client => {
         
                                         let finalChannels = [];
                                         let channelStr = "";
+
+                                        let selectedChannels = "";
                                         console.log(channels);
                                         console.log(res);
                                         console.log(res2);
                                         res2.forEach(streamer => {
-                                            if (channels.includes(streamer.streamer_name)) {
+                                            selectedChannels += "\n" + streamer.name;
+
+                                            if (channels.includes(streamer.name)) {
                                                 finalChannels = [
                                                     ...finalChannels,
-                                                    streamer_name
+                                                    streamer.name
                                                 ];
 
-                                                channelStr += `\n${streamer_name}`;
+                                                channelStr += `\n${streamer.name}`;
                                             }
                                         });
                                         console.log(finalChannels);
@@ -74,7 +78,8 @@ module.exports = client => {
                                             const embed = new MessageEmbed()
                                                     .setTitle("Failed to Link!")
                                                     .setDescription("We couldn't add any channels because the channels you mod for and the channels selected don't match.")
-                                                    .addField("Detected Channels", "```" + allChannelsStr + "```");
+                                                    .addField("Detected Channels", "```" + allChannelsStr + "```", true)
+                                                    .addField("Selected Channels", "```" + selectedChannels + "```", true);
                                             member.send(embed);
                                             return;
                                         }
