@@ -10,7 +10,7 @@ const command = {
                 .setDescription(`Get access to TMS channels by authenticating your account with twitch [here](https://tmsqd.co/link/${message.author.id}).`)
                 .setColor(0x772ce8);
 
-        message.member.send(embed);
+        message.author.send(embed);
     }
 };
 
