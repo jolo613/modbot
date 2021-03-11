@@ -21,8 +21,6 @@ client.once('ready', () => {
 
 // implement commands
 client.on('message', async message => {
-    message.bot_id = client.user.id;
-
     // if the message is sent by a bot, we don't need process this at all.
     if (message.author.bot) return;
 
