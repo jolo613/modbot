@@ -50,7 +50,7 @@ client.on("guildMemberAdd", member => {
 
         const embed = new Discord.MessageEmbed()
                 .setTitle("Welcome to Twitch Mod Squad!")
-                .setDescription(`Get access to TMS channels by authenticating your account with twitch [here](https://tmsqd.cc/link/${member.id}).`)
+                .setDescription(`Get access to TMS channels by authenticating your account with twitch [here](https://tmsqd.co/link/${member.id}).`)
                 .setColor(0x772ce8);
 
         member.send(embed);
