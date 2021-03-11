@@ -23,9 +23,6 @@ client.once('ready', () => {
 client.on('message', async message => {
     message.bot_id = client.user.id;
 
-    // we can't have messages with no guild attached after this point
-    if (message.guild === undefined || message.guild === null) return;
-
     // if the message is sent by a bot, we don't need process this at all.
     if (message.author.bot) return;
 
@@ -39,24 +36,29 @@ client.on('message', async message => {
 
     let cmd = client.commands.get(command);
     
-    if (!cmd.hasOwnProperty("permission") || message.guild.member(message.author.id).hasPermission(cmd.permission)) {
     try {
         cmd.execute(message, args);
     } catch (error) {
         console.error(error);
         message.reply('There was an error trying to execute that command!');
     }
-    } else {
-        message.reply(`Insufficient permission! You need \`${cmd.permission}\``);
-    }
 });
 
 client.on("guildMemberAdd", member => {
     if (config.hasOwnProperty("modsquad_discord") && config.hasOwnProperty("notlinked_role") && member.guild.id === config.modsquad_discord) {
         member.roles.add(config.notlinked_role);
+
+        const embed = new MessageEmbed()
+                .setTitle("Welcome to Twitch Mod Squad!")
+                .setDescription(`Get access to TMS channels by authenticating your account with twitch [here](https://tmsqd.cc/link/${member.id}).`)
+                .setColor(0x772ce8);
+
+        member.send(embed);
     }
 });
 
 client.login(config.token);
+
+require("./interval/authenticate")(client);
 
 module.exports = client;
