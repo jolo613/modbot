@@ -1,6 +1,7 @@
 const con = require("../../database");
 const config = require("../../config.json");
 
+const https = require("https");
 const {MessageEmbed} = require("discord.js");
 
 const FOLLOWER_REQUIREMENT = 2000;
