@@ -159,7 +159,7 @@ discordClient.guilds.fetch(config.modsquad_discord).then(msg => {
     console.log(channels);
 
     const client = new tmi.Client({
-        options: { debug: true },
+        // options: { debug: true },
         connection: { reconnect: true },
         identity: {
             username: config.twitch.username,
