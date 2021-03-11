@@ -48,7 +48,7 @@ client.on("guildMemberAdd", member => {
     if (config.hasOwnProperty("modsquad_discord") && config.hasOwnProperty("notlinked_role") && member.guild.id === config.modsquad_discord) {
         member.roles.add(config.notlinked_role);
 
-        const embed = new MessageEmbed()
+        const embed = new Discord.MessageEmbed()
                 .setTitle("Welcome to Twitch Mod Squad!")
                 .setDescription(`Get access to TMS channels by authenticating your account with twitch [here](https://tmsqd.cc/link/${member.id}).`)
                 .setColor(0x772ce8);
