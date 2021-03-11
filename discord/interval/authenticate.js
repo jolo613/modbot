@@ -54,9 +54,6 @@ module.exports = client => {
                                         let channelStr = "";
 
                                         let selectedChannels = "";
-                                        console.log(channels);
-                                        console.log(res);
-                                        console.log(res2);
                                         res2.forEach(streamer => {
                                             selectedChannels += "\n" + streamer.name;
 
@@ -69,7 +66,6 @@ module.exports = client => {
                                                 channelStr += `\n${streamer.name}`;
                                             }
                                         });
-                                        console.log(finalChannels);
 
                                         let guild = await client.guilds.fetch(config.modsquad_discord);
                                         let member = await guild.members.fetch(mod.discord_id);
@@ -83,6 +79,8 @@ module.exports = client => {
                                             member.send(embed);
                                             return;
                                         }
+
+                                        console.log(member.roles.cache);
 
                                         member.roles.remove(member.roles.cache).then(() => {
                                             let roles = []
@@ -108,6 +106,8 @@ module.exports = client => {
                                                         role
                                                     ];
                                                 }
+
+                                                console.log(roles);
 
                                                 member.roles.add(roles);
 
