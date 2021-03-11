@@ -30,7 +30,7 @@ module.exports = client => {
                         });
         
                         //the whole response has been received
-                        response.on('end', function () {
+                        response.on('end', async function () {
                             try {
                                 let data = JSON.parse(str.trim());
         
@@ -63,8 +63,8 @@ module.exports = client => {
                                             }
                                         });
 
-                                        let guild = client.guilds.fetch(config.modsquad_discord);
-                                        let member = guild.members.fetch(mod.discord_id);
+                                        let guild = await client.guilds.fetch(config.modsquad_discord);
+                                        let member = await guild.members.fetch(mod.discord_id);
 
                                         if (finalChannels.length === 0) {
                                             const embed = new MessageEmbed()
