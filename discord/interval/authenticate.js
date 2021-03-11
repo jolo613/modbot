@@ -165,9 +165,13 @@ module.exports = client => {
                                                         role
                                                     ];
                                                 }
+
+                                                addedRoles += `\n${role.name}`;
                                             });
 
                                             console.log(roles);
+
+                                            if (addedRoles === "") addedRoles = "No roles were added! This may be a bug! (Contact Dev)";
 
                                             member.roles.add(roles);
 
