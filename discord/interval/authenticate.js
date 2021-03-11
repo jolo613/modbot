@@ -53,7 +53,7 @@ module.exports = client => {
                                         let finalChannels = [];
                                         let channelStr = "";
                                         res2.forEach(streamer => {
-                                            if (channels.contains(streamer.streamer_name)) {
+                                            if (channels.includes(streamer.streamer_name)) {
                                                 finalChannels = [
                                                     ...finalChannels,
                                                     streamer_name
