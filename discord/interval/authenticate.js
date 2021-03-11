@@ -52,6 +52,9 @@ module.exports = client => {
         
                                         let finalChannels = [];
                                         let channelStr = "";
+                                        console.log(channels);
+                                        console.log(res1);
+                                        console.log(res2);
                                         res2.forEach(streamer => {
                                             if (channels.includes(streamer.streamer_name)) {
                                                 finalChannels = [
@@ -62,6 +65,7 @@ module.exports = client => {
                                                 channelStr += `\n${streamer_name}`;
                                             }
                                         });
+                                        console.log(finalChannels);
 
                                         let guild = await client.guilds.fetch(config.modsquad_discord);
                                         let member = await guild.members.fetch(mod.discord_id);
@@ -70,7 +74,7 @@ module.exports = client => {
                                             const embed = new MessageEmbed()
                                                     .setTitle("Failed to Link!")
                                                     .setDescription("We couldn't add any channels because the channels you mod for and the channels selected don't match.")
-                                                    .addField("Detected Channels", "```" + allChannelStr + "```");
+                                                    .addField("Detected Channels", "```" + allChannelsStr + "```");
                                             member.send(embed);
                                             return;
                                         }
