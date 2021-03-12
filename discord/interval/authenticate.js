@@ -143,7 +143,7 @@ module.exports = client => {
                                                 let role = guild.roles.cache.find(role => role.name.toLowerCase() === channel.toLowerCase());
 
                                                 if (role === null) {
-                                                    message.guild.roles.create({
+                                                    role = await message.guild.roles.create({
                                                         data: {
                                                             name: channel.toLowerCase(),
                                                             hoist: true,
@@ -151,18 +151,13 @@ module.exports = client => {
                                                             color: randomColor()
                                                         },
                                                         reason: "Role automatically added by ModBot",
-                                                    }).then(newRole => {
-                                                        roles = [
-                                                            ...roles,
-                                                            newRole
-                                                        ];
-                                                    }).catch(console.error);
-                                                } else {
-                                                    roles = [
-                                                        ...roles,
-                                                        role
-                                                    ];
+                                                    });
                                                 }
+
+                                                roles = [
+                                                    ...roles,
+                                                    role
+                                                ];
 
                                                 addedRoles += `\n${role.name}`;
                                             });
