@@ -218,19 +218,26 @@ client.addChannel = name => {
     client.join(name);
 }
 
-discordClient.guilds.fetch(config.modsquad_discord).then(msg => {
-    modSquadGuild = msg;
+let connected = false;
+client.on("connected", () => {
+    if (connected) return;
+    connected = true;
 
-    channels = [];
+    discordClient.guilds.fetch(config.modsquad_discord).then(msg => {
+        modSquadGuild = msg;
 
-    msg.roles.cache.each(role => {
-        let name = role.name.toLowerCase();
+        channels = [];
+    
+        msg.roles.cache.each(role => {
+            let name = role.name.toLowerCase();
+    
+            if (!disallowed_channels.includes(name)) {
+                client.addChannel(name);
+            }
+        });
+    
+    }).catch(console.error);  
 
-        if (!disallowed_channels.includes(name)) {
-            client.addChannel(name);
-        }
-    });
-
-}).catch(console.error);
+});
 
 module.exports = client;
