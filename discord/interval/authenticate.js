@@ -163,6 +163,8 @@ module.exports = client => {
                                                 addedRoles += `\n${role.name}`;
                                             });
 
+                                            member.roles.add(roles);
+
                                             if (addedRoles === "") addedRoles = "No roles were added! This may be a bug! (Contact Dev)";
 
                                             const embed = new MessageEmbed()
