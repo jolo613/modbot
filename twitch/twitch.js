@@ -211,12 +211,14 @@ client.on("timeout", (channel, username, reason, duration, userstate) => {
 });
 
 client.addChannel = name => {
-    channels = [
-        ...channels,
-        name
-    ];
-    client.join(name);
-}
+    if (!channels.includes(name)) {
+        channels = [
+            ...channels,
+            name
+        ];
+        client.join(name);
+    }
+};
 
 let connected = false;
 client.on("logon", () => {
