@@ -13,18 +13,11 @@ const command = {
         if (args[0] === "1") {
             let keepRoles = ["modbot", "not linked", "toastfps", "admin", "@everyone"];
 
-            let removeRoles = [];
-
             message.guild.roles.cache.each(role => {
                 if (!keepRoles.includes(role.name.toLowerCase())) {
-                    removeRoles = [
-                        ...removeRoles,
-                        role
-                    ];
+                    role.delete();
                 }
             });
-
-            message.guild.roles.remove(removeRoles);
         } else if (args[0] === "2") {
             message.guild.members.cache.each(member => {
                 const embed = new MessageEmbed()

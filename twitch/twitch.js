@@ -221,7 +221,7 @@ client.addChannel = name => {
 };
 
 let connected = false;
-client.on("logon", () => {
+client.on("connected", () => {
 
     setTimeout(() => {
         if (connected) return;
