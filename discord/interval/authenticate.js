@@ -143,7 +143,7 @@ module.exports = client => {
                                                 let role = guild.roles.cache.find(role => role.name.toLowerCase() === channel.toLowerCase());
 
                                                 if (role === null || role === undefined) {
-                                                    role = await message.guild.roles.create({
+                                                    role = await guild.roles.create({
                                                         data: {
                                                             name: channel.toLowerCase(),
                                                             hoist: true,
