@@ -171,41 +171,45 @@ discordClient.guilds.fetch(config.modsquad_discord).then(msg => {
     client.connect();
 
     client.on('message', (channel, tags, message, self) => {
-        // Ignore echoed messages.
-        if (self) return;
+        try {
+            // Ignore echoed messages.
+            if (self) return;
 
-        if (tags.hasOwnProperty("message-type") && tags["message-type"] === "whisper") return;
+            if (tags.hasOwnProperty("message-type") && tags["message-type"] === "whisper") return;
 
-        con.query("insert into chatlog (id, timesent, channel, userid, display_name, color, message) values (?, ?, ?, ?, ?, ?, ?);", [
-            tags.id,
-            tags["tmi-sent-ts"],
-            channel,
-            tags["user-id"],
-            tags["display-name"],
-            tags["color"],
-            message
-        ]);
-
-        if (isBanned(channel, tags["user-id"])) {
-            console.log("Changing ban active state of " + tags["display-name"]);
-
-            con.query("update ban set active = false where channel = ? and userid = ?;", [
+            con.query("insert into chatlog (id, timesent, channel, userid, display_name, color, message) values (?, ?, ?, ?, ?, ?, ?);", [
+                tags.id,
+                tags["tmi-sent-ts"],
                 channel,
-                tags["user-id"]
+                tags["user-id"],
+                tags["display-name"],
+                tags["color"],
+                message
             ]);
 
-            bannedList = bannedList.filter(brow => brow.channel !== channel && brow.userid !== tags["user-id"]);
-        }
+            if (isBanned(channel, tags["user-id"])) {
+                console.log("Changing ban active state of " + tags["display-name"]);
 
-        if (isTimedOut(channel, tags["user-id"])) {
-            console.log("Changing timeout active state of " + tags["display-name"]);
+                con.query("update ban set active = false where channel = ? and userid = ?;", [
+                    channel,
+                    tags["user-id"]
+                ]);
 
-            con.query("update timeout set active = false where channel = ? and userid = ?;", [
-                channel,
-                tags["user-id"]
-            ]);
+                bannedList = bannedList.filter(brow => brow.channel !== channel && brow.userid !== tags["user-id"]);
+            }
 
-            timeoutList = timeoutList.filter(torow => torow.channel !== channel && torow.userid !== tags["user-id"]);
+            if (isTimedOut(channel, tags["user-id"])) {
+                console.log("Changing timeout active state of " + tags["display-name"]);
+
+                con.query("update timeout set active = false where channel = ? and userid = ?;", [
+                    channel,
+                    tags["user-id"]
+                ]);
+
+                timeoutList = timeoutList.filter(torow => torow.channel !== channel && torow.userid !== tags["user-id"]);
+            }
+        } catch (e) {
+            console.error(e);
         }
     });
 
