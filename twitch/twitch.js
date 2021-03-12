@@ -219,7 +219,7 @@ client.addChannel = name => {
     client.join(name);
 }
 
-client.on("connected", () => {
+client.on("logon", () => {
 
     discordClient.guilds.fetch(config.modsquad_discord).then(msg => {
         modSquadGuild = msg;
