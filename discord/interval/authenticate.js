@@ -152,6 +152,7 @@ module.exports = client => {
                                                         },
                                                         reason: "Role automatically added by ModBot",
                                                     });
+                                                    console.log(role);
                                                 }
 
                                                 roles = [
