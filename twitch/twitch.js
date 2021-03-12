@@ -142,89 +142,100 @@ con.query("select channel, username, userid, duration from timeout where active 
     });
 });
 
-discordClient.guilds.fetch(config.modsquad_discord).then(msg => {
-    modSquadGuild = msg;
+const client = new tmi.Client({
+    options: { debug: true },
+    connection: { reconnect: true },
+    identity: {
+        username: config.twitch.username,
+        password: config.twitch.oauth
+    },
+    channels: channels
+});
 
-    msg.roles.cache.each(role => {
-        let name = role.name.toLowerCase();
+client.connect();
 
-        if (!disallowed_channels.includes(name)) {
-            channels = [
-                ...channels,
-                name
-            ];
-        }
-    });
+client.on('message', (channel, tags, message, self) => {
+    try {
+        // Ignore echoed messages.
+        if (self) return;
 
-    console.log(channels);
+        if (tags.hasOwnProperty("message-type") && tags["message-type"] === "whisper") return;
 
-    const client = new tmi.Client({
-        // options: { debug: true },
-        connection: { reconnect: true },
-        identity: {
-            username: config.twitch.username,
-            password: config.twitch.oauth
-        },
-        channels: channels
-    });
+        con.query("insert into chatlog (id, timesent, channel, userid, display_name, color, message) values (?, ?, ?, ?, ?, ?, ?);", [
+            tags.id,
+            tags["tmi-sent-ts"],
+            channel,
+            tags["user-id"],
+            tags["display-name"],
+            tags["color"],
+            message
+        ]);
 
-    client.connect();
+        if (isBanned(channel, tags["user-id"])) {
+            console.log("Changing ban active state of " + tags["display-name"]);
 
-    client.on('message', (channel, tags, message, self) => {
-        try {
-            // Ignore echoed messages.
-            if (self) return;
-
-            if (tags.hasOwnProperty("message-type") && tags["message-type"] === "whisper") return;
-
-            con.query("insert into chatlog (id, timesent, channel, userid, display_name, color, message) values (?, ?, ?, ?, ?, ?, ?);", [
-                tags.id,
-                tags["tmi-sent-ts"],
+            con.query("update ban set active = false where channel = ? and userid = ?;", [
                 channel,
-                tags["user-id"],
-                tags["display-name"],
-                tags["color"],
-                message
+                tags["user-id"]
             ]);
 
-            if (isBanned(channel, tags["user-id"])) {
-                console.log("Changing ban active state of " + tags["display-name"]);
-
-                con.query("update ban set active = false where channel = ? and userid = ?;", [
-                    channel,
-                    tags["user-id"]
-                ]);
-
-                bannedList = bannedList.filter(brow => brow.channel !== channel && brow.userid !== tags["user-id"]);
-            }
-
-            if (isTimedOut(channel, tags["user-id"])) {
-                console.log("Changing timeout active state of " + tags["display-name"]);
-
-                con.query("update timeout set active = false where channel = ? and userid = ?;", [
-                    channel,
-                    tags["user-id"]
-                ]);
-
-                timeoutList = timeoutList.filter(torow => torow.channel !== channel && torow.userid !== tags["user-id"]);
-            }
-        } catch (e) {
-            console.error(e);
+            bannedList = bannedList.filter(brow => brow.channel !== channel && brow.userid !== tags["user-id"]);
         }
-    });
 
-    client.on("messagedeleted", (channel, username, deletedMessage, userstate) => {
-        let id = userstate["target-msg-id"];
+        if (isTimedOut(channel, tags["user-id"])) {
+            console.log("Changing timeout active state of " + tags["display-name"]);
 
-        con.query("update chatlog set deleted = true where id = ?;", [id]);
-    });
+            con.query("update timeout set active = false where channel = ? and userid = ?;", [
+                channel,
+                tags["user-id"]
+            ]);
 
-    client.on('ban', (channel, username, reason, userstate) => {
-        addBan(channel, userstate["target-user-id"], username, reason, userstate["tmi-sent-ts"]);
-    });
+            timeoutList = timeoutList.filter(torow => torow.channel !== channel && torow.userid !== tags["user-id"]);
+        }
+    } catch (e) {
+        console.error(e);
+    }
+});
 
-    client.on("timeout", (channel, username, reason, duration, userstate) => {
-        addTimeout(channel, userstate["target-user-id"], username, reason, duration, userstate["tmi-sent-ts"]);
-    });
+client.on("messagedeleted", (channel, username, deletedMessage, userstate) => {
+    let id = userstate["target-msg-id"];
 
-}).catch(console.error);
+    con.query("update chatlog set deleted = true where id = ?;", [id]);
+});
+
+client.on('ban', (channel, username, reason, userstate) => {
+    addBan(channel, userstate["target-user-id"], username, reason, userstate["tmi-sent-ts"]);
+});
+
+client.on("timeout", (channel, username, reason, duration, userstate) => {
+    addTimeout(channel, userstate["target-user-id"], username, reason, duration, userstate["tmi-sent-ts"]);
+});
+
+client.addChannel = name => {
+    channels = [
+        ...channels,
+        name
+    ];
+    client.join(channel);
+}
+
+client.on("connected", () => {
+
+    discordClient.guilds.fetch(config.modsquad_discord).then(msg => {
+        modSquadGuild = msg;
+
+        channels = [];
+    
+        msg.roles.cache.each(role => {
+            let name = role.name.toLowerCase();
+    
+            if (!disallowed_channels.includes(name)) {
+                client.addChannel(name);
+            }
+        });
+    
+    }).catch(console.error);  
+
+});
+
+module.exports = client;
