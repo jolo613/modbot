@@ -149,7 +149,6 @@ const client = new tmi.Client({
         username: config.twitch.username,
         password: config.twitch.oauth
     },
-    channels: channels
 });
 
 client.connect();
@@ -219,23 +218,19 @@ client.addChannel = name => {
     client.join(name);
 }
 
-client.on("logon", () => {
+discordClient.guilds.fetch(config.modsquad_discord).then(msg => {
+    modSquadGuild = msg;
 
-    discordClient.guilds.fetch(config.modsquad_discord).then(msg => {
-        modSquadGuild = msg;
+    channels = [];
 
-        channels = [];
-    
-        msg.roles.cache.each(role => {
-            let name = role.name.toLowerCase();
-    
-            if (!disallowed_channels.includes(name)) {
-                client.addChannel(name);
-            }
-        });
-    
-    }).catch(console.error);  
+    msg.roles.cache.each(role => {
+        let name = role.name.toLowerCase();
 
-});
+        if (!disallowed_channels.includes(name)) {
+            client.addChannel(name);
+        }
+    });
+
+}).catch(console.error);
 
 module.exports = client;
