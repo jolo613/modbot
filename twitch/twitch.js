@@ -216,7 +216,7 @@ client.addChannel = name => {
         ...channels,
         name
     ];
-    client.join(channel);
+    client.join(name);
 }
 
 client.on("connected", () => {
