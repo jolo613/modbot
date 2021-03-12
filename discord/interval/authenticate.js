@@ -71,7 +71,7 @@ module.exports = client => {
             res.forEach(mod => {
                 con.query("delete from auth where mod_id = ?;", [mod.id]);
 
-                con.query("select mod_streamer.streamer_name as name from mod_streamer where mod_id = ?;", [mod.id], (err2, res2) => {
+                con.query("select mod_streamer.streamer_name as name from mod_streamer where mod_id = ? and active = true;", [mod.id], (err2, res2) => {
                     if (err2) {console.error(err2);return;}
 
                     https.request({
