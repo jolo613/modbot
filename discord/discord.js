@@ -57,6 +57,8 @@ client.on("guildMemberAdd", member => {
 
 client.login(config.token);
 
-require("./interval/authenticate")(client);
+setTimeout(() => {
+    require("./interval/authenticate")(client);
+}, 500);
 
 module.exports = client;
