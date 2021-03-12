@@ -76,7 +76,14 @@ const addBan = (channel, userid, username, reason, timebanned) => {
                     embed.addField(`Chat Log in \`${channel}\``, "```" + logs + "```", false);
                 }
 
-                dchnl.send(embed);
+                dchnl.send(embed).then(message => {
+                    con.prepare("update ban set discord_message = ? where timebanned = ? and channel = ? and userid = ?;", [
+                        message.id,
+                        timebanned,
+                        channel,
+                        userid
+                    ]);
+                });
             });
         }
     }
