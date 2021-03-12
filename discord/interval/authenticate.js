@@ -57,6 +57,7 @@ const randomColor = () => {
 
 const https = require("https");
 const {MessageEmbed} = require("discord.js");
+const tmiclient = require("../../twitch/twitch");
 
 const FOLLOWER_REQUIREMENT = 2000;
 
@@ -106,7 +107,6 @@ module.exports = client => {
                                         });
         
                                         let finalChannels = [];
-                                        let channelStr = "";
 
                                         let selectedChannels = "";
                                         res2.forEach(streamer => {
@@ -118,7 +118,7 @@ module.exports = client => {
                                                     streamer.name
                                                 ];
 
-                                                channelStr += `\n${streamer.name}`;
+                                                tmiclient.addChannel(streamer.name);
                                             }
                                         });
 
