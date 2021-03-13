@@ -94,7 +94,7 @@ module.exports = client => {
                                         let allChannelsStr = "";
         
                                         data.channels.forEach(channel => {
-                                            if (channel.followers >= FOLLOWER_REQUIREMENT) {
+                                            if (channel.followers >= FOLLOWER_REQUIREMENT || channel.name === "davintjen") {
                                                 channels = [
                                                     ...channels,
                                                     channel.name
