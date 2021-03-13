@@ -39,8 +39,6 @@ const colors = {
     olive: "#808000",
     orange: "#ffa500",
     pink: "#ffc0cb",
-    purple: "#800080",
-    violet: "#800080",
     red: "#ff0000",
     silver: "#c0c0c0",
     yellow: "#ffff00"
