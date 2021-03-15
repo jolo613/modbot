@@ -218,7 +218,8 @@ client.on("timeout", (channel, username, reason, duration, userstate) => {
 });
 
 client.addChannel = name => {
-    if (!channels.includes(name)) {
+    name = name.toLowerCase();
+    if (!channels.includes(name) && !disallowed_channels.includes(name)) {
         channels = [
             ...channels,
             name
@@ -242,9 +243,7 @@ client.on("connected", () => {
             msg.roles.cache.each(role => {
                 let name = role.name.toLowerCase();
         
-                if (!disallowed_channels.includes(name)) {
-                    client.addChannel(name);
-                }
+                client.addChannel(name);
             });
         
         }).catch(console.error); 
