@@ -10,7 +10,7 @@ const {MessageEmbed} = require("discord.js");
 let modSquadGuild = null;
 
 let channels = [];
-let disallowed_channels = ["@everyone", "modbot", "ludwig", "masayoshi", "5uppp", "yvonnie"];
+let disallowed_channels = ["@everyone", "modbot", "ludwig", "masayoshi", "5uppp", "yvonnie", "jellypeanut"];
 
 let bannedList = [];
 let timeoutList = [];
