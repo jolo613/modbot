@@ -134,13 +134,13 @@ module.exports = client => {
                                         }
 
                                         member.roles.remove(member.roles.cache).then(() => {
-                                            let roles = []
-                                            let addedRoles = "";
-                                            finalChannels.forEach(async channel => {
+
+                                            let roles = [];
+                                            finalChannels.forEach(channel => {
                                                 let role = guild.roles.cache.find(role => role.name.toLowerCase() === channel.toLowerCase());
 
                                                 if (role === null || role === undefined) {
-                                                    role = await guild.roles.create({
+                                                     guild.roles.create({
                                                         data: {
                                                             name: channel.toLowerCase(),
                                                             hoist: true,
@@ -148,27 +148,31 @@ module.exports = client => {
                                                             color: randomColor()
                                                         },
                                                         reason: "Role automatically added by ModBot",
+                                                    }).then(newRole => {
+                                                        member.roles.add(newRole);
                                                     });
-                                                    console.log(role);
+                                                } else {
+                                                    roles = [
+                                                        ...roles,
+                                                        role
+                                                    ];
                                                 }
-
-                                                roles = [
-                                                    ...roles,
-                                                    role
-                                                ];
-
-                                                addedRoles += `\n${role.name}`;
                                             });
 
-                                            member.roles.add(roles);
+                                            member.roles.add(roles).then(() => {
+                                                const embed = new MessageEmbed()
+                                                            .setTitle("Account Linked!")
+                                                            .setDescription("Your account was linked to Twitch! You should now have full access to TMS.")
+                                                            .addField("Added Channels", "```" + selectedChannels + "```");
+                                                member.send(embed);
+                                            }).catch(() => {
+                                                const embed = new MessageEmbed()
+                                                            .setTitle("Account Link May Have Failed!")
+                                                            .setDescription("The attempt to link your account *may* have failed. The 'not linked' role should be removed, so you should still have access to all channels.");
+                                                member.send(embed);
+                                            });
 
-                                            if (addedRoles === "") addedRoles = "No roles were added! This may be a bug! (Contact Dev)";
-
-                                            const embed = new MessageEmbed()
-                                                        .setTitle("Account Linked!")
-                                                        .setDescription("Your account was linked to Twitch! You should now have full access to TMS.")
-                                                        .addField("Added Channels", "```" + addedRoles + "```");
-                                            member.send(embed);
+                                            
                                         });
                                     }
                                 } else {
