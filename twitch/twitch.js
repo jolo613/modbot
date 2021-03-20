@@ -7,6 +7,15 @@ const discordClient = require("../discord/discord");
 
 const {MessageEmbed} = require("discord.js");
 
+const client = new tmi.Client({
+    options: { debug: true },
+    connection: { reconnect: true },
+    identity: {
+        username: config.twitch.username,
+        password: config.twitch.oauth
+    },
+});
+
 let modSquadGuild = null;
 
 let channels = [];
@@ -36,10 +45,10 @@ const addBan = (channel, userid, username, reason, timebanned) => {
 
     if (bannedPerMinute[channel].length > 60) {
         console.log("More than 60 bans per minute in " + channel + ". Parting for 15 minutes.");
-        tmi.part(channel.replace('#', ""));
+        client.part(channel.replace('#', ""));
 
         setTimeout(() => {
-            tmi.join(channel.replace('#', ""));
+            client.join(channel.replace('#', ""));
         }, 15 * 60 * 1000);
 
         return;
@@ -183,15 +192,6 @@ con.query("select channel, username, userid, duration from timeout where active 
             }
         ];
     });
-});
-
-const client = new tmi.Client({
-    options: { debug: true },
-    connection: { reconnect: true },
-    identity: {
-        username: config.twitch.username,
-        password: config.twitch.oauth
-    },
 });
 
 client.connect();
