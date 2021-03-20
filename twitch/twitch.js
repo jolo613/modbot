@@ -10,82 +10,118 @@ const {MessageEmbed} = require("discord.js");
 let modSquadGuild = null;
 
 let channels = [];
-let disallowed_channels = ["@everyone", "modbot", "ludwig", "masayoshi", "5uppp", "yvonnie", "jellypeanut"];
+let disallowed_channels = ["@everyone", "modbot", "ludwig"];
 
 let bannedList = [];
 let timeoutList = [];
 
+let bannedPerMinute = {};
+
+setInterval(() => {
+    for (const [streamer, timestampList] of Object.entries(bannedPerMinute)) {
+        let now = Date.now();
+        bannedPerMinute[streamer] = timestampList.filter(ts => now - ts < 60000);
+    }
+}, 1000);
+
 /* I think reason may be deprecated here, so it may always be null. I'll have to check on that. */
 const addBan = (channel, userid, username, reason, timebanned) => {
-    con.query("insert into ban (timebanned, channel, userid, username, reason) values (?, ?, ?, ?, ?);", [
-        timebanned,
-        channel,
-        userid,
-        username,
-        reason
-    ]);
+    if (!bannedPerMinute.hasOwnProperty(channel)) {
+        bannedPerMinute[channel] = [];
+    }
+    bannedPerMinute[channel] = [
+        ...bannedPerMinute[channel],
+        Date.now()
+    ];
 
-    bannedList = [
-        ...bannedList,
-        {
-            channel: channel,
-            userid: userid,
-            username: username,
-        }
-    ]
+    if (bannedPerMinute[channel].length > 60) {
+        console.log("More than 60 bans per minute in " + channel + ". Parting for 15 minutes.");
+        tmi.part(channel.replace('#', ""));
+
+        setTimeout(() => {
+            tmi.join(channel.replace('#', ""));
+        }, 15 * 60 * 1000);
+
+        return;
+    }
+
+    if (bannedPerMinute[channel].length <= 30) {
+        con.query("insert into ban (timebanned, channel, userid, username, reason) values (?, ?, ?, ?, ?);", [
+            timebanned,
+            channel,
+            userid,
+            username,
+            reason
+        ]);
+
+        bannedList = [
+            ...bannedList,
+            {
+                channel: channel,
+                userid: userid,
+                username: username,
+            }
+        ]
+    } else {
+        console.log(`Not logging ban in ${channel} due to exceeding BPM threshold (${bannedPerMinute[channel]}>30)`);
+    }
 
     // send ban message, if the liveban channel is present.
 
-    if (config.hasOwnProperty("liveban_channel")) {
-        let dchnl = modSquadGuild.channels.cache.find(dchnl => dchnl.id == config.liveban_channel);
+    if (bannedPerMinute[channel].length <= 5) {
+        if (config.hasOwnProperty("liveban_channel")) {
+            let dchnl = modSquadGuild.channels.cache.find(dchnl => dchnl.id == config.liveban_channel);
 
-        if (dchnl.isText()) {
-            con.query("select display_name, message, deleted, timesent from chatlog where channel = ? and userid = ? order by timesent desc limit 10;",[
-                channel,
-                userid
-            ], (err, res) => {
-                const embed = new MessageEmbed()
-                        // Set the title of the field
-                        .setTitle(`User was Banned!`)
-                        // Set the description of the field
-                        .setDescription(`User \`${username}\` was banned from channel \`${channel}\``)
-                        // Set the color of the embed
-                        .setColor(0xe83b3b);
-                
-                if (typeof(res) === "object") {
-                    let logs = "";
+            if (dchnl.isText()) {
+                con.query("select display_name, message, deleted, timesent from chatlog where channel = ? and userid = ? order by timesent desc limit 10;",[
+                    channel,
+                    userid
+                ], (err, res) => {
+                    const embed = new MessageEmbed()
+                            // Set the title of the field
+                            .setTitle(`User was Banned!`)
+                            // Set the description of the field
+                            .setDescription(`User \`${username}\` was banned from channel \`${channel}\``)
+                            // Set the color of the embed
+                            .setColor(0xe83b3b);
+                    
+                    if (typeof(res) === "object") {
+                        let logs = "";
 
-                    res = res.reverse();
+                        res = res.reverse();
 
-                    res.forEach(log => {
-                        let date = new Date(log.timesent);
+                        res.forEach(log => {
+                            let date = new Date(log.timesent);
 
-                        let hor = date.getHours() + "";
-                        let min = date.getMinutes() + "";
-                        let sec = date.getSeconds() + "";
+                            let hor = date.getHours() + "";
+                            let min = date.getMinutes() + "";
+                            let sec = date.getSeconds() + "";
 
-                        if (hor.length == 1) hor = "0" + hor;
-                        if (min.length == 1) min = "0" + min;
-                        if (sec.length == 1) sec = "0" + sec;
+                            if (hor.length == 1) hor = "0" + hor;
+                            if (min.length == 1) min = "0" + min;
+                            if (sec.length == 1) sec = "0" + sec;
 
-                        logs += `\n${hor}:${min}:${sec} [${log.display_name}]: ${log.message}${log.deleted == 1 ? " [deleted]" : ""}`;
+                            logs += `\n${hor}:${min}:${sec} [${log.display_name}]: ${log.message}${log.deleted == 1 ? " [deleted]" : ""}`;
+                        });
+
+                        if (logs == "") logs = "There are no logs in this channel from this user!";
+
+                        embed.addField(`Chat Log in \`${channel}\``, "```" + logs + "```", false);
+                    }
+
+                    dchnl.send(embed).then(message => {
+                        con.query("update ban set discord_message = ? where timebanned = ? and channel = ? and userid = ?;", [
+                            message.id,
+                            timebanned,
+                            channel,
+                            userid
+                        ]);
                     });
-
-                    if (logs == "") logs = "There are no logs in this channel from this user!";
-
-                    embed.addField(`Chat Log in \`${channel}\``, "```" + logs + "```", false);
-                }
-
-                dchnl.send(embed).then(message => {
-                    con.query("update ban set discord_message = ? where timebanned = ? and channel = ? and userid = ?;", [
-                        message.id,
-                        timebanned,
-                        channel,
-                        userid
-                    ]);
                 });
-            });
+            }
         }
+    } else {
+        console.log(`Not notifying of ban in ${channel} due to exceeding BPM threshold (${bannedPerMinute[channel]}>5)`);
     }
 }
 
