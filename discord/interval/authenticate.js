@@ -63,7 +63,7 @@ module.exports = client => {
 
     setInterval(() => {
         try {
-        con.query("select tm.id, tm.display_name, tm.discord_id from auth join twitchmod as tm on tm.id = auth.mod_id;", (err, res) => {
+        con.query("select u.id, u.display_name, u.discord_id from auth join user as u on u.id = auth.mod_id;", (err, res) => {
             if (err) {console.error(err);return;}
 
             res.forEach(mod => {
