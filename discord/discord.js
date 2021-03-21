@@ -54,7 +54,7 @@ client.on("guildMemberAdd", member => {
         member.send(embed).then(() => {
             if (config.hasOwnProperty("notification_channel")) {
                 const embedPublic = new Discord.MessageEmbed()
-                        .setTitle(`Welcome to Twitch Mod Squad, ${member}!`)
+                        .setTitle(`Welcome to Twitch Mod Squad, ${member.displayName}!`)
                         .setDescription("Follow the link sent in a DM to link your account to TMS. This will give you access to the rest of the channels!")
                         .setColor(0x772ce8);
     
@@ -63,7 +63,7 @@ client.on("guildMemberAdd", member => {
         }).catch(() => {
             if (config.hasOwnProperty("notification_channel")) {
                 const embedPublic = new Discord.MessageEmbed()
-                        .setTitle(`Welcome to Twitch Mod Squad, ${member}!`)
+                        .setTitle(`Welcome to Twitch Mod Squad, ${member.displayName}!`)
                         .setDescription("We weren't able to send you a DM! This is probably due to your privacy settings.\nTry sending !link directly to the ModBot user (me), change your privacy settings, or DM <@267380687345025025>")
                         .setColor(0x772ce8);
     
