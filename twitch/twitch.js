@@ -265,25 +265,35 @@ client.addChannel = name => {
 };
 
 let connected = false;
+const tryAddChannels = () => {
+    if (connected) return;
+    setTimeout(latency => {
+        console.log(`Connected with latency: ${latency} ms`);
+        client.ping().then(() => {
+            connected = true;
+
+            discordClient.guilds.fetch(config.modsquad_discord).then(msg => {
+                modSquadGuild = msg;
+
+                channels = [];
+            
+                msg.roles.cache.each(role => {
+                    let name = role.name.toLowerCase();
+            
+                    client.addChannel(name);
+                });
+            
+            }).catch(console.error); 
+        }).catch(() => {
+            console.log("Failed to connect. Retrying in 2 seconds");
+            tryAddChannels();
+        });
+    }, 2000);
+}
+
 client.on("connected", () => {
 
-    setTimeout(() => {
-        if (connected) return;
-        connected = true;
-
-        discordClient.guilds.fetch(config.modsquad_discord).then(msg => {
-            modSquadGuild = msg;
-
-            channels = [];
-        
-            msg.roles.cache.each(role => {
-                let name = role.name.toLowerCase();
-        
-                client.addChannel(name);
-            });
-        
-        }).catch(console.error); 
-    }, 5000); 
+    tryAddChannels();
 
 });
 
