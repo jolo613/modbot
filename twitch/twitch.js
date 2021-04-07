@@ -45,6 +45,17 @@ const addBan = (channel, userid, username, reason, timebanned) => {
 
     if (bannedPerMinute[channel].length > 60) {
         console.log("More than 60 bans per minute in " + channel + ". Parting for 15 minutes.");
+
+        const embed = new MessageEmbed()
+                // Set the title of the field
+                .setTitle(`Bot Action Detected`)
+                // Set the description of the field
+                .setDescription(`Channel \`${channel}\` appears to be handling a bot attack. Channel has had \`${bannedPerMinute[channel].length}\` bans in the last minute, this exceeds the limit of \`60\`.\nThe bot will part from the channel for \`15 minutes\`.`)
+                // Set the color of the embed
+                .setColor(0x8c1212);
+
+        dchnl.send(embed);
+
         client.part(channel.replace('#', ""));
 
         setTimeout(() => {
