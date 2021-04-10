@@ -46,7 +46,7 @@ const addBan = (channel, userid, username, reason, timebanned) => {
     if (bannedPerMinute[channel].length > 60) {
         console.log("More than 60 bans per minute in " + channel + ". Parting for 15 minutes.");
 
-        if (config.hasOwnProperty("liveban_channel")) {
+        if (bannedPerMinute[channel].length === 61 && config.hasOwnProperty("liveban_channel")) {
             let dchnl = modSquadGuild.channels.cache.find(dchnl => dchnl.id == config.liveban_channel);
 
             if (dchnl.isText()) {
