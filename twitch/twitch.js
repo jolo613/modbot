@@ -19,7 +19,7 @@ const client = new tmi.Client({
 let modSquadGuild = null;
 
 let channels = [];
-let disallowed_channels = ["@everyone", "modbot", "ludwig"];
+let disallowed_channels = ["@everyone", "modbot", "ludwig", "tarzaned"];
 
 let bannedList = [];
 let timeoutList = [];
