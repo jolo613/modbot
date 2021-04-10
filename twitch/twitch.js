@@ -35,6 +35,7 @@ setInterval(() => {
 
 /* I think reason may be deprecated here, so it may always be null. I'll have to check on that. */
 const addBan = (channel, userid, username, reason, timebanned) => {
+    let channelStripped = channel.replace("#", "");
     if (!bannedPerMinute.hasOwnProperty(channel)) {
         bannedPerMinute[channel] = [];
     }
@@ -62,10 +63,10 @@ const addBan = (channel, userid, username, reason, timebanned) => {
             }
         }
 
-        client.part(channel.replace('#', ""));
+        client.part(channelStripped);
 
         setTimeout(() => {
-            client.join(channel.replace('#', ""));
+            client.join(channelStripped);
         }, 15 * 60 * 1000);
 
         return;
@@ -104,44 +105,51 @@ const addBan = (channel, userid, username, reason, timebanned) => {
                     userid
                 ], (err, res) => {
                     const embed = new MessageEmbed()
-                            // Set the title of the field
                             .setTitle(`User was Banned!`)
-                            // Set the description of the field
+                            .setAuthor(channelStripped, undefined, "https://twitch.tv/" + channelStripped)
                             .setDescription(`User \`${username}\` was banned from channel \`${channel}\``)
-                            // Set the color of the embed
-                            .setColor(0xe83b3b);
-                    
-                    if (typeof(res) === "object") {
-                        let logs = "";
+                            .setColor(0xe83b3b)
+                            .setFooter("Bans per Minute: " + bannedPerMinute[channel].length);
 
-                        res = res.reverse();
+                    con.query("select profile_image_url from userinfo where login = ?;", [channel.replace('#', "")], (uierr, uires) => {
+                        if (!uierr && typeof(uires) === "object") {
+                            if (uires.length === 1) {
+                                embed.setAuthor(channelStripped, uires[0].profile_image_url, "https://twitch.tv/" + channelStripped);
+                            }
+                        }
 
-                        res.forEach(log => {
-                            let date = new Date(log.timesent);
-
-                            let hor = date.getHours() + "";
-                            let min = date.getMinutes() + "";
-                            let sec = date.getSeconds() + "";
-
-                            if (hor.length == 1) hor = "0" + hor;
-                            if (min.length == 1) min = "0" + min;
-                            if (sec.length == 1) sec = "0" + sec;
-
-                            logs += `\n${hor}:${min}:${sec} [${log.display_name}]: ${log.message}${log.deleted == 1 ? " [deleted]" : ""}`;
+                        if (typeof(res) === "object") {
+                            let logs = "";
+    
+                            res = res.reverse();
+    
+                            res.forEach(log => {
+                                let date = new Date(log.timesent);
+    
+                                let hor = date.getHours() + "";
+                                let min = date.getMinutes() + "";
+                                let sec = date.getSeconds() + "";
+    
+                                if (hor.length == 1) hor = "0" + hor;
+                                if (min.length == 1) min = "0" + min;
+                                if (sec.length == 1) sec = "0" + sec;
+    
+                                logs += `\n${hor}:${min}:${sec} [${log.display_name}]: ${log.message}${log.deleted == 1 ? " [❌deleted]" : ""}`;
+                            });
+    
+                            if (logs == "") logs = "There are no logs in this channel from this user!";
+    
+                            embed.addField(`Chat Log in \`${channel}\``, "```" + logs + "```", false);
+                        }
+    
+                        dchnl.send(embed).then(message => {
+                            con.query("update ban set discord_message = ? where timebanned = ? and channel = ? and userid = ?;", [
+                                message.id,
+                                timebanned,
+                                channel,
+                                userid
+                            ]);
                         });
-
-                        if (logs == "") logs = "There are no logs in this channel from this user!";
-
-                        embed.addField(`Chat Log in \`${channel}\``, "```" + logs + "```", false);
-                    }
-
-                    dchnl.send(embed).then(message => {
-                        con.query("update ban set discord_message = ? where timebanned = ? and channel = ? and userid = ?;", [
-                            message.id,
-                            timebanned,
-                            channel,
-                            userid
-                        ]);
                     });
                 });
             }
