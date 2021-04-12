@@ -60,10 +60,10 @@ const addBan = (channel, userid, username, reason, timebanned) => {
             }
         }
 
-        client.part(channelStripped);
+        partFromChannel(channelStripped);
 
         setTimeout(() => {
-            client.join(channelStripped);
+            listenOnChannel(channelStripped);
         }, 15 * 60 * 1000);
 
         return;
@@ -369,8 +369,13 @@ const listenOnChannel = channel => {
 }
 
 const partFromChannel = channel => {
+    channel = channel.replace('#', "");
     for (let client of channels) {
-
+        if (client.channels.includes(channel)) {
+            console.log("Parting channel " + channel);
+            client.client.part(channel);
+            client.channels.splice(client.channels.indexOf(channel), 1);
+        }
     }
 }
 
