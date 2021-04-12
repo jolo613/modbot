@@ -319,27 +319,36 @@ const initializeClient = () => {
         clientObj
     ];
 
-    let delay = (clients.filter(client => client.client.readyState() === "CLOSED").length + 1) * CLIENT_CONNECT_TIMEOUT;
+    let delay = clients.filter(client => client.client.readyState() === "CLOSED").length * CLIENT_CONNECT_TIMEOUT;
 
     console.log(`Initializing new client with delay of ${delay}`);
 
     setTimeout(() => {
+        console.log("Initializing client...");
         client.connect();
 
-        clientObj.addChannel = name => {
-            name = name.toLowerCase();
-            if (!isChannelListenedTo(name) && !disallowed_channels.includes(name)) {
-                clientObj.channels = [
-                    ...clientObj.channels,
-                    name
-                ];
-                client.join(name);
-            }
-        };
+        const interval = setInterval(() => {
+            if (client.readyState() === "OPEN") {
+                console.log("Client opened. Connecting clients.");
+                clearInterval(interval);
 
-        clientObj.channels.forEach(channel => {
-            client.join(channel);
-        });
+                clientObj.addChannel = name => {
+                    name = name.toLowerCase();
+                    if (!isChannelListenedTo(name) && !disallowed_channels.includes(name)) {
+                        clientObj.channels = [
+                            ...clientObj.channels,
+                            name
+                        ];
+                        client.join(name);
+                    }
+                };
+        
+                clientObj.channels.forEach(channel => {
+                    client.join(channel);
+                });
+            }
+        }, 1000);
+        
     }, delay);
 
     return clientObj;
