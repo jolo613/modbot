@@ -108,10 +108,10 @@ const addBan = (channel, userid, username, reason, timebanned) => {
                             .setColor(0xe83b3b)
                             .setFooter("Bans per Minute: " + bannedPerMinute[channel].length);
 
-                    con.query("select profile_image_url from userinfo where login = ?;", [channel.replace('#', "")], (uierr, uires) => {
+                    con.query("select display_name, profile_image_url from userinfo where login = ?;", [channel.replace('#', "")], (uierr, uires) => {
                         if (!uierr && typeof(uires) === "object") {
                             if (uires.length === 1) {
-                                embed.setAuthor(channelStripped, uires[0].profile_image_url, "https://twitch.tv/" + channelStripped);
+                                embed.setAuthor(uires[0].display_name, uires[0].profile_image_url, "https://twitch.tv/" + channelStripped);
                             }
                         }
 
