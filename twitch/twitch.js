@@ -16,7 +16,7 @@ let clients = [];
 let modSquadGuild = null;
 
 let channels = [];
-let disallowed_channels = ["@everyone", "modbot", "ludwig", "tarzaned"];
+let disallowed_channels = ["@everyone", "admin", "server booster", "modbot", "ludwig", "tarzaned"];
 
 let bannedList = [];
 let timeoutList = [];
@@ -344,7 +344,7 @@ const initializeClient = () => {
                 };
         
                 clientObj.channels.forEach(channel => {
-                    client.join(channel);
+                    client.join(channel).catch(console.error);
                 });
             }
         }, 1000);
@@ -366,6 +366,12 @@ const getFreeClient = () => {
 
 const listenOnChannel = channel => {
     getFreeClient().addChannel(channel);
+}
+
+const partFromChannel = channel => {
+    for (let client of channels) {
+
+    }
 }
 
 
