@@ -304,7 +304,7 @@ const initializeClient = () => {
         channels: []
     };
 
-    client.addChannel = name => {
+    clientObj.addChannel = name => {
         name = name.toLowerCase();
         if (!isChannelListenedTo(name) && !disallowed_channels.includes(name)) {
             clientObj.channels = [
@@ -326,7 +326,7 @@ const initializeClient = () => {
     setTimeout(() => {
         client.connect();
 
-        client.addChannel = name => {
+        clientObj.addChannel = name => {
             name = name.toLowerCase();
             if (!isChannelListenedTo(name) && !disallowed_channels.includes(name)) {
                 clientObj.channels = [
