@@ -352,7 +352,7 @@ const getFreeClient = () => {
         }
     }
 
-    return intializeClient();
+    return initializeClient();
 }
 
 const listenOnChannel = channel => {
