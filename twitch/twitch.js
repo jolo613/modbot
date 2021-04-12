@@ -131,7 +131,7 @@ const addBan = (channel, userid, username, reason, timebanned) => {
                                 if (min.length == 1) min = "0" + min;
                                 if (sec.length == 1) sec = "0" + sec;
     
-                                logs += `\n${hor}:${min}:${sec} [${log.display_name}]: ${log.message}${log.deleted == 1 ? " [❌deleted]" : ""}`;
+                                logs += `\n${hor}:${min}:${sec} [${log.display_name}]: ${log.message}${log.deleted == 1 ? " [❌ deleted]" : ""}`;
                             });
     
                             if (logs == "") logs = "There are no logs in this channel from this user!";
