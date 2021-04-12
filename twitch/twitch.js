@@ -319,7 +319,7 @@ const initializeClient = () => {
         clientObj
     ];
 
-    let delay = (clients.filter(client => client.readyState() === "CLOSED").length + 1) * CLIENT_CONNECT_TIMEOUT;
+    let delay = (clients.filter(client => client.client.readyState() === "CLOSED").length + 1) * CLIENT_CONNECT_TIMEOUT;
 
     console.log(`Initializing new client with delay of ${delay}`);
 
