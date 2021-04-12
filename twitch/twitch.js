@@ -1,3 +1,6 @@
+const CLIENT_CONNECT_TIMEOUT = 15000;
+const CLIENT_MAXIMUM_CHANNELS = 20;
+
 const config = require("../config.json");
 
 const tmi = require('tmi.js');
@@ -6,15 +9,9 @@ const con = require("../database");
 const discordClient = require("../discord/discord");
 
 const {MessageEmbed} = require("discord.js");
+const client = require("../discord/discord");
 
-const client = new tmi.Client({
-    options: { debug: true },
-    connection: { reconnect: true },
-    identity: {
-        username: config.twitch.username,
-        password: config.twitch.oauth
-    },
-});
+let clients = [];
 
 let modSquadGuild = null;
 
@@ -188,6 +185,62 @@ const isTimedOut = (channel, userid) => {
     return timeoutList.find(timeoutRow => timeoutRow.channel === channel && timeoutRow.userid === userid) !== undefined;
 }
 
+const handle = {
+    message: (channel, tags, message, self) => {
+        try {
+            // Ignore echoed messages.
+            if (self) return;
+    
+            if (tags.hasOwnProperty("message-type") && tags["message-type"] === "whisper") return;
+    
+            con.query("insert into chatlog (id, timesent, channel, userid, display_name, color, message) values (?, ?, ?, ?, ?, ?, ?);", [
+                tags.id,
+                tags["tmi-sent-ts"],
+                channel,
+                tags["user-id"],
+                tags["display-name"],
+                tags["color"],
+                message
+            ]);
+    
+            if (isBanned(channel, tags["user-id"])) {
+                console.log("Changing ban active state of " + tags["display-name"]);
+    
+                con.query("update ban set active = false where channel = ? and userid = ?;", [
+                    channel,
+                    tags["user-id"]
+                ]);
+    
+                bannedList = bannedList.filter(brow => brow.channel !== channel && brow.userid !== tags["user-id"]);
+            }
+    
+            if (isTimedOut(channel, tags["user-id"])) {
+                console.log("Changing timeout active state of " + tags["display-name"]);
+    
+                con.query("update timeout set active = false where channel = ? and userid = ?;", [
+                    channel,
+                    tags["user-id"]
+                ]);
+    
+                timeoutList = timeoutList.filter(torow => torow.channel !== channel && torow.userid !== tags["user-id"]);
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    },
+    messageDeleted: (channel, username, deletedMessage, userstate) => {
+        let id = userstate["target-msg-id"];
+    
+        con.query("update chatlog set deleted = true where id = ?;", [id]);
+    },
+    ban: (channel, username, reason, userstate) => {
+        addBan(channel, userstate["target-user-id"], username, reason, userstate["tmi-sent-ts"]);
+    },
+    timeout: (channel, username, reason, duration, userstate) => {
+        addTimeout(channel, userstate["target-user-id"], username, reason, duration, userstate["tmi-sent-ts"]);
+    }
+};
+
 con.query("select channel, username, userid from ban where active = true;", (err, res) => {
     if (err) {console.error(err);return;}
 
@@ -219,107 +272,103 @@ con.query("select channel, username, userid, duration from timeout where active 
     });
 });
 
-client.connect();
-
-client.on('message', (channel, tags, message, self) => {
-    try {
-        // Ignore echoed messages.
-        if (self) return;
-
-        if (tags.hasOwnProperty("message-type") && tags["message-type"] === "whisper") return;
-
-        con.query("insert into chatlog (id, timesent, channel, userid, display_name, color, message) values (?, ?, ?, ?, ?, ?, ?);", [
-            tags.id,
-            tags["tmi-sent-ts"],
-            channel,
-            tags["user-id"],
-            tags["display-name"],
-            tags["color"],
-            message
-        ]);
-
-        if (isBanned(channel, tags["user-id"])) {
-            console.log("Changing ban active state of " + tags["display-name"]);
-
-            con.query("update ban set active = false where channel = ? and userid = ?;", [
-                channel,
-                tags["user-id"]
-            ]);
-
-            bannedList = bannedList.filter(brow => brow.channel !== channel && brow.userid !== tags["user-id"]);
+const isChannelListenedTo = channel => {
+    for (let client of clients) {
+        if (client.channels.includes(channel)) {
+            return true;
         }
-
-        if (isTimedOut(channel, tags["user-id"])) {
-            console.log("Changing timeout active state of " + tags["display-name"]);
-
-            con.query("update timeout set active = false where channel = ? and userid = ?;", [
-                channel,
-                tags["user-id"]
-            ]);
-
-            timeoutList = timeoutList.filter(torow => torow.channel !== channel && torow.userid !== tags["user-id"]);
-        }
-    } catch (e) {
-        console.error(e);
     }
-});
-
-client.on("messagedeleted", (channel, username, deletedMessage, userstate) => {
-    let id = userstate["target-msg-id"];
-
-    con.query("update chatlog set deleted = true where id = ?;", [id]);
-});
-
-client.on('ban', (channel, username, reason, userstate) => {
-    addBan(channel, userstate["target-user-id"], username, reason, userstate["tmi-sent-ts"]);
-});
-
-client.on("timeout", (channel, username, reason, duration, userstate) => {
-    addTimeout(channel, userstate["target-user-id"], username, reason, duration, userstate["tmi-sent-ts"]);
-});
-
-client.addChannel = name => {
-    name = name.toLowerCase();
-    if (!channels.includes(name) && !disallowed_channels.includes(name)) {
-        channels = [
-            ...channels,
-            name
-        ];
-        client.join(name);
-    }
-};
-
-let connected = false;
-const tryAddChannels = () => {
-    if (connected) return;
-    setTimeout(latency => {
-        console.log(`Connected with latency: ${latency} ms`);
-        client.ping().then(() => {
-            connected = true;
-
-            discordClient.guilds.fetch(config.modsquad_discord).then(msg => {
-                modSquadGuild = msg;
-
-                channels = [];
-            
-                msg.roles.cache.each(role => {
-                    let name = role.name.toLowerCase();
-            
-                    client.addChannel(name);
-                });
-            
-            }).catch(console.error); 
-        }).catch(() => {
-            console.log("Failed to connect. Retrying in 2 seconds");
-            tryAddChannels();
-        });
-    }, 2000);
+    return false;
 }
 
-client.on("connected", () => {
+const initializeClient = () => {
+    const client = new tmi.Client({
+        options: { debug: true },
+        connection: { reconnect: true },
+        identity: {
+            username: config.twitch.username,
+            password: config.twitch.oauth
+        },
+    });
 
-    tryAddChannels();
+    client.on('message', handle.message);
 
-});
+    client.on("messagedeleted", handle.messageDeleted);
+
+    client.on('ban', handle.ban);
+    
+    client.on("timeout", handle.timeout);
+
+    let clientObj = {
+        client: client,
+        channels: []
+    };
+
+    client.addChannel = name => {
+        name = name.toLowerCase();
+        if (!isChannelListenedTo(name) && !disallowed_channels.includes(name)) {
+            clientObj.channels = [
+                ...clientObj.channels,
+                name
+            ];
+        }
+    };
+
+    clients = [
+        ...clients,
+        clientObj
+    ];
+
+    let delay = (clients.filter(client => client.readyState() === "CLOSED").length + 1) * CLIENT_CONNECT_TIMEOUT;
+
+    console.log(`Initializing new client with delay of ${delay}`);
+
+    setTimeout(() => {
+        client.connect();
+
+        client.addChannel = name => {
+            name = name.toLowerCase();
+            if (!isChannelListenedTo(name) && !disallowed_channels.includes(name)) {
+                clientObj.channels = [
+                    ...clientObj.channels,
+                    name
+                ];
+                client.join(name);
+            }
+        };
+
+        clientObj.channels.forEach(channel => {
+            client.join(channel);
+        });
+    }, delay);
+
+    return clientObj;
+}
+
+const getFreeClient = () => {
+    for (let client of clients) {
+        if (client.channels.length < CLIENT_MAXIMUM_CHANNELS) {
+            return client;
+        }
+    }
+
+    return intializeClient();
+}
+
+const listenOnChannel = channel => {
+    getFreeClient().addChannel(channel);
+}
+
+
+discordClient.guilds.fetch(config.modsquad_discord).then(msg => {
+    modSquadGuild = msg;
+
+    msg.roles.cache.each(role => {
+        let name = role.name.toLowerCase();
+
+        listenOnChannel(name);
+    });
+
+}).catch(console.error);
 
 module.exports = client;
