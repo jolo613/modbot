@@ -391,4 +391,4 @@ discordClient.guilds.fetch(config.modsquad_discord).then(msg => {
 
 }).catch(console.error);
 
-module.exports = client;
+module.exports = {listenOnChannel: listenOnChannel};
