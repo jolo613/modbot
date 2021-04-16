@@ -21,6 +21,8 @@ client.once('ready', () => {
 
 // implement mod comments
 client.on('message', message => {
+    console.log(message.reference);
+    console.log(message.referencedMessage);
     if (message.hasOwnProperty("referencedMessage") && message.referencedMessage !== undefined && message.referencedMessage !== null) {
         message.member.send('test: ' + message.referencedMessage.id);
     }
