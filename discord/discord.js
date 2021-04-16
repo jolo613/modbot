@@ -24,7 +24,7 @@ client.on('message', message => {
     console.log(message.reference);
     console.log(message.referencedMessage);
     if (message.hasOwnProperty("reference") && message.reference.messageID && message.reference.messageID !== undefined && message.reference.messageID !== null) {
-        message.member.send('test: ' + message.referencedMessage.id);
+        message.member.send('test: ' + message.reference.messageID);
     }
 });
 
