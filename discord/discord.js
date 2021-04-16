@@ -19,6 +19,13 @@ client.once('ready', () => {
     console.log(`Bot has started with ${client.users.cache.size} users, in ${client.channels.cache.size} channels of ${client.guilds.cache.size} guilds.`);
 });
 
+// implement mod comments
+client.on('message', message => {
+    if (message.hasOwnProperty("referencedMessage") && message.referencedMessage !== undefined && message.referencedMessage !== null) {
+        message.member.send('test: ' + message.referencedMessage.id);
+    }
+});
+
 // implement commands
 client.on('message', async message => {
     // if the message is sent by a bot, we don't need process this at all.
