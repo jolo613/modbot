@@ -2,6 +2,8 @@ const fs = require('fs');
 const Discord = require("discord.js");
 const client = new Discord.Client();
 
+const con = require("../database");
+
 client.commands = new Discord.Collection();
 
 const config = require("../config.json");
@@ -21,11 +23,29 @@ client.once('ready', () => {
 
 // implement mod comments
 client.on('message', message => {
-    console.log(message.reference);
-    console.log(message.referencedMessage);
+
     if (message.hasOwnProperty("reference") && message.reference && message.reference.messageID) {
-        message.member.send('test: ' + message.reference.messageID);
+        con.query("select id, userid, username from ban where discord_message = ?;", [message.reference.messageID], (err, res) => {
+            if (err) {console.error(err);return;}
+
+            if (res.length === 1) {
+                let ban = res[0];
+
+                con.query("select id, display_name from user where discord_id = ?;", message.member.id, (guerr, gures) => {
+                    if (guerr) {console.error(guerr);return;}
+
+                    if (gures.length === 1) {
+                        let mod = gures[0];
+
+                        con.query("insert into comment (mod__id, mod__display_name, target__id, target__display_name, target_ban, target_timeout, time_created, comment_discord_sf, comment) values (?, ?, ?, ?, ?, null, null, ?, ?);", [
+                            mod.id, mod.display_name, ban.userid, ban.user.username, ban.id, message.id, message.content
+                        ]);
+                    }
+                });
+            }
+        });
     }
+
 });
 
 // implement commands
