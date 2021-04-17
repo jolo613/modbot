@@ -1,6 +1,8 @@
 const CLIENT_CONNECT_TIMEOUT = 15000;
 const CLIENT_MAXIMUM_CHANNELS = 20;
 
+const ACTIVE_CHANNEL_PADDING = 3;
+
 const config = require("../config.json");
 
 const tmi = require('tmi.js');
@@ -195,12 +197,18 @@ const addBan = (channel, userid, username, reason, timebanned) => {
                             if (!laerr && typeof(uires) === "object") {
                                 let activeChannels = "";
 
+                                let longestChannelName = 7;
+
                                 lares.forEach(xchnl => {
-                                    activeChannels += "\n" + xchnl.channel + ' '.repeat(26 - xchnl.channel.length) + parseDate(parseInt(xchnl.lastactive));
+                                    if (xchnl.length > longestChannelName) longestChannelName = xchnl.length;
+                                });
+
+                                lares.forEach(xchnl => {
+                                    activeChannels += "\n" + xchnl.channel + ' '.repeat(longestChannelName + ACTIVE_CHANNEL_PADDING - xchnl.channel.length) + parseDate(parseInt(xchnl.lastactive));
                                 });
 
                                 if (activeChannels !== "")
-                                    embed.addField(`Active in Channels:`, `\`\`\`\nChannel                   Last Active${activeChannels}\`\`\``);
+                                    embed.addField(`Active in Channels:`, `\`\`\`\nChannel${' '.repeat(longestChannelName + ACTIVE_CHANNEL_PADDING - 7)}Last Active${activeChannels}\`\`\``);
                             }
                             
                             dchnl.send(embed).then(message => {
