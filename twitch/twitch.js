@@ -354,7 +354,7 @@ const isChannelListenedTo = channel => {
 
 const initializeClient = () => {
     const client = new tmi.Client({
-        options: { debug: true },
+        options: { debug: false },
         connection: { reconnect: true },
         identity: {
             username: config.twitch.username,
