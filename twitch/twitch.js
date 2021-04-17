@@ -62,9 +62,7 @@ function parseDay(day) {
 }
 
 function parseDate(timestamp) {
-    let dte = new Date();
-
-    dte.setTime(timestamp);
+    let dte = new Date(timestamp);
 
     let hr = "" + dte.getHours();
     let mn = "" + dte.getMinutes();
