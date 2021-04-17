@@ -39,7 +39,11 @@ client.on('message', message => {
 
                         con.query("insert into comment (mod__id, mod__display_name, target__id, target__display_name, target_ban, target_timeout, time_created, comment_discord_sf, comment) values (?, ?, ?, ?, ?, null, null, ?, ?);", [
                             mod.id, mod.display_name, ban.userid, ban.username, ban.id, message.id, message.content
-                        ]);
+                        ], (ierr, ires) => {
+                            if (ierr) {console.error(ierr);return;}
+
+                            
+                        });
                     }
                 });
             }
