@@ -216,7 +216,7 @@ const addBan = (channel, userid, username, reason, timebanned) => {
                                     channel,
                                     userid
                                 ]);
-                            });
+                            }).catch(console.error);
                         });
                     });
                 });
