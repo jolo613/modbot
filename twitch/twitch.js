@@ -198,7 +198,7 @@ const addBan = (channel, userid, username, reason, timebanned) => {
                                 let longestChannelName = 7;
 
                                 lares.forEach(xchnl => {
-                                    if (xchnl.length > longestChannelName) longestChannelName = xchnl.length;
+                                    if (xchnl.length > longestChannelName) longestChannelName = xchnl.channel.length;
                                 });
 
                                 lares.forEach(xchnl => {
