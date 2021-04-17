@@ -30,6 +30,58 @@ setInterval(() => {
     }
 }, 1000);
 
+function parseDay(day) {
+    let result = "";
+
+    switch (day) {
+        case 0:
+            result = "Sun";
+            break;
+        case 1:
+            result = "Mon";
+            break;
+        case 2:
+            result = "Tue";
+            break;
+        case 3:
+            result = "Wed";
+            break;
+        case 4:
+            result = "Thu";
+            break;
+        case 5:
+            result = "Fri";
+            break;
+        case 6:
+            result = "Sat";
+    }
+
+    return result;
+}
+
+function parseDate(timestamp) {
+    let dte = new Date();
+
+    dte.setTime(timestamp);
+
+    let hr = "" + dte.getHours();
+    let mn = "" + dte.getMinutes();
+    let sc = "" + dte.getSeconds();
+
+    if (hr.length === 1) hr = "0" + hr;
+    if (mn.length === 1) mn = "0" + mn;
+    if (sc.length === 1) sc = "0" + sc;
+
+    let mo = "" + (dte.getMonth() + 1);
+    let dy = "" + dte.getDate();
+    let yr = dte.getFullYear();
+
+    if (mo.length === 1) mo = "0" + mo;
+    if (dy.length === 1) dy = "0" + dy;
+
+    return `${parseDay(dte.getDay())} ${mo}.${dy}.${yr} ${hr}:${mn}:${sc}`;
+}
+
 /* I think reason may be deprecated here, so it may always be null. I'll have to check on that. */
 const addBan = (channel, userid, username, reason, timebanned) => {
     let channelStripped = channel.replace("#", "");
@@ -138,14 +190,27 @@ const addBan = (channel, userid, username, reason, timebanned) => {
     
                             embed.addField(`Chat Log in \`${channel}\``, "```" + logs + "```", false);
                         }
-    
-                        dchnl.send(embed).then(message => {
-                            con.query("update ban set discord_message = ? where timebanned = ? and channel = ? and userid = ?;", [
-                                message.id,
-                                timebanned,
-                                channel,
-                                userid
-                            ]);
+
+                        con.query("select channel, max(timesent) as lastactive from chatlog where userid = ? group by channel;", [userid], (laerr, lares) => {
+                            if (!laerr && typeof(uires) === "object") {
+                                let activeChannels = "";
+
+                                lares.forEach(xchnl => {
+                                    activeChannels += "\n" + xchnl.channel + ' '.repeat(26 - xchnl.channel.length) + parseDate(parseInt(xchnl.lastactive));
+                                });
+
+                                if (activeChannels !== "")
+                                    embed.addField(`Active in Channels:`, `\`\`\`\nChannel                   Last Active${activeChannels}\`\`\``);
+                            }
+                            
+                            dchnl.send(embed).then(message => {
+                                con.query("update ban set discord_message = ? where timebanned = ? and channel = ? and userid = ?;", [
+                                    message.id,
+                                    timebanned,
+                                    channel,
+                                    userid
+                                ]);
+                            });
                         });
                     });
                 });
