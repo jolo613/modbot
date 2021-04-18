@@ -25,6 +25,8 @@ client.once('ready', () => {
 client.on('message', message => {
 
     if (message.hasOwnProperty("reference") && message.reference && message.reference.messageID) {
+        if (message.content.startsWith("!")) return;
+
         con.query("select id, userid, username from ban where discord_message = ?;", [message.reference.messageID], (err, res) => {
             if (err) {console.error(err);return;}
 
