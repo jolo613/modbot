@@ -139,7 +139,7 @@ const addBan = (channel, userid, username, reason, timebanned) => {
             }
         ]
     } else {
-        console.log(`Not logging ban in ${channel} due to exceeding BPM threshold (${bannedPerMinute[channel]}>30)`);
+        console.log(`Not logging ban in ${channel} due to exceeding BPM threshold (${bannedPerMinute[channel].length}>30)`);
     }
 
     // send ban message, if the liveban channel is present.
