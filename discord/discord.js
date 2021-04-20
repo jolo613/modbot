@@ -124,7 +124,7 @@ const generateUUID = userid => {
                     }
                 });
             } else {
-                generateUUID().then(resolve).catch(reject);
+                generateUUID(userid).then(resolve).catch(reject);
             }
         });
     });
@@ -160,7 +160,7 @@ client.on('messageReactionAdd', async (reaction, user) => {
                     }
 
                     if (link === null) {
-                        link = await generateUUID();
+                        link = await generateUUID(userid);
                     }
 
                     con.query("select id from user where discord_id = ?;", [user.id], (guerr, gures) => {
