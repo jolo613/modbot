@@ -220,6 +220,8 @@ const addBan = (channel, userid, username, reason, timebanned) => {
                                     channel,
                                     userid
                                 ]);
+
+                                message.react('❌');
                             }).catch(console.error);
                         });
                     });
