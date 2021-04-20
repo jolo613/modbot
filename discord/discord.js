@@ -2,6 +2,8 @@ const fs = require('fs');
 const Discord = require("discord.js");
 const client = new Discord.Client();
 
+const uuid = require("uuid");
+
 const con = require("../database");
 
 client.commands = new Discord.Collection();
@@ -103,6 +105,80 @@ client.on("guildMemberAdd", member => {
                         .setColor(0x772ce8);
     
                 member.guild.channels.resolve(config.notification_channel).send(embedPublic);
+            }
+        });
+    }
+});
+
+const generateUUID = userid => {
+    return new Promise((resolve, reject) => {
+        let genid = uuid.v4();
+
+        con.query("select link from permalink where link = ?;", [genid], (err, res) => {
+            if (err || res.length === 0) {
+                con.query("insert into permalink (link, user_id) values (?, ?);", [genid, userid], inserr => {
+                    if (inserr) {
+                        reject(inserr);
+                    } else {
+                        resolve(genid);
+                    }
+                });
+            } else {
+                generateUUID().then(resolve).catch(reject);
+            }
+        });
+    });
+}
+
+client.on('messageReactionAdd', async (reaction, user) => {
+    if (reaction.me) return; // We don't need to take action on things that the bot does.
+
+    // When we receive a reaction we check if the reaction is partial or not
+    if (reaction.partial) {
+        // If the message this reaction belongs to was removed the fetching might result in an API error, which we need to handle
+        try {
+            await reaction.fetch();
+        } catch (error) {
+            console.error('Something went wrong when fetching the message: ', error);
+            // Return as `reaction.message.author` may be undefined/null
+            return;
+        }
+    }
+    
+    if (reaction.emoji.name === '❌') {
+        con.query("select userid, username from ban where discord_message = ?;", [reaction.message.id], (err, res) => {
+            if (err) {console.error(err);return;}
+
+            if (res.length === 1) {
+                let userid = res[0].userid;
+                let username = res[0].username;
+
+                con.query("select link from permalink where user_id = ?;", [userid], async (cbplerr, cbplres) => {
+                    let link = null;
+                    if (!cbplerr && cbplres.length >= 1) {
+                        link = cbplres[0].link;
+                    }
+
+                    if (link === null) {
+                        link = await generateUUID();
+                    }
+
+                    con.query("select id from user where discord_id = ?;", [user.id], (guerr, gures) => {
+                        if (guerr || gures.length === 0) {
+                            console.error(guerr);
+                            console.err(gures);
+                            reaction.message.channel.send(`${user} we couldn't get your Twitch ID from the database. Make sure you've linked your account to TMSQD`);
+                        } else {
+                            con.query("select streamer_name from mod_streamer where mod_id = ?;", [gures[0].id], (sgerr, sgres) => {
+                                if (sgerr) {console.error(sgerr);return;}
+
+                                sgres.forEach(streamer => {
+                                    con.query("insert into crossban (username, streamer, by_id) values (?, ?, ?);", [username, streamer.streamer_name, gures[0].id]);
+                                });
+                            });
+                        }
+                    });
+                });
             }
         });
     }
