@@ -173,7 +173,7 @@ client.on('messageReactionAdd', async (reaction, user) => {
                                 if (sgerr) {console.error(sgerr);return;}
 
                                 sgres.forEach(streamer => {
-                                    con.query("insert into crossban (username, streamer, by_id) values (?, ?, ?);", [username, streamer.streamer_name, gures[0].id]);
+                                    con.query("insert into crossban (username, streamer, by_id) values (?, ?, ?);", [username, streamer.streamer_name, gures[0].id], (err) => {if (err) console.error();});
                                 });
                             });
                         }
