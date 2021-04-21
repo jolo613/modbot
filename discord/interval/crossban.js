@@ -4,6 +4,8 @@ const config = require("../../config.json");
 const {MessageEmbed} = require("discord.js");
 const tmi = require("../../twitch/twitch");
 
+const uuid = require("uuid");
+
 const generateUUID = userid => {
     return new Promise((resolve, reject) => {
         let genid = uuid.v4();
