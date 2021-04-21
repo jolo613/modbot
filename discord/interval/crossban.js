@@ -42,6 +42,7 @@ const getPermalink = userid => {
 module.exports = client => {
 
     setInterval(() => {
+        console.log("crossban interval");
         try {
             con.query("select cb.username, cb.id, cb.streamer, u.discord_id from crossban as cb left join user as u on u.id = cb.by_id where cb.fulfilled = false;", (err, res) => {
                 if (err) {console.error(err);return;}
