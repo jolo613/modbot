@@ -48,7 +48,7 @@ module.exports = client => {
                 if (err) {console.error(err);return;}
 
                 res.forEach(cbRow => {
-                    if (tmi.isModded(cbRow.streamer)) {
+                    if (tmi.isModded("#" + cbRow.streamer)) {
                         tmi.banClient.ban(cbRow.streamer, cbRow.username, "TMSQD: Crossban https://tmsqd.co/x/" + getPermalink(cbRow.id));
                     } else {
                         console.warn("Currently skipping streamer " + cbRow.streamer + " as we aren't modded in that channel");
