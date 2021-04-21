@@ -497,6 +497,5 @@ banClient.connect();
 
 module.exports = {
     listenOnChannel: listenOnChannel,
-    isModded: isModded,
     banClient: banClient
 };
