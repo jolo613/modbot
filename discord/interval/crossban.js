@@ -48,6 +48,7 @@ module.exports = client => {
                 if (err) {console.error(err);return;}
 
                 res.forEach(cbRow => {
+                    console.log(cbRow.streamer);
                     console.log(tmi.banClient.isMod("#" + cbRow.streamer, config.twitch.username));
                     if (tmi.isModded("#" + cbRow.streamer)) {
                         tmi.banClient.ban(cbRow.streamer, cbRow.username, "TMSQD: Crossban https://tmsqd.co/x/" + getPermalink(cbRow.id));
