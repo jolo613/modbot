@@ -319,6 +319,8 @@ const handle = {
         addTimeout(channel, userstate["target-user-id"], username, reason, duration, userstate["tmi-sent-ts"]);
     },
     mod: (channel, username) => {
+        console.log(username.toLowerCase());
+        console.log(config.twitch.username.toLowerCase());
         if (username.toLowerCase() === config.twitch.username.toLowerCase()) {
             console.log("Modded in " + channel);
             moddedChannels = [
@@ -328,7 +330,9 @@ const handle = {
         }
     },
     unmod: (channel, username) => {
-        moddedChannels = moddedChannels.filter(chnl => chnl !== channel);
+        if (username.toLowerCase() === config.twitch.username.toLowerCase()) {
+            moddedChannels = moddedChannels.filter(chnl => chnl !== channel);
+        }
     }
 };
 
