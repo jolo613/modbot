@@ -20,8 +20,6 @@ let modSquadGuild = null;
 let channels = [];
 let disallowed_channels = ["@everyone", "admin", "server booster", "modbot", "ludwig", "tarzaned"];
 
-let moddedChannels = [];
-
 let bannedList = [];
 let timeoutList = [];
 
@@ -336,10 +334,6 @@ const handle = {
     }
 };
 
-const isModded = channel => {
-    return moddedChannels.includes(channel);
-};
-
 con.query("select channel, username, userid from ban where active = true;", (err, res) => {
     if (err) {console.error(err);return;}
 
@@ -397,10 +391,6 @@ const initializeClient = () => {
     client.on('ban', handle.ban);
     
     client.on("timeout", handle.timeout);
-
-    client.on("mod", handle.mod);
-
-    client.on("unmod", handle.unmod);
 
     let clientObj = {
         client: client,

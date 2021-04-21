@@ -41,29 +41,38 @@ const getPermalink = userid => {
     });
 }
 
+let notModded = [];
+
 module.exports = client => {
 
     setInterval(() => {
-        console.log("crossban interval");
         try {
             con.query("select cb.username, cb.id, cb.streamer, u.discord_id from crossban as cb left join user as u on u.id = cb.by_id where cb.fulfilled = false;", (err, res) => {
                 if (err) {console.error(err);return;}
 
                 res.forEach(cbRow => {
-                    console.log(tmi.banClient.isMod("#" + cbRow.streamer, cbRow.username));
-
-                    tmi.banClient.ban("#" + cbRow.streamer, cbRow.username, "TMSQD: Crossban https://tmsqd.co/x/" + getPermalink(cbRow.id)).then(() => {
-                        console.log("banned.");
-
-                        con.query("update crossban set fulfilled = true where username = ? and streamer = ?;", [cbRow.username, cbRow.streamer]);
-                    }).catch(err => {
-                        console.log(err);
-                    });
+                    if (!notModded.includes(cbRow.streamer)) {
+                        getPermalink(cbRow.id).then(permalink => {
+                            tmi.banClient.ban("#" + cbRow.streamer, cbRow.username, "TMSQD: Crossban https://tmsqd.co/x/" + permalink).then(() => {
+                                console.log("User was banned.");
+    
+                                con.query("update crossban set fulfilled = true where username = ? and streamer = ?;", [cbRow.username, cbRow.streamer]);
+                            }).catch(err => {
+                                if (err === "no_permission") {
+                                    notModded = [...notModded, cbRow.streamer];
+                                }
+                            });
+                        }).catch(err => console.error(err));
+                    }
                 });
             });
         } catch (e) {
             console.error(e);
         }
-    }, 10000);
+    }, 10 * 1000);
+
+    setInterval(() => {
+        notModded = [];
+    }, 10 * 60 * 1000);
 
 }
