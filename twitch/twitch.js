@@ -494,15 +494,19 @@ discordClient.guilds.fetch(config.modsquad_discord).then(msg => {
 
 }).catch(console.error);
 
+const banClient = new tmi.Client({
+    options: { debug: false },
+    connection: { reconnect: true },
+    identity: {
+        username: config.twitch.username,
+        password: config.twitch.oauth
+    },
+});
+
+banClient.connect();
+
 module.exports = {
     listenOnChannel: listenOnChannel,
     isModded: isModded,
-    banClient: new tmi.Client({
-        options: { debug: false },
-        connection: { reconnect: true },
-        identity: {
-            username: config.twitch.username,
-            password: config.twitch.oauth
-        },
-    })
+    banClient: banClient
 };

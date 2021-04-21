@@ -50,6 +50,8 @@ module.exports = client => {
                 if (err) {console.error(err);return;}
 
                 res.forEach(cbRow => {
+                    console.log(tmi.banClient.isMod("#" + cbRow.streamer, cbRow.username));
+
                     tmi.banClient.ban("#" + cbRow.streamer, cbRow.username, "TMSQD: Crossban https://tmsqd.co/x/" + getPermalink(cbRow.id)).then(() => {
                         console.log("banned.");
 
