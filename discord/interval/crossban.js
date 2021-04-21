@@ -48,13 +48,13 @@ module.exports = client => {
                 if (err) {console.error(err);return;}
 
                 res.forEach(cbRow => {
-                    console.log(cbRow.streamer, config.twitch.username);
-                    console.log(tmi.banClient.isMod(cbRow.streamer, config.twitch.username));
-                    if (tmi.isModded("#" + cbRow.streamer)) {
-                        tmi.banClient.ban(cbRow.streamer, cbRow.username, "TMSQD: Crossban https://tmsqd.co/x/" + getPermalink(cbRow.id));
-                    } else {
-                        console.warn("Currently skipping streamer " + cbRow.streamer + " as we aren't modded in that channel");
-                    }
+                    tmi.banClient.ban("#" + cbRow.streamer, cbRow.username, "TMSQD: Crossban https://tmsqd.co/x/" + getPermalink(cbRow.id)).then(() => {
+                        console.log("banned.");
+
+                        con.query("update crossban set fulfilled = true where username = ? and streamer = ?;", [cbRow.username, cbRow.streamer]);
+                    }).catch(err => {
+                        console.log(err);
+                    });
                 });
             });
         } catch (e) {
