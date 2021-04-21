@@ -20,6 +20,8 @@ let modSquadGuild = null;
 let channels = [];
 let disallowed_channels = ["@everyone", "admin", "server booster", "modbot", "ludwig", "tarzaned"];
 
+let moddedChannels = [];
+
 let bannedList = [];
 let timeoutList = [];
 
@@ -315,7 +317,23 @@ const handle = {
     },
     timeout: (channel, username, reason, duration, userstate) => {
         addTimeout(channel, userstate["target-user-id"], username, reason, duration, userstate["tmi-sent-ts"]);
+    },
+    mod: (channel, username) => {
+        if (username.toLowerCase() === config.twitch.username.toLowerCase()) {
+            console.log("Modded in " + channel);
+            moddedChannels = [
+                ...moddedChannels,
+                channel
+            ];
+        }
+    },
+    unmod: (channel, username) => {
+        moddedChannels = moddedChannels.filter(chnl => chnl !== channel);
     }
+};
+
+const isModded = channel => {
+    return moddedChannels.includes(channel);
 };
 
 con.query("select channel, username, userid from ban where active = true;", (err, res) => {
@@ -375,6 +393,10 @@ const initializeClient = () => {
     client.on('ban', handle.ban);
     
     client.on("timeout", handle.timeout);
+
+    client.on("mod", handle.mod);
+
+    client.on("unmod", handle.unmod);
 
     let clientObj = {
         client: client,
@@ -468,4 +490,15 @@ discordClient.guilds.fetch(config.modsquad_discord).then(msg => {
 
 }).catch(console.error);
 
-module.exports = {listenOnChannel: listenOnChannel};
+module.exports = {
+    listenOnChannel: listenOnChannel,
+    isModded: isModded,
+    banClient: new tmi.Client({
+        options: { debug: false },
+        connection: { reconnect: true },
+        identity: {
+            username: config.twitch.username,
+            password: config.twitch.oauth
+        },
+    })
+};

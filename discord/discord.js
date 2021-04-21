@@ -110,26 +110,6 @@ client.on("guildMemberAdd", member => {
     }
 });
 
-const generateUUID = userid => {
-    return new Promise((resolve, reject) => {
-        let genid = uuid.v4();
-
-        con.query("select link from permalink where link = ?;", [genid], (err, res) => {
-            if (err || res.length === 0) {
-                con.query("insert into permalink (link, user_id) values (?, ?);", [genid, userid], inserr => {
-                    if (inserr) {
-                        reject(inserr);
-                    } else {
-                        resolve(genid);
-                    }
-                });
-            } else {
-                generateUUID(userid).then(resolve).catch(reject);
-            }
-        });
-    });
-}
-
 client.on('messageReactionAdd', async (reaction, user) => {
     if (reaction.me) return; // We don't need to take action on things that the bot does.
 
@@ -153,31 +133,19 @@ client.on('messageReactionAdd', async (reaction, user) => {
                 let userid = res[0].userid;
                 let username = res[0].username;
 
-                con.query("select link from permalink where user_id = ?;", [userid], async (cbplerr, cbplres) => {
-                    let link = null;
-                    if (!cbplerr && cbplres.length >= 1) {
-                        link = cbplres[0].link;
-                    }
+                con.query("select id from user where discord_id = ?;", [user.id], (guerr, gures) => {
+                    if (guerr || gures.length === 0) {
+                        console.error(guerr);
+                        reaction.message.channel.send(`${user} we couldn't get your Twitch ID from the database. Make sure you've linked your account to TMSQD`);
+                    } else {
+                        con.query("select streamer_name from mod_streamer where mod_id = ?;", [gures[0].id], (sgerr, sgres) => {
+                            if (sgerr) {console.error(sgerr);return;}
 
-                    if (link === null) {
-                        link = await generateUUID(userid);
-                    }
-
-                    con.query("select id from user where discord_id = ?;", [user.id], (guerr, gures) => {
-                        if (guerr || gures.length === 0) {
-                            console.error(guerr);
-                            console.err(gures);
-                            reaction.message.channel.send(`${user} we couldn't get your Twitch ID from the database. Make sure you've linked your account to TMSQD`);
-                        } else {
-                            con.query("select streamer_name from mod_streamer where mod_id = ?;", [gures[0].id], (sgerr, sgres) => {
-                                if (sgerr) {console.error(sgerr);return;}
-
-                                sgres.forEach(streamer => {
-                                    con.query("insert into crossban (username, streamer, by_id) values (?, ?, ?);", [username, streamer.streamer_name, gures[0].id], (err) => {if (err) console.error();});
-                                });
+                            sgres.forEach(streamer => {
+                                con.query("insert into crossban (username, id, streamer, by_id) values (?, ?, ?);", [username, userid, streamer.streamer_name, gures[0].id], (err) => {if (err) console.error();});
                             });
-                        }
-                    });
+                        });
+                    }
                 });
             }
         });
@@ -188,6 +156,7 @@ client.login(config.token);
 
 setTimeout(() => {
     require("./interval/authenticate")(client);
+    require("./interval/crossban")(client);
 }, 500);
 
 module.exports = client;
