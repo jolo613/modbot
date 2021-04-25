@@ -56,7 +56,7 @@ module.exports = client => {
                             tmi.banClient.ban("#" + cbRow.streamer, cbRow.username, "TMSQD: Crossban https://tmsqd.co/x/" + permalink).then(() => {
                                 console.log("User was banned.");
     
-                                con.query("update crossban set fulfilled = true where username = ? and streamer = ?;", [cbRow.username, cbRow.streamer]);
+                                con.query("update crossban set fulfilled = true and alert_discord_id = null where username = ? and streamer = ?;", [cbRow.username, cbRow.streamer]);
                             }).catch(err => {
                                 if (err === "no_permission") {
                                     notModded = [...notModded, cbRow.streamer];
