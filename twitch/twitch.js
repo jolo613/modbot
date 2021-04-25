@@ -212,6 +212,8 @@ const addBan = (channel, userid, username, reason, timebanned) => {
                                 if (activeChannels !== "")
                                     embed.addField(`Active in Channels:`, `\`\`\`\nChannel${' '.repeat(longestChannelName + ACTIVE_CHANNEL_PADDING - 7)}Last Active${activeChannels}\`\`\``);
                             }
+
+                            embed.addField("Crossban", "Click the `❌` reaction on this message to ban this user in the channels you're mod on.", true);
                             
                             dchnl.send(embed).then(message => {
                                 con.query("update ban set discord_message = ? where timebanned = ? and channel = ? and userid = ?;", [

@@ -143,14 +143,52 @@ client.on('messageReactionAdd', async (reaction, user) => {
                         con.query("select streamer_name from mod_streamer where mod_id = ?;", [gures[0].id], (sgerr, sgres) => {
                             if (sgerr) {console.error(sgerr);return;}
 
+                            let streamList = "";
+
                             sgres.forEach(streamer => {
+                                streamList += `\n${streamer.streamer_name}`;
                                 con.query("insert into crossban (username, id, streamer, by_id) values (?, ?, ?, ?);", [username, userid, streamer.streamer_name, gures[0].id], (err) => {if (err) console.error(err);});
+                            });
+
+                            if (streamList === "") streamList = "\nWe couldn't find the channels you're mod on.";
+
+                            const embed = new Discord.MessageEmbed()
+                                    .setTitle(`Attempting Crossban to ${sgres.length} Channels`)
+                                    .setDescription(`We will attempt to ban \`${username}\` on ${sgres.length} channels in approximately 1 minute. \`TwitchModSquad\` must be modded in the channel for this to succeed.`)
+                                    .addField("Affected Channels", "```" + streamList + "```")
+                                    .addField("Undo", "React with `↩️` within one minute to undo. *After this period, you must unban the user manually.*")
+                                    .setColor(0x772ce8);
+
+                            user.send(embed).then(message => {
+                                message.react('↩️');
+
+                                sgres.forEach(streamer => {
+                                    con.query("update crossban set alert_discord_id = ? where username = ? and streamer = ?;", [message.id, username, streamer.streamer_name], (err) => {if (err) console.error(err);});
+                                });
+                            }).catch(() => {
+                                reaction.message.channel.send(embed).then(message => {
+                                    message.react('↩️');
+
+                                    sgres.forEach(streamer => {
+                                        con.query("update crossban set alert_discord_id = ? where username = ? and streamer = ?;", [message.id, username, streamer.streamer_name], (err) => {if (err) console.error(err);});
+                                    });
+                                }).catch(err => {
+                                    console.error("Could not send crossban confirmation -> " + err);
+                                });
                             });
                         });
                     }
                 });
             }
         });
+    } else if (reaction.emoji.name === '↩️') {
+        con.query("delete from crossban where alert_discord_id = ?;", [reaction.message.id], (err) => {if (err) console.error(err);});
+
+        const embed = new Discord.MessageEmbed()
+                .setTitle(`Cancelled Crossban`)
+                .setColor(0x772ce8);
+
+        reaction.message.channel.send(embed);
     }
 });
 

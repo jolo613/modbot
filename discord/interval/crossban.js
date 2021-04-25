@@ -47,7 +47,7 @@ module.exports = client => {
 
     setInterval(() => {
         try {
-            con.query("select cb.username, cb.id, cb.streamer, u.discord_id from crossban as cb left join user as u on u.id = cb.by_id where cb.fulfilled = false;", (err, res) => {
+            con.query("select cb.username, cb.id, cb.streamer, u.discord_id from crossban as cb left join user as u on u.id = cb.by_id where cb.fulfilled = false and cb.time_created < date_sub(now(), interval 1 minute);", (err, res) => {
                 if (err) {console.error(err);return;}
 
                 res.forEach(cbRow => {
@@ -73,6 +73,6 @@ module.exports = client => {
 
     setInterval(() => {
         notModded = [];
-    }, 10 * 60 * 1000);
+    }, 30 * 60 * 1000);
 
 }
