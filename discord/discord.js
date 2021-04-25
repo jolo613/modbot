@@ -153,8 +153,8 @@ client.on('messageReactionAdd', async (reaction, user) => {
                             if (streamList === "") streamList = "\nWe couldn't find the channels you're mod on.";
 
                             const embed = new Discord.MessageEmbed()
-                                    .setTitle(`Attempting Crossban to ${sgres.length} Channels`)
-                                    .setDescription(`We will attempt to ban \`${username}\` on ${sgres.length} channels in approximately 1 minute. \`TwitchModSquad\` must be modded in the channel for this to succeed.`)
+                                    .setTitle(`Attempting Crossban to ${sgres.length} Channel${sgres.length === 1 ? "" : "s"}`)
+                                    .setDescription(`We will attempt to ban \`${username}\` on ${sgres.length} channel${sgres.length === 1 ? "" : "s"} in approximately 1 minute. \`TwitchModSquad\` must be modded in the channel for this to succeed.`)
                                     .addField("Affected Channels", "```" + streamList + "```")
                                     .addField("Undo", "React with `↩️` within one minute to undo. *After this period, you must unban the user manually.*")
                                     .setColor(0x772ce8);
