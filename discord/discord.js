@@ -21,8 +21,6 @@ for (const file of commandFiles) {
 client.once('ready', () => {
     console.log(`Discord bot ready! Logged in as ${client.user.tag}!`);
     console.log(`Bot has started with ${client.users.cache.size} users, in ${client.channels.cache.size} channels of ${client.guilds.cache.size} guilds.`);
-
-    // client.channels.fetch(config.liveban_channel).awaitMessages(m => true, {time: 60000}).then(collected => console.log(collected.size + ' messages awaited.'));
 });
 
 // implement mod comments
