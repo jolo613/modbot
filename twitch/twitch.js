@@ -155,6 +155,7 @@ const addBan = (channel, userid, username, reason, timebanned) => {
                 ], (err, res) => {
                     const embed = new MessageEmbed()
                             .setTitle(`User was Banned!`)
+                            .setURL(`https://tmsqd.co/user/${username}`)
                             .setAuthor(channelStripped, undefined, "https://twitch.tv/" + channelStripped)
                             .setDescription(`User \`${username}\` was banned from channel \`${channel}\``)
                             .setColor(0xe83b3b)
