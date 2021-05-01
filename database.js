@@ -11,4 +11,13 @@ const connection = mysql.createConnection({
  
 connection.connect();
 
+connection.pquery = (query, vars) => {
+    return new Promise((res, rej) => {
+        connection.query(query, vars, (err, result) => {
+            if (err) {rej(err);return;}
+            res(result);
+        });
+    });
+}
+
 module.exports = connection;
