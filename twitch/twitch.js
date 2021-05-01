@@ -202,11 +202,7 @@ const addBan = (channel, userid, username, reason, timebanned) => {
                                 });
 
                                 lares.forEach(xchnl => {
-                                    console.log(longestChannelName);
-                                    console.log(ACTIVE_CHANNEL_PADDING);
-                                    console.log(xchnl.channel.length);
-                                    console.log(longestChannelName + ACTIVE_CHANNEL_PADDING - xchnl.channel.length);
-                                    activeChannels += "\n" + xchnl.channel + (' '.repeat(longestChannelName + ACTIVE_CHANNEL_PADDING - xchnl.channel.length)) + parseDate(parseInt(xchnl.lastactive));
+                                    activeChannels += "\n" + xchnl.channel + (' '.repeat(longestChannelName + ACTIVE_CHANNEL_PADDING - xchnl.channel.length)) + parseDate(parseInt(xchnl.lastactive)) + (isBanned(xchnl.channel, userid) || xchnl.channel === channel ? ' [❌ banned]' : '');
                                 });
 
                                 if (activeChannels !== "")
