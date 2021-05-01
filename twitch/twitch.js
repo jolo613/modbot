@@ -195,6 +195,7 @@ const addBan = (channel, userid, username, reason, timebanned) => {
                             if (!laerr && typeof(uires) === "object") {
                                 let bannedChannels = [];
 
+                                // grab banned channels from the database
                                 try {
                                     let gbcRes = await con.pquery("select distinct channel from ban where userid = ? and active = true;", [userid]);
 
@@ -211,23 +212,32 @@ const addBan = (channel, userid, username, reason, timebanned) => {
                                 let longestChannelName = 7;
                                 let activeChannels = "";
 
+                                // calculate longest channel name
                                 lares.forEach(xchnl => {
                                     if (xchnl.channel.length > longestChannelName) longestChannelName = xchnl.channel.length;
                                 });
 
+                                bannedChannels.forEach(chnl => {
+                                    if (chnl.length > longestChannelName) longestChannelName = chnl.length;
+                                });
+
+                                // assemble active channels
                                 lares.forEach(xchnl => {
-                                    activeChannels += "\n" + xchnl.channel + (' '.repeat(longestChannelName + ACTIVE_CHANNEL_PADDING - xchnl.channel.length)) + parseDate(parseInt(xchnl.lastactive)) + (bannedChannels.includes(xchnl.channel) ? ' [❌ banned]' : '');
+                                    activeChannels += "\n" + xchnl.channel + (' '.repeat(Math.max(1, longestChannelName + ACTIVE_CHANNEL_PADDING - xchnl.channel.length))) + parseDate(parseInt(xchnl.lastactive)) + (bannedChannels.includes(xchnl.channel) ? ' [❌ banned]' : '');
 
                                     bannedChannels.splice(bannedChannels.indexOf(xchnl.channel), 1);
                                 });
 
+                                // assemble "also banned in" section
                                 if (bannedChannels.length > 0) {
                                     activeChannels += "\nAlso banned in:";
                                 }
 
                                 bannedChannels.forEach(chnl => {
-                                    activeChannels += "\n" + chnl + (' '.repeat(longestChannelName + ACTIVE_CHANNEL_PADDING - chnl.length)) + "Never Active" + (' '.repeat(12)) + '[❌ banned]';
+                                    activeChannels += "\n" + chnl + (' '.repeat(Math.max(1, longestChannelName + ACTIVE_CHANNEL_PADDING - chnl.length))) + "Never Active" + (' '.repeat(12)) + '[❌ banned]';
                                 });
+
+                                // add the field, if any active channels were found (which should pretty much always be true)
 
                                 if (activeChannels !== "")
                                     embed.addField(`Active in Channels:`, `\`\`\`\nChannel${' '.repeat(longestChannelName + ACTIVE_CHANNEL_PADDING - 7)}Last Active${activeChannels}\`\`\``);
