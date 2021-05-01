@@ -60,6 +60,9 @@ module.exports = client => {
                             }).catch(err => {
                                 if (err === "no_permission") {
                                     notModded = [...notModded, cbRow.streamer];
+                                } else if (err === "already_banned") {
+                                    console.log("Already banned. Updating crossban...");
+                                    con.query("update crossban set fulfilled = true, alert_discord_id = null where username = ? and streamer = ?;", [cbRow.username, cbRow.streamer]);
                                 }
                             });
                         }).catch(err => console.error(err));
