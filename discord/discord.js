@@ -21,6 +21,20 @@ for (const file of commandFiles) {
 client.once('ready', () => {
     console.log(`Discord bot ready! Logged in as ${client.user.tag}!`);
     console.log(`Bot has started with ${client.users.cache.size} users, in ${client.channels.cache.size} channels of ${client.guilds.cache.size} guilds.`);
+
+    if (config.hasOwnProperty("liveban_channel")) {
+        client.channels.fetch(config.liveban_channel).then(channel => {
+            con.query("select discord_message from ban where discord_message is not null order by timebanned desc limit 250, 1;", (err, afterBan) => {
+                if (err) {console.error(err);return;}
+                if (afterBan.length !== 1) {console.error("Query did not return 1 record");return;}
+
+                channel.messages.fetch({
+                    limit: 255,
+                    after: afterBan[0].discord_message
+                }).then(messages => console.log(messages.size + " messages were successfully fetched from the #bans channel")).catch(console.error);
+            });
+        }).catch(console.error);
+    }
 });
 
 // implement mod comments
