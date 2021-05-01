@@ -191,22 +191,25 @@ const addBan = (channel, userid, username, reason, timebanned) => {
                             embed.addField(`Chat Log in \`${channel}\``, "```" + logs + "```", false);
                         }
 
-                        con.query("select channel, max(timesent) as lastactive from chatlog where userid = ? group by channel;", [userid], (laerr, lares) => {
+                        con.query("select channel, max(timesent) as lastactive from chatlog where userid = ? group by channel;", [userid], async (laerr, lares) => {
                             if (!laerr && typeof(uires) === "object") {
-                                let activeChannels = "";
-
                                 let longestChannelName = 7;
+                                let activeChannels = "";
 
                                 lares.forEach(xchnl => {
                                     if (xchnl.channel.length > longestChannelName) longestChannelName = xchnl.channel.length;
                                 });
 
-                                lares.forEach(xchnl => {
-                                    con.query("select id from ban where channel = ? and userid = ? and active = true limit 1;", [xchnl.channel, userid], (gberr, gbres) => {
-                                        if (gberr) console.error(gberr);
-                                        activeChannels += "\n" + xchnl.channel + (' '.repeat(longestChannelName + ACTIVE_CHANNEL_PADDING - xchnl.channel.length)) + parseDate(parseInt(xchnl.lastactive)) + (!(gberr) && gbres.length > 0 ? ' [❌ banned]' : '');
-                                    });
-                                });
+                                for (let i = 0; i < lares.length; i++) {
+                                    let xchnl = lares[i];
+
+                                    try {
+                                        let gbres = await con.pquery("select id from ban where channel = ? and userid = ? and active = true limit 1;", [xchnl.channel, userid]);
+                                        activeChannels += "\n" + xchnl.channel + (' '.repeat(longestChannelName + ACTIVE_CHANNEL_PADDING - xchnl.channel.length)) + parseDate(parseInt(xchnl.lastactive)) + (gbres.length > 0 ? ' [❌ banned]' : '');
+                                    } catch (err) {
+                                        console.error(err);
+                                    }
+                                }
 
                                 if (activeChannels !== "")
                                     embed.addField(`Active in Channels:`, `\`\`\`\nChannel${' '.repeat(longestChannelName + ACTIVE_CHANNEL_PADDING - 7)}Last Active${activeChannels}\`\`\``);
