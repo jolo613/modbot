@@ -193,6 +193,21 @@ const addBan = (channel, userid, username, reason, timebanned) => {
 
                         con.query("select channel, max(timesent) as lastactive from chatlog where userid = ? group by channel;", [userid], async (laerr, lares) => {
                             if (!laerr && typeof(uires) === "object") {
+                                let bannedChannels = [];
+
+                                try {
+                                    let gbcRes = con.pquery("select distinct channel from ban where userid = ? and active = true;", [userid]);
+
+                                    gbcRes.forEach(bc => {
+                                        bannedChannels = [
+                                            ...bannedChannels,
+                                            bc.channel
+                                        ];
+                                    });
+                                } catch (err) {
+                                    console.error(err);
+                                }
+
                                 let longestChannelName = 7;
                                 let activeChannels = "";
 
@@ -200,16 +215,19 @@ const addBan = (channel, userid, username, reason, timebanned) => {
                                     if (xchnl.channel.length > longestChannelName) longestChannelName = xchnl.channel.length;
                                 });
 
-                                for (let i = 0; i < lares.length; i++) {
-                                    let xchnl = lares[i];
+                                lares.forEach(xchnl => {
+                                    activeChannels += "\n" + xchnl.channel + (' '.repeat(longestChannelName + ACTIVE_CHANNEL_PADDING - xchnl.channel.length)) + parseDate(parseInt(xchnl.lastactive)) + (bannedChannels.includes(xchnl.channel) ? ' [❌ banned]' : '');
 
-                                    try {
-                                        let gbres = await con.pquery("select id from ban where channel = ? and userid = ? and active = true limit 1;", [xchnl.channel, userid]);
-                                        activeChannels += "\n" + xchnl.channel + (' '.repeat(longestChannelName + ACTIVE_CHANNEL_PADDING - xchnl.channel.length)) + parseDate(parseInt(xchnl.lastactive)) + (gbres.length > 0 ? ' [❌ banned]' : '');
-                                    } catch (err) {
-                                        console.error(err);
-                                    }
+                                    bannedChannels.splice(bannedChannels.indexOf(xchnl.channel), 1);
+                                });
+
+                                if (bannedChannels.length > 0) {
+                                    activeChannels += "\nAlso banned in:";
                                 }
+
+                                bannedChannels.forEach(chnl => {
+                                    activeChannels += "\n" + chnl + (' '.repeat(longestChannelName + ACTIVE_CHANNEL_PADDING - chnl.length)) + "Never Active" + (' '.repeat(12)) + '[❌ banned]';
+                                });
 
                                 if (activeChannels !== "")
                                     embed.addField(`Active in Channels:`, `\`\`\`\nChannel${' '.repeat(longestChannelName + ACTIVE_CHANNEL_PADDING - 7)}Last Active${activeChannels}\`\`\``);
