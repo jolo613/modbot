@@ -196,7 +196,7 @@ const addBan = (channel, userid, username, reason, timebanned) => {
                                 let bannedChannels = [];
 
                                 try {
-                                    let gbcRes = con.pquery("select distinct channel from ban where userid = ? and active = true;", [userid]);
+                                    let gbcRes = await con.pquery("select distinct channel from ban where userid = ? and active = true;", [userid]);
 
                                     gbcRes.forEach(bc => {
                                         bannedChannels = [
