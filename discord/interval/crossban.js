@@ -43,6 +43,8 @@ const getPermalink = userid => {
 
 let notModded = [];
 
+const ALREADY_BANNED_ERRORS = ["already_banned", "bad_ban_admin", "bad_ban_broadcaster", "bad_ban_global_mod", "bad_ban_self", "bad_ban_staff"];
+
 module.exports = client => {
 
     setInterval(() => {
@@ -60,10 +62,10 @@ module.exports = client => {
                                     if (err) console.error(err);
                                 });
                             }).catch(err => {
-                                console.error(err);
+                                console.error(cbRow.streamer, err);
                                 if (err === "no_permission") {
                                     notModded = [...notModded, cbRow.streamer];
-                                } else if (err === "already_banned") {
+                                } else if (ALREADY_BANNED_ERRORS.includes(err)) {
                                     console.log("Already banned. Updating crossban...");
                                     con.query("update crossban set fulfilled = true, alert_discord_id = null where username = ? and streamer = ?;", [cbRow.username, cbRow.streamer], (err, res) => {
                                         if (err) console.error(err);
