@@ -82,7 +82,9 @@ module.exports = client => {
     }, 10 * 1000);
 
     setInterval(() => {
+        con.query("delete from crossban where time_created < date_sub(now(), interval 1 hour) and fulfilled = false;");
+
         notModded = [];
-    }, 30 * 60 * 1000);
+    }, 60 * 1000);
 
 }
