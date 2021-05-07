@@ -56,13 +56,18 @@ module.exports = client => {
                             tmi.banClient.ban("#" + cbRow.streamer, cbRow.username, "TMSQD: Crossban https://tmsqd.co/x/" + permalink).then(() => {
                                 console.log("User was banned.");
     
-                                con.query("update crossban set fulfilled = true, alert_discord_id = null where username = ? and streamer = ?;", [cbRow.username, cbRow.streamer]);
+                                con.query("update crossban set fulfilled = true, alert_discord_id = null where username = ? and streamer = ?;", [cbRow.username, cbRow.streamer], (err, res) => {
+                                    if (err) console.error(err);
+                                });
                             }).catch(err => {
+                                console.error(err);
                                 if (err === "no_permission") {
                                     notModded = [...notModded, cbRow.streamer];
                                 } else if (err === "already_banned") {
                                     console.log("Already banned. Updating crossban...");
-                                    con.query("update crossban set fulfilled = true, alert_discord_id = null where username = ? and streamer = ?;", [cbRow.username, cbRow.streamer]);
+                                    con.query("update crossban set fulfilled = true, alert_discord_id = null where username = ? and streamer = ?;", [cbRow.username, cbRow.streamer], (err, res) => {
+                                        if (err) console.error(err);
+                                    });
                                 }
                             });
                         }).catch(err => console.error(err));
