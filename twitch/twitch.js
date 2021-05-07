@@ -224,7 +224,7 @@ const addBan = (channel, userid, username, reason, timebanned) => {
 
                                 // assemble active channels
                                 lares.forEach(xchnl => {
-                                    activeChannels += "\n" + xchnl.channel + (' '.repeat(Math.max(1, longestChannelName + ACTIVE_CHANNEL_PADDING - xchnl.channel.length))) + parseDate(parseInt(xchnl.lastactive)) + (bannedChannels.includes(xchnl.channel) ? ' [❌ banned]' : '');
+                                    activeChannels += "\n" + xchnl.channel + (' '.repeat(Math.max(1, longestChannelName + ACTIVE_CHANNEL_PADDING - xchnl.channel.length))) + parseDate(parseInt(xchnl.lastactive)) + (bannedChannels.includes(xchnl.channel) || xchnl.channel === channel ? ' [❌ banned]' : '');
 
                                     bannedChannels.splice(bannedChannels.indexOf(xchnl.channel), 1);
                                 });
