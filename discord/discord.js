@@ -1,6 +1,7 @@
 const fs = require('fs');
-const Discord = require("discord.js");
-const client = new Discord.Client();
+
+const Discord = require('discord.js');
+const client = new Discord.Client({ intents: [Discord.Intents.FLAGS.GUILDS, Discord.Intents.FLAGS.GUILD_MESSAGES] });
 
 const uuid = require("uuid");
 
@@ -15,7 +16,7 @@ const commandFiles = fs.readdirSync('./discord/commands').filter(file => file.en
 
 for (const file of commandFiles) {
     const command = require(`./commands/${file}`);
-    client.commands.set(command.name, command);
+    client.commands.set(command.data.name, command);
 }
 
 client.once('ready', () => {
@@ -71,25 +72,18 @@ client.on('message', message => {
 });
 
 // implement commands
-client.on('message', async message => {
-    // if the message is sent by a bot, we don't need process this at all.
-    if (message.author.bot) return;
 
-    // if the message doesn't start with the prefix we don't need to process this as a command.
-    if (!message.content.startsWith(prefix)) return;
+client.on('interactionCreate', interaction => {
+    if (!interaction.isCommand()) return;
 
-    const args = message.content.slice(prefix.length).trim().split(/ +/);
-    const command = args.shift().toLowerCase();
-    
-    if (!client.commands.has(command)) return;
+    if (!client.commands.has(interaction.commandName)) return;
 
-    let cmd = client.commands.get(command);
-    
+    let cmd = client.commands.get(interaction.commandName);
     try {
-        cmd.execute(message, args);
+        cmd.execute(interaction);
     } catch (error) {
         console.error(error);
-        message.reply('There was an error trying to execute that command!');
+        interaction.reply('***There was an error trying to execute that command!***');
     }
 });
 
@@ -204,7 +198,9 @@ client.on('messageReactionAdd', async (reaction, user) => {
     }
 });
 
-client.login(config.token);
+client.login(config.discord.token);
+
+require("./slashCommands")(client);
 
 setTimeout(() => {
     require("./interval/authenticate")(client);
