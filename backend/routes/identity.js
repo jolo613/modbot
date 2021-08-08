@@ -1,5 +1,8 @@
 const {Router} = require("express");
 const con = require("../../database");
+const API = require("../../api");
+
+const IdentityService = new API.IdentityService();
  
 const router = Router();
 
@@ -8,11 +11,13 @@ router.get("/", (req, res) => {
 });
  
 router.get('/:identityId', (req, res) => {
-    con.query("select id, name from identity where id = ?;", [req.params.identityId], (err, result) => {
-        if (err) {
-            res.json({success: false, error: err});
+    IdentityService.resolveIdentity(req.params.identityId).then(identity => {
+        res.json({success: true, data: identity});
+    }).catch(err => {
+        if (err === "Identity not found") {
+            res.json({success: true, data: null});
         } else {
-            res.json({success: true, data: result.length > 0 ? result[0] : null});
+            res.json({success: false, error: err});
         }
     });
 });
