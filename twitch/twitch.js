@@ -11,7 +11,6 @@ const con = require("../database");
 const discordClient = require("../discord/discord");
 
 const {MessageEmbed} = require("discord.js");
-const client = require("../discord/discord");
 
 let clients = [];
 
@@ -85,185 +84,190 @@ function parseDate(timestamp) {
 /* I think reason may be deprecated here, so it may always be null. I'll have to check on that. */
 const addBan = (channel, userid, username, reason, timebanned) => {
     let channelStripped = channel.replace("#", "");
-    if (!bannedPerMinute.hasOwnProperty(channel)) {
-        bannedPerMinute[channel] = [];
-    }
-    bannedPerMinute[channel] = [
-        ...bannedPerMinute[channel],
-        Date.now()
-    ];
 
-    if (bannedPerMinute[channel].length > 60) {
-        console.log("More than 60 bans per minute in " + channel + ". Parting for 15 minutes.");
+    con.query("select id from twitch__user where display_name = ?;", [channelStripped], (gstrerr, gstrres) => {
+        if (gstrerr || gstrres.length === 0) {console.error("Failed to find streamer: " + channel);return;}
 
-        if (bannedPerMinute[channel].length === 61 && config.hasOwnProperty("liveban_channel")) {
-            let dchnl = modSquadGuild.channels.cache.find(dchnl => dchnl.id == config.liveban_channel);
+        let streamer_id = gstrres[0].id;
 
-            if (dchnl.isText()) {
-                const embed = new MessageEmbed()
-                        // Set the title of the field
-                        .setTitle(`Bot Action Detected`)
-                        // Set the description of the field
-                        .setDescription(`Channel \`${channel}\` appears to be handling a bot attack. Channel has had \`${bannedPerMinute[channel].length}\` bans in the last minute, this exceeds the limit of \`60\`.\nThe bot will part from the channel for \`15 minutes\`.`)
-                        // Set the color of the embed
-                        .setColor(0x8c1212);
+        if (!bannedPerMinute.hasOwnProperty(channel)) {
+            bannedPerMinute[channel] = [];
+        }
+        bannedPerMinute[channel] = [
+            ...bannedPerMinute[channel],
+            Date.now()
+        ];
 
-                dchnl.send(embed);
+        if (bannedPerMinute[channel].length > 60) {
+            console.log("More than 60 bans per minute in " + channel + ". Parting for 15 minutes.");
+
+            if (bannedPerMinute[channel].length === 61 && config.hasOwnProperty("liveban_channel")) {
+                let dchnl = modSquadGuild.channels.cache.find(dchnl => dchnl.id == config.liveban_channel);
+
+                if (dchnl.isText()) {
+                    const embed = new MessageEmbed()
+                            // Set the title of the field
+                            .setTitle(`Bot Action Detected`)
+                            // Set the description of the field
+                            .setDescription(`Channel \`${channel}\` appears to be handling a bot attack. Channel has had \`${bannedPerMinute[channel].length}\` bans in the last minute, this exceeds the limit of \`60\`.\nThe bot will part from the channel for \`15 minutes\`.`)
+                            // Set the color of the embed
+                            .setColor(0x8c1212);
+
+                    dchnl.send(embed);
+                }
             }
+
+            partFromChannel(channelStripped);
+
+            setTimeout(() => {
+                listenOnChannel(channelStripped);
+            }, 15 * 60 * 1000);
+
+            return;
         }
 
-        partFromChannel(channelStripped);
+        if (bannedPerMinute[channel].length <= 30) {
+            con.query("insert into twitch__ban (time_banned, streamer_id, user_id) values (?, ?, ?);", [
+                timebanned,
+                streamer_id,
+                userid
+            ]);
+    
+            bannedList = [
+                ...bannedList,
+                {
+                    channel: channel,
+                    userid: userid,
+                    username: username,
+                }
+            ]
+        } else {
+            console.log(`Not logging ban in ${channel} due to exceeding BPM threshold (${bannedPerMinute[channel].length}>30)`);
+        }
 
-        setTimeout(() => {
-            listenOnChannel(channelStripped);
-        }, 15 * 60 * 1000);
+        // send ban message, if the liveban channel is present.
 
-        return;
-    }
+        if (bannedPerMinute[channel].length <= 5) {
+            if (config.hasOwnProperty("liveban_channel")) {
+                let dchnl = modSquadGuild.channels.cache.find(dchnl => dchnl.id == config.liveban_channel);
 
-    if (bannedPerMinute[channel].length <= 30) {
-        con.query("insert into ban (timebanned, channel, userid, username, reason) values (?, ?, ?, ?, ?);", [
-            timebanned,
-            channel,
-            userid,
-            username,
-            reason
-        ]);
+                if (dchnl.isText()) {
+                    con.query("select twitch__user.display_name, message, deleted, timesent from twitch__chat join twitch__user on twitch__user.id = twitch__chat.user_id where streamer_id = ? and user_id = ? order by timesent desc limit 10;",[
+                        streamer_id,
+                        userid
+                    ], (err, res) => {
+                        const embed = new MessageEmbed()
+                                .setTitle(`User was Banned!`)
+                                .setURL(`https://tmsqd.co/user/${username}`)
+                                .setAuthor(channelStripped, undefined, "https://twitch.tv/" + channelStripped)
+                                .setDescription(`User \`${username}\` was banned from channel \`${channel}\``)
+                                .setColor(0xe83b3b)
+                                .setFooter("Bans per Minute: " + bannedPerMinute[channel].length);
 
-        bannedList = [
-            ...bannedList,
-            {
-                channel: channel,
-                userid: userid,
-                username: username,
-            }
-        ]
-    } else {
-        console.log(`Not logging ban in ${channel} due to exceeding BPM threshold (${bannedPerMinute[channel].length}>30)`);
-    }
-
-    // send ban message, if the liveban channel is present.
-
-    if (bannedPerMinute[channel].length <= 5) {
-        if (config.hasOwnProperty("liveban_channel")) {
-            let dchnl = modSquadGuild.channels.cache.find(dchnl => dchnl.id == config.liveban_channel);
-
-            if (dchnl.isText()) {
-                con.query("select display_name, message, deleted, timesent from chatlog where channel = ? and userid = ? order by timesent desc limit 10;",[
-                    channel,
-                    userid
-                ], (err, res) => {
-                    const embed = new MessageEmbed()
-                            .setTitle(`User was Banned!`)
-                            .setURL(`https://tmsqd.co/user/${username}`)
-                            .setAuthor(channelStripped, undefined, "https://twitch.tv/" + channelStripped)
-                            .setDescription(`User \`${username}\` was banned from channel \`${channel}\``)
-                            .setColor(0xe83b3b)
-                            .setFooter("Bans per Minute: " + bannedPerMinute[channel].length);
-
-                    con.query("select display_name, profile_image_url from userinfo where login = ?;", [channel.replace('#', "")], (uierr, uires) => {
-                        if (!uierr && typeof(uires) === "object") {
-                            if (uires.length === 1) {
-                                embed.setAuthor(uires[0].display_name, uires[0].profile_image_url, "https://twitch.tv/" + channelStripped);
+                        con.query("select display_name, profile_image_url from userinfo where login = ?;", [channel.replace('#', "")], (uierr, uires) => {
+                            if (!uierr && typeof(uires) === "object") {
+                                if (uires.length === 1) {
+                                    embed.setAuthor(uires[0].display_name, uires[0].profile_image_url, "https://twitch.tv/" + channelStripped);
+                                }
                             }
-                        }
 
-                        if (typeof(res) === "object") {
-                            let logs = "";
-    
-                            res = res.reverse();
-    
-                            res.forEach(log => {
-                                let date = new Date(log.timesent);
-    
-                                let hor = date.getHours() + "";
-                                let min = date.getMinutes() + "";
-                                let sec = date.getSeconds() + "";
-    
-                                if (hor.length == 1) hor = "0" + hor;
-                                if (min.length == 1) min = "0" + min;
-                                if (sec.length == 1) sec = "0" + sec;
-    
-                                logs += `\n${hor}:${min}:${sec} [${log.display_name}]: ${log.message}${log.deleted == 1 ? " [❌ deleted]" : ""}`;
-                            });
-    
-                            if (logs == "") logs = "There are no logs in this channel from this user!";
-    
-                            embed.addField(`Chat Log in \`${channel}\``, "```" + logs + "```", false);
-                        }
+                            if (typeof(res) === "object") {
+                                let logs = "";
+        
+                                res = res.reverse();
+        
+                                res.forEach(log => {
+                                    let date = new Date(log.timesent);
+        
+                                    let hor = date.getHours() + "";
+                                    let min = date.getMinutes() + "";
+                                    let sec = date.getSeconds() + "";
+        
+                                    if (hor.length == 1) hor = "0" + hor;
+                                    if (min.length == 1) min = "0" + min;
+                                    if (sec.length == 1) sec = "0" + sec;
+        
+                                    logs += `\n${hor}:${min}:${sec} [${log.display_name}]: ${log.message}${log.deleted == 1 ? " [❌ deleted]" : ""}`;
+                                });
+        
+                                if (logs == "") logs = "There are no logs in this channel from this user!";
+        
+                                embed.addField(`Chat Log in \`${channel}\``, "```" + logs + "```", false);
+                            }
 
-                        con.query("select channel, max(timesent) as lastactive from chatlog where userid = ? group by channel;", [userid], async (laerr, lares) => {
-                            if (!laerr && typeof(uires) === "object") {
-                                let bannedChannels = [];
+                            con.query("select streamer.display_name as channel, max(timesent) as lastactive from twitch__chat join twitch__user as streamer on twitch__chat.streamer_id = streamer.id where user_id = ? group by streamer.display_name;", [userid], async (laerr, lares) => {
+                                if (!laerr && typeof(uires) === "object") {
+                                    let bannedChannels = [];
 
-                                // grab banned channels from the database
-                                try {
-                                    let gbcRes = await con.pquery("select distinct channel from ban where userid = ? and active = true;", [userid]);
+                                    // grab banned channels from the database
+                                    try {
+                                        let gbcRes = await con.pquery("select distinct channel from ban where userid = ? and active = true;", [userid]);
 
-                                    gbcRes.forEach(bc => {
-                                        bannedChannels = [
-                                            ...bannedChannels,
-                                            bc.channel
-                                        ];
+                                        gbcRes.forEach(bc => {
+                                            bannedChannels = [
+                                                ...bannedChannels,
+                                                bc.channel
+                                            ];
+                                        });
+                                    } catch (err) {
+                                        console.error(err);
+                                    }
+
+                                    let longestChannelName = 7;
+                                    let activeChannels = "";
+
+                                    // calculate longest channel name
+                                    lares.forEach(xchnl => {
+                                        if (xchnl.channel.length > longestChannelName) longestChannelName = xchnl.channel.length;
                                     });
-                                } catch (err) {
-                                    console.error(err);
+
+                                    bannedChannels.forEach(chnl => {
+                                        if (chnl.length > longestChannelName) longestChannelName = chnl.length;
+                                    });
+
+                                    // assemble active channels
+                                    lares.forEach(xchnl => {
+                                        activeChannels += "\n" + xchnl.channel + (' '.repeat(Math.max(1, longestChannelName + ACTIVE_CHANNEL_PADDING - xchnl.channel.length))) + parseDate(parseInt(xchnl.lastactive)) + (bannedChannels.includes(xchnl.channel) || xchnl.channel === channel ? ' [❌ banned]' : '');
+
+                                        bannedChannels.splice(bannedChannels.indexOf(xchnl.channel), 1);
+                                    });
+
+                                    // assemble "also banned in" section
+                                    if (bannedChannels.length > 0) {
+                                        activeChannels += "\nAlso banned in:";
+                                    }
+
+                                    bannedChannels.forEach(chnl => {
+                                        activeChannels += "\n" + chnl + (' '.repeat(Math.max(1, longestChannelName + ACTIVE_CHANNEL_PADDING - chnl.length))) + "Never Active" + (' '.repeat(12)) + '[❌ banned]';
+                                    });
+
+                                    // add the field, if any active channels were found (which should pretty much always be true)
+
+                                    if (activeChannels !== "")
+                                        embed.addField(`Active in Channels:`, `\`\`\`\nChannel${' '.repeat(longestChannelName + ACTIVE_CHANNEL_PADDING - 7)}Last Active${activeChannels}\`\`\``);
                                 }
 
-                                let longestChannelName = 7;
-                                let activeChannels = "";
+                                embed.addField("Crossban", "Click the `❌` reaction on this message to ban this user in the channels you're mod on.", true);
+                                
+                                dchnl.send(embed).then(message => {
+                                    con.query("update twitch__ban set discord_message = ? where timebanned = ? and streamer_id = ? and user_id = ?;", [
+                                        message.id,
+                                        timebanned,
+                                        streamer_id,
+                                        userid
+                                    ]);
 
-                                // calculate longest channel name
-                                lares.forEach(xchnl => {
-                                    if (xchnl.channel.length > longestChannelName) longestChannelName = xchnl.channel.length;
-                                });
-
-                                bannedChannels.forEach(chnl => {
-                                    if (chnl.length > longestChannelName) longestChannelName = chnl.length;
-                                });
-
-                                // assemble active channels
-                                lares.forEach(xchnl => {
-                                    activeChannels += "\n" + xchnl.channel + (' '.repeat(Math.max(1, longestChannelName + ACTIVE_CHANNEL_PADDING - xchnl.channel.length))) + parseDate(parseInt(xchnl.lastactive)) + (bannedChannels.includes(xchnl.channel) || xchnl.channel === channel ? ' [❌ banned]' : '');
-
-                                    bannedChannels.splice(bannedChannels.indexOf(xchnl.channel), 1);
-                                });
-
-                                // assemble "also banned in" section
-                                if (bannedChannels.length > 0) {
-                                    activeChannels += "\nAlso banned in:";
-                                }
-
-                                bannedChannels.forEach(chnl => {
-                                    activeChannels += "\n" + chnl + (' '.repeat(Math.max(1, longestChannelName + ACTIVE_CHANNEL_PADDING - chnl.length))) + "Never Active" + (' '.repeat(12)) + '[❌ banned]';
-                                });
-
-                                // add the field, if any active channels were found (which should pretty much always be true)
-
-                                if (activeChannels !== "")
-                                    embed.addField(`Active in Channels:`, `\`\`\`\nChannel${' '.repeat(longestChannelName + ACTIVE_CHANNEL_PADDING - 7)}Last Active${activeChannels}\`\`\``);
-                            }
-
-                            embed.addField("Crossban", "Click the `❌` reaction on this message to ban this user in the channels you're mod on.", true);
-                            
-                            dchnl.send(embed).then(message => {
-                                con.query("update ban set discord_message = ? where timebanned = ? and channel = ? and userid = ?;", [
-                                    message.id,
-                                    timebanned,
-                                    channel,
-                                    userid
-                                ]);
-
-                                message.react('❌');
-                            }).catch(console.error);
+                                    message.react('❌');
+                                }).catch(console.error);
+                            });
                         });
                     });
-                });
+                }
             }
+        } else {
+            console.log(`Not notifying of ban in ${channel} due to exceeding BPM threshold (${bannedPerMinute[channel]}>5)`);
         }
-    } else {
-        console.log(`Not notifying of ban in ${channel} due to exceeding BPM threshold (${bannedPerMinute[channel]}>5)`);
-    }
+    });
 }
 
 const addTimeout = (channel, userid, username, reason, duration, timeto) => {
