@@ -4,8 +4,8 @@ const command = {
     data: {
         name: 'link'
         , description: 'Link your discord account to your TMSQD identity'
-    }
-    , execute(interaction, args) {
+    },
+    execute(interaction, args) {
         const embed = new MessageEmbed()
                 .setTitle("Welcome to Twitch Mod Squad!")
                 .setDescription(`Get access to TMS channels by authenticating your account with twitch [here](https://tmsqd.co/discord).`)
