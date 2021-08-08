@@ -10,7 +10,10 @@
   "license": "ISC",
   "dependencies": {
     "@discordjs/rest": "^0.1.0-canary.0",
+    "cookie-parser": "^1.4.5",
+    "cors": "^2.8.5",
     "discord.js": "^13.0.0-dev.t1628124537.3eb4140",
+    "express": "^4.17.1",
     "mysql": "^2.18.1",
     "nodejs": "0.0.0",
     "tmi.js": "^1.7.3",
