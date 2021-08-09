@@ -1,4 +1,11 @@
 const con = require("./database");
+const config = require("./config.json");
+
+const {ApiClient} = require("twitch");
+const {ClientCredentialsAuthProvider} = require("twitch-auth");
+
+const authProvider = new ClientCredentialsAuthProvider(config.twitch.client_id, config.twitch.client_secret);
+const api = new ApiClient({ authProvider });
 
 class IdentityService {
     resolveIdentity(identityId) {
@@ -104,4 +111,5 @@ module.exports = {
     IdentityService,
     TwitchUserService,
     DiscordUserService,
+    TwitchAPI: api,
 }
