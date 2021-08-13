@@ -67,11 +67,21 @@ class IdentityService {
 
     linkModerator(moderatorId, streamerId) {
         return new Promise((resolve, reject) => {
-            con.query("insert into identity__moderator (identity_id, modfor_id) values (?, ?);", [moderatorId, streamerId], err => {
-                if (err) {
-                    reject(err);
+            con.query("select * from identity__moderator where identity_id = ? and modfor_id = ?;", [moderatorId, streamerId], (err, res) => {
+                if (!err) {
+                    if (res.length === 0) {
+                        con.query("insert into identity__moderator (identity_id, modfor_id) values (?, ?);", [moderatorId, streamerId], err => {
+                            if (err) {
+                                reject(err);
+                            } else {
+                                resolve();
+                            }
+                        });
+                    } else {
+                        resolve();
+                    }
                 } else {
-                    resolve();
+                    reject(err);
                 }
             });
         });
