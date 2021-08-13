@@ -6,7 +6,7 @@ const TwitchAPI = API.TwitchAPI;
 module.exports = () => {
     con.query("select id, display_name from twitch__user where follower_count is null or date_add(last_updated, interval 1 day) < now();", (err, res) => {
         if (err) return;
-        console.log(res);
+        
         res.forEach(async user => {
             let followers = await TwitchAPI.helix.users.getFollows({followedUser: user.id});
 
