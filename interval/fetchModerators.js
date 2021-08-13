@@ -7,7 +7,7 @@ const IdentityService = new API.IdentityService();
 
 const https = require("https");
 
-const TwitchAPI = API.TwitchAPI;
+const twitch = require("../twitch/twitch");
 
 const FOLLOWER_REQUIREMENT = 5000;
 
@@ -50,6 +50,8 @@ module.exports = () => {
                                     try {
                                         let streamer = await TwitchUserService.resolveByName(channel.name);
                                         let streamerIdentity = await TwitchUserService.resolveIdentity(streamer.id, streamer.display_name);
+
+                                        twitch.listenOnChannel(channel.name.toLowerCase());
                                         
                                         await IdentityService.linkModerator(identity.id, streamerIdentity.id);
 
