@@ -1,8 +1,4 @@
 const fs = require("fs");
-const { REST } = require('@discordjs/rest');
-const { Routes } = require('discord-api-types/v9');
-
-const config = require("../config.json");
 
 const commandFiles = fs.readdirSync('./discord/commands').filter(file => file.endsWith('.js'));
 
@@ -16,14 +12,9 @@ for (const file of commandFiles) {
     ]
 }
 
-const rest = new REST({ version: '9' }).setToken(config.discord.token);
-
 module.exports = (async client => {
     try {
-        if (!client.application) {
-            console.error("No client application found");
-        }
-        await client.application?.commands.set(commands);
+        await client.application(client.user.id).commands.set(commands);
 
         console.log('Successfully set commands',commands);
     } catch (error) {
