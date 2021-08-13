@@ -53,6 +53,18 @@ class IdentityService {
         });
     }
 
+    unlinkModerators(moderatorId) {
+        return new Promise((resolve, reject) => {
+            con.query("delete from identity__moderator where identity_id = ?;", [moderatorId], err => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve();
+                }
+            });
+        });
+    }
+
     linkModerator(moderatorId, streamerId) {
         return new Promise((resolve, reject) => {
             con.query("insert into identity__moderator (identity_id, modfor_id) values (?, ?);", [moderatorId, streamerId], err => {
@@ -208,6 +220,25 @@ class DiscordUserService {
 
                 resolve(res);
             });
+        });
+    }
+
+    grantDiscordRole(userId, role) {
+        return new Promise(async (resolve, reject) => {
+            let guild = await global.client.discord.guilds.fetch(config.modsquad_discord);
+
+            if (guild) {
+                let guildMember = await guild.members.fetch(userId);
+                
+                if (guildMember) {
+                    if (!guildMember.roles.cache.has(role))
+                        guildMember.roles.add(role).then(() => {resolve();}).catch(reject);
+                } else {
+                    reject("User not found in the Mod squad guild");
+                }
+            } else {
+                reject("Mod squad guild not found!");
+            }
         });
     }
 }
