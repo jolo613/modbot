@@ -15,7 +15,7 @@ for (const file of commandFiles) {
 
 module.exports = (async client => {
     try {
-        console.log(await client.api.application(config.discord.application).commands.set(commands));
+        await client.api.application(config.discord.application).commands.set(commands);
 
         console.log('Successfully set commands');
     } catch (error) {
