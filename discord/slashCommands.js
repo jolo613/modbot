@@ -1,3 +1,5 @@
+const { REST } = require('@discordjs/rest');
+const { Routes } = require('discord-api-types/v9');
 const fs = require("fs");
 const config = require("../config.json");
 
@@ -13,9 +15,14 @@ for (const file of commandFiles) {
     ]
 }
 
+const rest = new REST({ version: '9' }).setToken(token);
+
 module.exports = (async client => {
     try {
-        await client.api.application(config.discord.application).commands.set(commands);
+        await rest.put(
+			Routes.applicationCommands(config.discord.client),
+			{ body: commands },
+		);
 
         console.log('Successfully set commands');
     } catch (error) {
