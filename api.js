@@ -142,7 +142,7 @@ class TwitchUserService {
                             helixUser.offlinePlaceholderUrl,
                             helixUser.description,
                             helixUser.views,
-                            helixUser.broadcasterType,
+                            (helixUser.broadcasterType === "" ? null : helixUser.broadcasterType),
                         ]);
 
                         resolve({
