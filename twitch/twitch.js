@@ -261,8 +261,8 @@ const addBan = async (channel, userid, username, reason, timebanned) => {
     }
 }
 
-const addTimeout = (channel, userid, username, reason, duration, timeto) => {
-    let streamer = TwitchUserService.resolveByName(channel.replace("#",""));
+const addTimeout = async (channel, userid, username, reason, duration, timeto) => {
+    let streamer = await TwitchUserService.resolveByName(channel.replace("#",""));
     con.query("insert into twitch__timeout (streamer_id, user_id, timeto, duration) values (?, ?, ?, ?);", [
         streamer.id,
         userid,
