@@ -22,7 +22,7 @@ module.exports = (async client => {
     try {
         await client.application?.commands.set(commands);
 
-        console.log('Successfully set commands');
+        console.log('Successfully set commands',commands);
     } catch (error) {
         console.error(error);
     }
