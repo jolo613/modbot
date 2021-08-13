@@ -20,6 +20,9 @@ const rest = new REST({ version: '9' }).setToken(config.discord.token);
 
 module.exports = (async client => {
     try {
+        if (!client.application) {
+            console.error("No client application found");
+        }
         await client.application?.commands.set(commands);
 
         console.log('Successfully set commands',commands);
