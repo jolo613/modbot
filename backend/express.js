@@ -48,6 +48,8 @@ app.use('/', (req, res, next) => {
 });
 
 app.use('/identity', routes.identity);
+app.use('/streamers', routes.streamers);
+app.use('/status', routes.status);
 
 app.get('/', (req, res) => {
     res.status(404);
