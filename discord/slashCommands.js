@@ -1,4 +1,5 @@
 const fs = require("fs");
+const config = require("../config.json");
 
 const commandFiles = fs.readdirSync('./discord/commands').filter(file => file.endsWith('.js'));
 
@@ -14,7 +15,7 @@ for (const file of commandFiles) {
 
 module.exports = (async client => {
     try {
-        console.log(await client.api.application(client.user.id).commands.set(commands));
+        console.log(await client.api.application(config.discord.application).commands.set(commands));
 
         console.log('Successfully set commands');
     } catch (error) {
