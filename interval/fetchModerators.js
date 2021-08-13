@@ -34,8 +34,6 @@ module.exports = () => {
 
                         if (data.status == 200) {
                             if (data.hasOwnProperty("channels") && data.channels.length > 0) {
-                                await IdentityService.unlinkModerators(identity.id);
-
                                 if (user.affiliation === "partner") {
                                     identity.profiles.discord.forEach(discordProfile => {
                                         DiscordUserService.grantDiscordRole(discordProfile.id, config.partnered.streamer);
