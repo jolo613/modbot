@@ -14,9 +14,9 @@ for (const file of commandFiles) {
 
 module.exports = (async client => {
     try {
-        await client.application(client.user.id).commands.set(commands);
+        console.log(await client.application(client.user.id).commands.set(commands));
 
-        console.log('Successfully set commands',commands);
+        console.log('Successfully set commands');
     } catch (error) {
         console.error(error);
     }
