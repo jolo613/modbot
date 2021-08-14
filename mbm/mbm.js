@@ -31,7 +31,7 @@ client.listeners.forEach(listener => {
     client[listener.eventType](listener.eventName, listener.listener);
 });
 
-client.login(config.mbm.client);
+client.login(config.mbm.token);
 
 // Register slash commands.
 require("./slashCommands")(client);
