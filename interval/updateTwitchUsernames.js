@@ -6,7 +6,7 @@ module.exports = () => {
         if (err) {console.error(err);return;}
 
         res.forEach(user => {
-            con.query("update twitch__username set last_seen = now() where id = ?;", [user.id], err => {
+            con.query("update twitch__username set last_seen = now() where id = ? and last_seen is null;", [user.id], err => {
                 if (err) console.error(err);
 
                 con.query("insert into twitch__username (id, display_name, first_seen) values (?, ?, ?);", [user.id, user.display_name, user.last_updated]);
