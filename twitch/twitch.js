@@ -91,7 +91,7 @@ const addBan = async (channel, userid, username, reason, timebanned) => {
     let streamer = await TwitchUserService.resolveByName(channelStripped);
     let streamer_id = streamer.id;
 
-    let speaker = await TwitchUserService.resolveById(userid);
+    let speaker = await TwitchUserService.resolveById(userid, username);
 
     if (!bannedPerMinute.hasOwnProperty(channel)) {
         bannedPerMinute[channel] = [];
