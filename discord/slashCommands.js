@@ -20,11 +20,11 @@ const rest = new REST({ version: '9' }).setToken(config.discord.token);
 module.exports = (async client => {
     try {
         await rest.put(
-			Routes.applicationCommands(config.discord.client),
+			Routes.applicationCommands(config.discord.application),
 			{ body: commands },
 		);
 
-        console.log('Successfully set commands');
+        console.log('[MB] Successfully set commands');
     } catch (error) {
         console.error(error);
     }
