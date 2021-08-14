@@ -3,6 +3,9 @@ global.client = {};
 // Load Discord Module
 require("./discord/discord");
 
+// Load Discord ModBot Mobile module
+require("./mbm/mbm");
+
 // Load Twitch Module
 require("./twitch/twitch");
 
