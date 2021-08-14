@@ -11,8 +11,8 @@ const config = require("../config.json");
 
 const grabFiles = path => fs.readdirSync(path).filter(file => file.endsWith('.js'));
 
-const commandFiles = grabFiles('./discord/commands');
-const listenerFiles = grabFiles('./discord/listeners');
+const commandFiles = grabFiles('./mbm/commands');
+const listenerFiles = grabFiles('./mbm/listeners');
 
 // process command files
 for (const file of commandFiles) {
