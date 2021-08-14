@@ -1,11 +1,8 @@
 const fs = require('fs');
-const uuid = require("uuid");
 const Discord = require('discord.js');
 
 const client = new Discord.Client({ intents: [Discord.Intents.FLAGS.GUILDS, Discord.Intents.FLAGS.GUILD_MESSAGES] });
 global.client.discord = client;
-
-const con = require("../database");
 
 client.commands = new Discord.Collection();
 client.listeners = new Discord.Collection();
