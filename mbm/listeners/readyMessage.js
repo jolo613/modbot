@@ -1,4 +1,4 @@
-const client = global.client.discord;
+const client = global.client.mbm;
 
 const listener = {
     name: 'readyMessage',
