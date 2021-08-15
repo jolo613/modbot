@@ -46,8 +46,8 @@ const command = {
         ]
     },
     execute(interaction) {
-        if (interaction.options.getInteger("discord-id")) {
-            IdentityService.resolveByDiscordId(interaction.options.getInteger("discord-id")).then(identity => {
+        if (interaction.options.getString("discord-id")) {
+            IdentityService.resolveByDiscordId(interaction.options.getString("discord-id")).then(identity => {
                 console.log(identity);
                 interaction.reply({content: identity.toString(), ephemeral: true});
             }).catch(err => {
