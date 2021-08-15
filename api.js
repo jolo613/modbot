@@ -111,7 +111,7 @@ class IdentityService {
                 if (err) {console.error(err);return;}
 
                 if (res.length > 0) {
-                    this.resolveIdentity(res[0].identityId).then(resolve).catch(reject);
+                    this.resolveIdentity(res[0].identity_id).then(resolve).catch(reject);
                 } else {
                     reject("User was not found with that ID");
                 }
