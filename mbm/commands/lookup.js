@@ -1,4 +1,6 @@
 const {MessageEmbed} = require("discord.js");
+const API = require("../../api");
+const IdentityService = new API.IdentityService();
 
 const command = {
     data: {
@@ -45,11 +47,25 @@ const command = {
     },
     execute(interaction) {
         if (interaction.options.getInteger("discord-id")) {
-            console.log(interaction.options.getInteger("discord-id"));
+            IdentityService.resolveByDiscordId(interaction.options.getInteger("discord-id")).then(identity => {
+                console.log(identity);
+                interaction.reply({content: identity.toString(), ephemeral: true});
+            }).catch(err => {
+                const embed = new MessageEmbed()
+                    .setTitle("Error!")
+                    .setDescription(`Error: ${err}`)
+                    .setColor(0xed3734);
+    
+                interaction.reply({content: ' ', embeds: [embed], ephemeral: true});
+            });
         } else {
-            console.log("/shrug");
+            const embed = new MessageEmbed()
+                .setTitle("Invalid Usage!")
+                .setDescription(`You must provide at least one parameter for us to search properly.`)
+                .setColor(0xed3734);
+
+            interaction.reply({content: ' ', embeds: [embed], ephemeral: true});
         }
-        interaction.reply("Hi");
     }
 };
 

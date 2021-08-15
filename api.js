@@ -104,6 +104,34 @@ class IdentityService {
             });
         });
     }
+
+    resolveByDiscordId(id) {
+        return new Promise((resolve, reject) => {
+            con.query("select identity_id from discord__user where id = ?;", [id], (err, res) => {
+                if (err) {console.error(err);return;}
+
+                if (res.length > 0) {
+                    this.resolveIdentity(res[0].identityId).then(resolve).catch(reject);
+                } else {
+                    reject("User was not found with that ID");
+                }
+            });
+        });
+    }
+
+    resolveByTwitchId(id) {
+        return new Promise((resolve, reject) => {
+            con.query("select identity_id from twitch__user where id = ?;", [id], (err, res) => {
+                if (err) {console.error(err);return;}
+
+                if (res.length > 0) {
+                    this.resolveIdentity(res[0].identityId).then(resolve).catch(reject);
+                } else {
+                    reject("User was not found with that ID");
+                }
+            });
+        });
+    }
 }
 
 class TwitchUserService {
