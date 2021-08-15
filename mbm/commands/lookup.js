@@ -43,15 +43,13 @@ const command = {
             },
         ]
     },
-    execute(interaction, args) {
-        const embed = new MessageEmbed()
-                .setTitle("Welcome to Twitch Mod Squad!")
-                .setDescription(`Get access to TMS channels by authenticating your account with twitch [here](https://tmsqd.co/discord).`)
-                .setColor(0x772ce8);
-
-        console.log(args);
-
-        interaction.reply({content: ' ', embeds: [embed], ephemeral: true});
+    execute(interaction) {
+        if (interaction.options.getInteger("discord-id")) {
+            console.log(interaction.options.getInteger("discord-id"));
+        } else {
+            console.log("/shrug");
+        }
+        interaction.reply("Hi");
     }
 };
 
