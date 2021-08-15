@@ -10,13 +10,13 @@ const command = {
             {
                 name: "discord-id",
                 description: "Searches based on a Discord ID",
-                type: 4,
+                type: 3,
                 required: false,
             },
             {
                 name: "twitch-id",
                 description: "Searches based on a Twitch ID",
-                type: 4,
+                type: 3,
                 required: false,
             },
             {
