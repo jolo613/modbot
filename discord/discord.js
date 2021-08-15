@@ -28,6 +28,7 @@ for (const file of listenerFiles) {
 
 // Register listeners.
 client.listeners.forEach(listener => {
+    console.log("registered ", listener);
     client[listener.eventType](listener.eventName, listener.listener);
 });
 
