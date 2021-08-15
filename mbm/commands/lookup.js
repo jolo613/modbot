@@ -19,7 +19,7 @@ const command = {
             },
             {
                 name: "discord-name",
-                description: "Searches based on a Discord Name, can include discriminator (ie. Twijn#8888) or just a name (ie. Twijn)",
+                description: "Searches based on a Discord Name, can include discriminator(ie.Twijn#8888) or just a name(ie.Twijn)",
                 type: 3,
                 required: false,
             },
