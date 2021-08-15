@@ -24,6 +24,10 @@ module.exports = (async client => {
 			{ body: commands },
 		));
 
+        console.log(await rest.get(
+            Routes.applicationCommands(config.discord.application)
+        ));
+
         console.log('[MB] Successfully set commands');
     } catch (error) {
         console.error(error);
