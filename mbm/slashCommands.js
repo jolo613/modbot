@@ -15,7 +15,7 @@ for (const file of commandFiles) {
     ]
 }
 
-const rest = new REST({ version: '9' }).setToken(config.discord.token);
+const rest = new REST({ version: '9' }).setToken(config.mbm.token);
 
 module.exports = (async client => {
     try {
