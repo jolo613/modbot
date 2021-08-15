@@ -19,7 +19,6 @@ const rest = new REST({ version: '9' }).setToken(config.mbm.token);
 
 module.exports = (async client => {
     try {
-        console.log(commands);
         await rest.put(
 			Routes.applicationCommands(config.mbm.application),
 			{ body: commands },
