@@ -3,7 +3,7 @@ const {MessageEmbed} = require("discord.js");
 const command = {
     data: {
         name: "lookup",
-        description: "Run a lookup on the entire TMS database following the requested parameters. Passing several parameters will act as an OR request.",
+        description: "Run a lookup on the entire TMS database following the requested parameters.",
         options: [
             {
                 name: "discord-id",
