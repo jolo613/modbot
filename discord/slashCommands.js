@@ -19,8 +19,6 @@ const rest = new REST({ version: '9' }).setToken(config.discord.token);
 
 module.exports = (async client => {
     try {
-
-        console.log(commands);
         await rest.put(
 			Routes.applicationCommands(config.discord.application),
 			{ body: commands },
