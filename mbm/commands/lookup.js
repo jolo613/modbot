@@ -8,37 +8,37 @@ const command = {
             {
                 name: "discord-id",
                 description: "Searches based on a Discord ID",
-                type: "INTEGER",
+                type: 4,
                 required: false,
             },
             {
                 name: "twitch-id",
                 description: "Searches based on a Twitch ID",
-                type: "INTEGER",
+                type: 4,
                 required: false,
             },
             {
                 name: "discord-name",
                 description: "Searches based on a Discord Name, can include discriminator (ie. Twijn#8888) or just a name (ie. Twijn)",
-                type: "STRING",
+                type: 3,
                 required: false,
             },
             {
                 name: "twitch-name",
                 description: "Searches based on a Twitch Name",
-                type: "STRING",
+                type: 3,
                 required: false,
             },
             {
                 name: "modfor-twitch-id",
                 description: "Searches based on who moderates for a specific Twitch ID",
-                type: "STRING",
+                type: 3,
                 required: false,
             },
             {
                 name: "modfor-twitch-name",
                 description: "Searches based on who moderates for a specific Twitch Name",
-                type: "STRING",
+                type: 3,
                 required: false,
             },
         ]
