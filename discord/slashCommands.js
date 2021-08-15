@@ -19,14 +19,14 @@ const rest = new REST({ version: '9' }).setToken(config.discord.token);
 
 module.exports = (async client => {
     try {
-        console.log(await rest.put(
-			Routes.applicationCommands(config.discord.application),
-			{ body: commands },
-		));
+        // await rest.put(
+		// 	Routes.applicationCommands(config.discord.application),
+		// 	{ body: commands },
+		// );
 
-        console.log(await rest.get(
-            Routes.applicationCommands(config.discord.application)
-        ));
+        await rest.delete(
+            Routes.applicationCommand(config.discord.application, 875833711860523108)
+        );
 
         console.log('[MB] Successfully set commands');
     } catch (error) {
