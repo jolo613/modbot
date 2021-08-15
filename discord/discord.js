@@ -26,13 +26,10 @@ for (const file of listenerFiles) {
     client.listeners.set(listener.name, listener);
 }
 
-client.on("interactionCreate", interaction => {
-    console.log(interaction);
-})
-
 // Register listeners.
 client.listeners.forEach(listener => {
-    console.log("registered ", listener);
+    console.log(listener.eventType, listener.eventName);
+    console.log(client);
     client[listener.eventType](listener.eventName, listener.listener);
 });
 
