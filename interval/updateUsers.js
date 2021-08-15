@@ -14,6 +14,8 @@ module.exports = () => {
 
             let helixUser = await TwitchAPI.helix.users.getUserById(user.id);
 
+            if (helixUser === null) {console.log(user.id + " was null");return;}
+
             if (helixUser.displayName.toLowerCase() !== user.display_name.toLowerCase()) {
                 con.query("update twitch__username set last_seen = now() where id = ? and display_name = ?;", [user.id, user.display_name]);
                 con.query("insert into twitch__username (id, display_name) values (?, ?);", [user.id, helixUser.displayName]);
