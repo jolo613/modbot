@@ -1,5 +1,4 @@
 const con = require("../database");
-const API = require("../api");
 
 module.exports = () => {
     con.query("select twitch__user.id, twitch__user.display_name, twitch__user.last_updated from twitch__user left join twitch__username on twitch__username.id = twitch__user.id where twitch__username.id is null;", (err, res) => {

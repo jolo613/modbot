@@ -1,7 +1,5 @@
 const con = require("../database");
-const API = require("../api");
-
-const TwitchAPI = API.TwitchAPI;
+const {TwitchAPI} = require("../api");
 
 module.exports = () => {
     con.query("select id, display_name from twitch__user where follower_count is null or date_add(last_updated, interval 1 day) < now();", (err, res) => {
@@ -14,7 +12,10 @@ module.exports = () => {
 
             let helixUser = await TwitchAPI.helix.users.getUserById(user.id);
 
-            if (helixUser === null) {console.log(user.id + " was null");return;}
+            if (helixUser === null) {
+                con.query("update twitch__user set last_updated = date_add(now(), interval 2 day) where id = ?;", [user.id]);
+                return;
+            }
 
             if (helixUser.displayName.toLowerCase() !== user.display_name.toLowerCase()) {
                 con.query("update twitch__username set last_seen = now() where id = ? and display_name = ?;", [user.id, user.display_name]);

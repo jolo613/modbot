@@ -1,6 +1,5 @@
 const {Router} = require("express");
-const API = require("../../api");
-const TwitchUserService = new API.TwitchUserService();
+const {TwitchUserService} = require("../../api");
 
 const twitch = require("../../twitch/twitch");
 

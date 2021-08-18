@@ -1,8 +1,6 @@
 const {Router} = require("express");
 const con = require("../../database");
-const API = require("../../api");
-
-const IdentityService = new API.IdentityService();
+const {IdentityService} = require("../../api");
  
 const router = Router();
 

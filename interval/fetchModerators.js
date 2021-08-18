@@ -1,15 +1,10 @@
 const con = require("../database");
-const API = require("../api");
+const {DiscordUserService, TwitchUserService, IdentityService} = require("../api");
 const config = require("../config.json");
-const DiscordUserService = new API.DiscordUserService();
-const TwitchUserService = new API.TwitchUserService();
-const IdentityService = new API.IdentityService();
 
 const https = require("https");
 
 const twitch = require("../twitch/twitch");
-
-const FOLLOWER_REQUIREMENT = 5000;
 
 module.exports = () => {
     con.query("select id, display_name, affiliation, identity_id from twitch__user where identity_id is not null and email is not null and (moderator_checked is null or date_add(moderator_checked, interval 7 day) < now());", (err, res) => {
@@ -53,7 +48,6 @@ module.exports = () => {
                                         
                                         await IdentityService.linkModerator(identity.id, streamerIdentity.id);
 
-
                                         if (streamer.affiliation === "partner") {
                                             identity.profiles.discord.forEach(discordProfile => {
                                                 DiscordUserService.grantDiscordRole(discordProfile.id, config.partnered.moderator);
@@ -70,7 +64,11 @@ module.exports = () => {
                                     }
                                 });
 
-                                con.query("update twitch__user set moderator_checked = now() where id = ?;",[user.id]);
+                                
+
+                                con.query("update twitch__user set moderator_checked = now() where id = ?;",[user.id], async () => {
+                                    global.websocket.emit({identityId: identity.id}, {type: "streamer-list-updated", data: await IdentityService.getStreamers(identity.id)});
+                                });
                             }
                         }
                     } catch (e) {

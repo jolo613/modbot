@@ -1,5 +1,4 @@
 const con = require("../database");
-const API = require("../api");
 
 module.exports = () => {
     con.query("select discord__user.id, discord__user.name, discord__user.discriminator from discord__user left join discord__username on discord__user.id = discord__username.id and discord__user.name = discord__username.name and discord__user.discriminator = discord__username.discriminator where discord__username.id is null;", (err, res) => {

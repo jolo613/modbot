@@ -5,8 +5,7 @@ const ACTIVE_CHANNEL_PADDING = 3;
 
 const config = require("../config.json");
 
-const API = require("../api");
-const TwitchUserService = new API.TwitchUserService();
+const {TwitchUserService} = require("../api");
 
 const tmi = require('tmi.js');
 const con = require("../database");
@@ -265,6 +264,8 @@ const addBan = async (channel, userid, username, reason, timebanned) => {
 
 const addTimeout = async (channel, userid, username, reason, duration, timeto) => {
     let streamer = await TwitchUserService.resolveByName(channel.replace("#",""));
+    let user = await TwitchUserService.resolveById(userid, username);
+
     con.query("insert into twitch__timeout (streamer_id, user_id, timeto, duration) values (?, ?, ?, ?);", [
         streamer.id,
         userid,
