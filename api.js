@@ -7,10 +7,26 @@ const {ClientCredentialsAuthProvider} = require("twitch-auth");
 const authProvider = new ClientCredentialsAuthProvider(config.twitch.client_id, config.twitch.client_secret);
 const api = new ApiClient({ authProvider });
 
-class IdentityService {
-    resolveIdentity(identityId) {
+class SessionService {
+    resolveSession(sessionId) {
         return new Promise((resolve, reject) => {
-            let identity = {avatar_url: "/assets/images/bop.png"};
+            con.query("select id, identity_id, created from session where id = ?;", [sessionId], (err, res) => {
+                if (err) {reject(err);return;}
+
+                if (res.length > 0) {
+                    resolve(res[0]);
+                } else {
+                    reject("Session not found");
+                }
+            });
+        })
+    }
+}
+
+class IdentityService {
+    resolveIdentity(identityId, includeStreamers = true) {
+        return new Promise((resolve, reject) => {
+            let identity = {avatar_url: "https://p.tmsqd.co/assets/images/bop.png"};
             con.query("select id, name from identity where id = ?;", [identityId], (err, res) => {
                 if (err) {reject(err);return;}
 
@@ -43,8 +59,16 @@ class IdentityService {
                                 });
                             }
 
-                            resolve(identity);
-                        })
+                            if (includeStreamers) {
+                                this.getStreamers(identity.id).then(streamers => {
+                                    identity.streamers = streamers;
+
+                                    resolve(identity);
+                                }).catch(reject);
+                            } else {
+                                resolve(identity);
+                            }
+                        }).catch(reject);
                     }).catch(reject);
                 } else {
                     reject("Identity not found");
@@ -96,7 +120,7 @@ class IdentityService {
                 for (var i = 0; i < res.length; i++) {
                     result = [
                         ...result,
-                        await this.resolveIdentity(res[i].id),
+                        await this.resolveIdentity(res[i].id, false),
                     ];
                 }
 
@@ -248,6 +272,28 @@ class TwitchUserService {
         });
     }
 
+    getActiveChannels(twitchId) {
+        return new Promise((resolve, reject) => {
+            con.query("SELECT streamer_id, twitch__user.identity_id, max(timesent) as last_active FROM `twitch__chat` join twitch__user on streamer_id = twitch__user.id WHERE user_id = ? group by streamer_id;", [twitchId], async (err, res) => {
+                if (err) {reject(err);return;}
+
+                let results = [];
+
+                for (let i = 0; i < res.length; i++) {
+                    let identity = await (new IdentityService()).resolveIdentity(res[i].identity_id);
+                    identity.last_active = res[i].last_active;
+
+                    results = [
+                        ...results,
+                        identity
+                    ];
+                }
+
+                resolve(results);
+            });
+        })
+    }
+
 }
 
 class DiscordUserService {
@@ -282,8 +328,9 @@ class DiscordUserService {
 }
 
 module.exports = {
-    IdentityService,
-    TwitchUserService,
-    DiscordUserService,
+    SessionService: new SessionService(),
+    IdentityService: new IdentityService(),
+    TwitchUserService: new TwitchUserService(),
+    DiscordUserService: new DiscordUserService(),
     TwitchAPI: api,
-}
+};
