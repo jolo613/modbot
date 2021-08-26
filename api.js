@@ -307,7 +307,34 @@ class DiscordUserService {
         });
     }
 
-    grantDiscordRole(userId, role) {
+    resolveIdentity(discordId, discordName) {
+        return new Promise(async (resolve, reject) => {
+            con.query("select identity_id from discord__user where id = ?;", [discordId], (err, res) => {
+                if (err) {reject(err);return;}
+
+                let ids = new IdentityService();
+                if (res.length > 0) {
+                    ids.resolveIdentity(res[0].identity_id).then(resolve, reject);
+                } else {
+                    con.query("insert into identity (name) values (?);", [discordName], (err2, res2) => {
+                        if (err2) {reject(err2);return;}
+
+                        con.query("update discord__user set identity_id = ? where id = ?;", [res2.insertId, discordId], err3 => {
+                            if (err3) {reject(err3);return;}
+
+                            ids.resolveIdentity(res2.insertId).then(resolve, reject);
+                        });
+                    });
+                }
+            });
+        });
+    }
+
+    revokeDiscordRole(userId, role) {
+        return this.revokeDiscordRoles(userId, [role]);
+    }
+
+    revokeDiscordRoles(userId, roles) {
         return new Promise(async (resolve, reject) => {
             let guild = await global.client.discord.guilds.fetch(config.modsquad_discord);
 
@@ -315,8 +342,51 @@ class DiscordUserService {
                 let guildMember = await guild.members.fetch(userId);
                 
                 if (guildMember) {
-                    if (!guildMember.roles.cache.has(role))
-                        guildMember.roles.add(role).then(() => {resolve();}).catch(reject);
+                    let realRoles = [];
+
+                    roles.forEach(role => {
+                        if (guildMember.roles.cache.has(role)) {
+                            realRoles = [
+                                ...realRoles,
+                                role
+                            ];
+                        }
+                    });
+                    console.log("removing roles ", realRoles);
+                    guildMember.roles.remove(realRoles).then(() => {resolve();}).catch(reject);
+                } else {
+                    reject("User not found in the Mod squad guild");
+                }
+            } else {
+                reject("Mod squad guild not found!");
+            }
+        });
+    }
+
+    grantDiscordRole(userId, role) {
+        return this.grantDiscordRoles(userId, [role]);
+    }
+
+    grantDiscordRoles(userId, roles) {
+        return new Promise(async (resolve, reject) => {
+            let guild = await global.client.discord.guilds.fetch(config.modsquad_discord);
+
+            if (guild) {
+                let guildMember = await guild.members.fetch(userId);
+                
+                if (guildMember) {
+                    let realRoles = [];
+
+                    roles.forEach(role => {
+                        if (!guildMember.roles.cache.has(role)) {
+                            realRoles = [
+                                ...realRoles,
+                                role
+                            ];
+                        }
+                    });
+                    console.log("adding roles ", realRoles);
+                    guildMember.roles.add(realRoles).then(() => {resolve();}).catch(reject);
                 } else {
                     reject("User not found in the Mod squad guild");
                 }
