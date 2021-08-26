@@ -17,10 +17,8 @@ global.websocket = {
     wss: wss,
     emit: (query, data) => {
         if (query.hasOwnProperty("identityId")) {
-            console.log("emitting", data);
             wss.clients.forEach(ws => {
                 if (ws.identity?.id == query.identityId) {
-                    console.log("emitting...");
                     ws.json(data);
                 }
             })
