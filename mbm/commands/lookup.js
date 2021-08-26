@@ -1,37 +1,14 @@
 const {MessageEmbed} = require("discord.js");
 const {IdentityService} = require("../../api");
 
-const resolveLookup = (interaction, identity) => {
-    let embedList = [];
+const resolveIdentity = (interaction, identity) => {
 
-    let authorizedStreamers = "";
+}
 
-    identity.streamers.forEach(streamer => {
-        authorizedStreamers += "\n" + streamer.name;
-    });
-
-    embedList = [
-        ...embedList,
-        new MessageEmbed()
-                .setTitle(identity.name)
-                .setDescription(`\`\`\`\n${identity.profiles.twitch.length} twitch profile${identity.profiles.twitch.length === 1 ? "" : "s"}\n${identity.profiles.discord.length} discord profile${identity.profiles.discord.length === 1 ? "" : "s"}\`\`\``)
-                .setThumbnail(identity.avatar_url)
-                .setColor(0x157ee8)
-                .addField("Authorized Streamers", "```" + authorizedStreamers + "```")
-    ];
-
-    identity.profiles.twitch.forEach(twitchAcc => {
-        embedList = [
-            ...embedList,
-            new MessageEmbed()
-                    .setTitle("Twitch: " + twitchAcc.display_name)
-                    .setDescription(twitchAcc.description)
-                    .setThumbnail(twitchAcc.profile_image_url)
-                    .setColor(0x157ee8)
-        ]
-    });
-
-    interaction.reply({content: ' ', embeds: embedList, ephemeral: true});
+const resolveLookup = (interaction, identities) => {
+    if (identities.length === 1) {
+        resolveIdentity(interaction, identities[0]);
+    }
 }
 
 const command = {
@@ -80,7 +57,7 @@ const command = {
     execute(interaction) {
         if (interaction.options.getString("discord-id")) {
             IdentityService.resolveByDiscordId(interaction.options.getString("discord-id")).then(identity => {
-                resolveLookup(interaction, identity);
+                resolveIdentity(interaction, identity);
             }).catch(err => {
                 const embed = new MessageEmbed()
                     .setTitle("Error!")
@@ -90,10 +67,22 @@ const command = {
                 interaction.reply({content: ' ', embeds: [embed], ephemeral: true});
             });
         } else if (interaction.options.getString("discord-name")) {
+            let str = interaction.options.getString("discord-name").split("#");
+            
+            if (str.length === 1) {
 
+            } else if (str.length === 2) {
+            } else {
+                const embed = new MessageEmbed()
+                    .setTitle("Improper format!")
+                    .setDescription(`Improper discord name format, should either contain only a name\`Twijn\`, or a name and discriminator, \`Twijn#8888\`. Make sure you don't have any outlying \`#\` characters.`)
+                    .setColor(0xed3734);
+    
+                interaction.reply({content: ' ', embeds: [embed], ephemeral: true});
+            }
         } else if (interaction.options.getString("twitch-id")) {
             IdentityService.resolveByTwitchId(interaction.options.getString("twitch-id")).then(identity => {
-                resolveLookup(interaction, identity);
+                resolveIdentity(interaction, identity);
             }).catch(err => {
                 const embed = new MessageEmbed()
                     .setTitle("Error!")
@@ -102,6 +91,8 @@ const command = {
     
                 interaction.reply({content: ' ', embeds: [embed], ephemeral: true});
             });
+        } else if (interaction.options.getString("twitch-name")) {
+
         } else {
             const embed = new MessageEmbed()
                 .setTitle("Invalid Usage!")
