@@ -9,8 +9,119 @@ const { MessageEmbed } = require("discord.js");
 
 const FOLLOWER_REQUIREMENT = 5000;
 
+const sendUpdate = identity => {
+    const embed = new MessageEmbed()
+            .setTitle("Identity Updated")
+            .setURL("https://p.tmsqd.co/#/identity/" + identity.id)
+            .setThumbnail(identity.avatar_url)
+            .setDescription("Twitch Mod Squad Identity `#" + identity.id + " - " + identity.name + `\` was updated.\n${identity.profiles.twitch.length} twitch account${identity.profiles.twitch.length === 1 ? "" : "s"} and ${identity.profiles.discord.length} discord account${identity.profiles.discord.length === 1 ? "" : "s"} are linked.`);
+
+    let twitchProfiles = "";
+
+    identity.profiles.twitch.forEach(tProfile => {
+        twitchProfiles += `\n${tProfile.display_name}${tProfile.affiliation === "partner" ? " ✓" : ""}`;
+    });
+
+    if (twitchProfiles === "") twitchProfiles = "\nNo Twitch profiles are linked.";
+
+    let discordProfiles = "";
+
+    identity.profiles.discord.forEach(dProfile => {
+        discordProfiles += `\n${dProfile.name}#${dProfile.discriminator}`;
+    });
+
+    if (discordProfiles === "") discordProfiles = "\nNo Discord profiles are linked.";
+
+    let roles = "The following roles were added:";
+
+    getRoles(identity).forEach(role => {
+        roles += "\n• <@&" + role + ">";
+    });
+
+    let streamers = "";
+    let other = "";
+
+    identity.streamers.forEach(streamer => {
+        streamer.profiles.twitch.forEach(strTwitch => {
+            let string = `\n${strTwitch.display_name} ${strTwitch.affiliation === "partner" ? " ✓" : ""}`;
+
+            if (streamer.active) {
+                streamers += string;
+            } else {
+                other += string;
+            }
+        })
+    });
+
+    embed.addField("Twitch Profiles", "```" + twitchProfiles + "```", true);
+    embed.addField("Discord Profiles", "```" + discordProfiles + "```", true);
+
+    embed.addField("Roles", roles, false);
+
+    if (streamers !== "") {
+        embed.addField("Authorized Channels", "```" + streamers + "```");
+    }
+    if (other !== "") {
+        embed.addField("Inactive Channels", "These channels did not meet the " + FOLLOWER_REQUIREMENT + " follower requirement.\n```" + other + "```")
+    }
+
+    let channel = global.client.discord.guilds.resolve(config.modsquad_discord).channels?.resolve(config.notification_channel);
+
+    if (channel === undefined || channel === null) {
+        console.error("Could not retrieve TMS notification channel");
+    } else {
+        channel.send({content: " ", embeds: [embed]})
+    }
+}
+
+const getRoles = identity => {
+    let roles = [];
+
+    const addRole = role => {
+        if (!roles.includes(role)) {
+            roles = [
+                ...roles,
+                role
+            ];
+        }
+    }
+    
+    identity.profiles.twitch.forEach(twitch => {
+        if (twitch.affiliation === "partner") {
+            addRole(config.partnered.streamer);
+        }
+        if (twitch.affiliation === "affiliate" && twitch.follower_count >= FOLLOWER_REQUIREMENT) {
+            addRole(config.affiliate.streamer);
+        }
+    });
+
+    identity.streamers.forEach(streamer => {
+        streamer.profiles.twitch.forEach(twitch => {
+            if (twitch.affiliation === "partner") {
+                addRole(config.partnered.moderator);
+            }
+            if (twitch.affiliation === "affiliate" && twitch.follower_count >= FOLLOWER_REQUIREMENT) {
+                addRole(config.affiliate.moderator);
+            }
+        });
+    })
+
+    return roles;
+}
+
+const updateRoles = identity => {
+    let roles = getRoles(identity);
+    console.log(roles);
+                    
+    if (roles.length > 0) {
+        identity.profiles.discord.forEach(disc => {
+            DiscordUserService.grantDiscordRoles(disc.id, roles);
+        });
+    }
+}
+
 module.exports = () => {
-    con.query("select id, display_name, affiliation, identity_id, moderator_checked from twitch__user where identity_id is not null and email is not null and (moderator_checked is null or date_add(moderator_checked, interval 7 day) < now());", (err, res) => {
+    con.query("select id, display_name, affiliation, identity_id, moderator_checked from twitch__user where identity_id is not null and email is not null and (moderator_checked is null or date_add(moderator_checked, interval 14 day) < now()) limit 2;", (err, res) => {
         if (err) return;
         
         res.forEach(async user => {
@@ -30,50 +141,22 @@ module.exports = () => {
                     try {
                         let data = JSON.parse(str.trim());
 
+                        console.log(data);
+
                         if (data.status == 200) {
                             if (data.hasOwnProperty("channels") && data.channels.length > 0) {
-                                let authstr = [];
-                                let roles = [];
-                                let notadded = [];
-
-                                const addRole = role => {
-                                    if (!roles.includes(role)) {
-                                        roles = [
-                                            ...roles,
-                                            role
-                                        ]
-                                    }
-                                }
-
-                                if (user.affiliation === "partner") {
-                                    addRole(config.partnered.streamer);
-                                } else if (user.affiliation === "affiliate") {
-                                    addRole(config.affiliate.streamer);
-                                }
 
                                 for (let i = 0; i < data.channels.length; i++) {
                                     let channel = data.channels[i];
-
-                                    if (channel.followers < FOLLOWER_REQUIREMENT) {
-                                        notadded = [...notadded, channel];
-                                        continue;
-                                    }
 
                                     try {
                                         let streamer = await TwitchUserService.resolveByName(channel.name);
                                         let streamerIdentity = await TwitchUserService.resolveIdentity(streamer.id, streamer.display_name);
 
-                                        twitch.listenOnChannel(channel.name.toLowerCase());
+                                        if (channel.followers >= FOLLOWER_REQUIREMENT)
+                                            twitch.listenOnChannel(channel.name.toLowerCase());
                                         
-                                        await IdentityService.linkModerator(identity.id, streamerIdentity.id);
-
-                                        if (streamer.affiliation === "partner") {
-                                            addRole(config.partnered.moderator);
-                                        } else if (streamer.affiliation === "affiliate") {
-                                            addRole(config.affiliate.moderator);
-                                        }
-
-                                        authstr = [...authstr, streamer];
+                                        await IdentityService.linkModerator(identity.id, streamerIdentity.id, channel.followers >= FOLLOWER_REQUIREMENT);
                                     } catch (e) {
                                         if (e !== "User not found") {
                                             console.error(e);
@@ -83,66 +166,20 @@ module.exports = () => {
 
                                 con.query("update twitch__user set moderator_checked = now() where id = ?;",[user.id], async () => {
                                     global.websocket.emit({identityId: identity.id}, {type: "streamer-list-updated", data: await IdentityService.getStreamers(identity.id)});
+                                    identity = await IdentityService.resolveIdentity(identity.id, undefined, true);
 
-                                    if (roles.length > 0) {
-                                        identity.profiles.discord.forEach(discordProfile => {
-                                            DiscordUserService.revokeDiscordRole(discordProfile.id, config.notlinked_role);
-                                        });
-                                    }
-
-                                    identity.profiles.discord.forEach(discordProfile => {
-                                        DiscordUserService.grantDiscordRoles(discordProfile.id, roles);
-                                    });
+                                    updateRoles(identity);
 
                                     if (user.moderator_checked === null) {
-                                        identity.profiles.discord.forEach(discordProfile => {
-                                            // format roles
-                                            let roleTxt = "";
-
-                                            roles.forEach(role => {
-                                                roleTxt += "\n• <@&"+role+">";
-                                            });
-
-                                            if (roles.length === 0) {
-                                                roleTxt = "\n• No roles were assigned.";
-                                            }
-
-                                            // format authorized streamers
-                                            let authStreamers = "";
-
-                                            authstr.forEach(streamer => {
-                                                authStreamers += "\n" + streamer.display_name + (streamer.affiliation === "partner" ? " ✓" : "");
-                                            })
-
-                                            // format not added streamers
-                                            let naStr = "";
-
-                                            notadded.forEach(channel => {
-                                                naStr += "\n" + channel.name + " " + channel.followers;
-                                            });
-    
-                                            const embed = new MessageEmbed()
-                                                    .setTitle("Account Linked to TMS!")
-                                                    .setThumbnail(identity.avatar_url)
-                                                    .setDescription(`Twitch User \`${user.display_name}\` was added to discord account <@${discordProfile.id}>!\nThey were granted the following roles:${roleTxt}`)
-                                                    .addField("Authorized Channels", "```" + authStreamers + "```");
-
-                                            if (notadded.length > 0) {
-                                                embed.addField("Other Channels", "These channels did not meet the requirement of " + FOLLOWER_REQUIREMENT + " followers:```" + naStr + "```");
-                                            }
-
-                                            let guild = global.client.discord.guilds.resolve(config.modsquad_discord);
-                                            let channel = guild.channels.resolve(config.notification_channel);
-                                            channel.send({content: ' ', embeds: [embed]});
-
-                                            con.query("update discord__user set streamers_updated = true where identity_id = ?;", [identity.id]);
-                                        });
-                                    } else {
-                                        console.log("Not notifying discord of changes.");
+                                        sendUpdate(identity);
                                     }
                                 });
+                            } else {
+                                con.query("update twitch__user set moderator_checked = now() where id = ?;", [user.id], () => {
+                                    global.websocket.emit({identityId: identity.id}, {type: "no-action-notification", data: {title: "Moderation Check Update", description: "Twitch user " + data.user + " was linked, but isn't listed as a moderator anywhere!"}});
+                                });
                             }
-                        }
+                        } 
                     } catch (e) {
                         console.error(e);
                     }
@@ -156,65 +193,12 @@ module.exports = () => {
             if (err) {console.error(err);return;}
     
             res.forEach(async user => {
-                const identity = await IdentityService.resolveIdentity(user.identity_id);
                 if (user.identity_id !== null) {
-                    con.query("select tu.id, tu.display_name, tu.follower_count, tu.affiliation from identity__moderator as im join twitch__user as tu on tu.identity_id = im.modfor_id where im.identity_id = ?;", [user.identity_id], (err, res) => {
-                        if (err) {console.error(err);return;}
-                        let authstr = [];
-                        let roles = [];
-    
-                        const addRole = role => {
-                            if (!roles.includes(role)) {
-                                roles = [
-                                    ...roles,
-                                    role
-                                ]
-                            }
-                        }
-    
-                        res.forEach(modfor => {
-                            if (modfor.affiliation === "partner") {
-                                addRole(config.partnered.moderator);
-                            } else if (modfor.affiliation === "affiliate") {
-                                addRole(config.affiliate.moderator);
-                            }
-                            
-                            authstr = [...authstr, modfor];
-                        });
-    
-                        DiscordUserService.grantDiscordRoles(user.id, roles);
-    
-                        if (roles.length > 0) {
-                            DiscordUserService.revokeDiscordRole(user.id, config.notlinked_role);
-                        }
-    
-                        let roleTxt = "";
-    
-                        roles.forEach(role => {
-                            roleTxt += "\n• <@&"+role+">";
-                        });
-    
-                        if (roles.length === 0) {
-                            roleTxt = "\n• No roles were assigned.";
-                        }
-    
-                        // format authorized streamers
-                        let authStreamers = "";
-    
-                        authstr.forEach(streamer => {
-                            authStreamers += "\n" + streamer.display_name + (streamer.affiliation === "partner" ? " ✓" : "");
-                        })
-    
-                        const embed = new MessageEmbed()
-                                .setTitle("Account Linked to TMS!")
-                                .setThumbnail(identity.avatar_url)
-                                .setDescription(`Discord account <@${user.id}> was linked to Identity \`${user.identity_id}\`!\nThey were granted the following roles:${roleTxt}`)
-                                .addField("Authorized Channels", "```" + authStreamers + "```");
-    
-                        let guild = global.client.discord.guilds.resolve(config.modsquad_discord);
-                        let channel = guild.channels.resolve(config.notification_channel);
-                        channel.send({content: ' ', embeds: [embed]});
-                    });
+                    let identity = await IdentityService.resolveIdentity(user.identity_id, undefined, true);
+                    
+                    updateRoles(identity);
+
+                    sendUpdate(identity);
                 }
     
                 con.query("update discord__user set streamers_updated = true where id = ?;", [user.id]);
