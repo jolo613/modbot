@@ -2,7 +2,7 @@ const con = require("../database");
 const {TwitchAPI} = require("../api");
 
 module.exports = () => {
-    con.query("select id, display_name from twitch__user where follower_count is null or date_add(last_updated, interval 1 day) < now();", (err, res) => {
+    con.query("select id, display_name from twitch__user where follower_count is null or date_add(last_updated, interval 7 day) < now() limit 2;", (err, res) => {
         if (err) return;
         
         res.forEach(async user => {
