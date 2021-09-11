@@ -494,7 +494,7 @@ discordClient.guilds.fetch(config.modsquad_discord).then(msg => {
     modSquadGuild = msg;
 });
 
-con.query("select distinct lower(twitch__user.display_name) as name from identity__moderator join identity on modfor_id = identity.id join twitch__user on twitch__user.identity_id = identity.id;", (err, res) => {
+con.query("select distinct lower(twitch__user.display_name) as name from identity__moderator join identity on modfor_id = identity.id join twitch__user on twitch__user.identity_id = identity.id where identity__moderator.active = true;", (err, res) => {
     if (err) {console.error(err);return;}
 
     res.forEach(streamer => {
