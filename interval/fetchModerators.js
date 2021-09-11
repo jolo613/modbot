@@ -10,6 +10,8 @@ const { MessageEmbed } = require("discord.js");
 const FOLLOWER_REQUIREMENT = 5000;
 
 const sendUpdate = identity => {
+    if (identity.profiles.discord.length === 0 || identity.profiles.twitch.length === 0) return;
+
     const embed = new MessageEmbed()
             .setTitle("Identity Updated")
             .setURL("https://p.tmsqd.co/#/identity/" + identity.id)
