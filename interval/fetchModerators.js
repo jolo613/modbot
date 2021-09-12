@@ -127,6 +127,8 @@ const updateRoles = identity => {
     if (roles.length > 0) {
         identity.profiles.discord.forEach(disc => {
             DiscordUserService.grantDiscordRoles(disc.id, roles);
+
+            DiscordUserService.revokeDiscordRole(disc.id, config.notlinked_role);
         });
     }
 }
