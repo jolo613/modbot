@@ -9,7 +9,16 @@ const { MessageEmbed } = require("discord.js");
 
 const FOLLOWER_REQUIREMENT = 5000;
 
+let sentMessages = [];
+
 const sendUpdate = identity => {
+    if (sentMessages.includes(identity.id + "-" + (identity.profiles.discord.length + identity.profiles.twitch.length))) return;
+    
+    sentMessages = [
+        ...sentMessages,
+        identity.id + "-" + (identity.profiles.discord.length + identity.profiles.twitch.length)
+    ];
+
     if (identity.profiles.discord.length === 0 || identity.profiles.twitch.length === 0) return;
 
     const embed = new MessageEmbed()
