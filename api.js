@@ -211,6 +211,7 @@ class IdentityService {
 
 class TwitchUserService {
     cache = new Cache();
+    banCache = new Cache(600);
 
     #resolveUserObj(result) {
         return {
@@ -346,6 +347,58 @@ class TwitchUserService {
         })
     }
 
+    getBans(userId) {
+        return this.banCache.get(userId, (resolve, reject) => {
+            con.query("select * from twitch__ban where user_id = ?;", userId, async (err, res) => {
+                if (err) {reject(err);return;}
+
+                let result = [];
+
+                for (let i = 0;i < res.length;i++) {
+                    let ban = res[i];
+                    result = [
+                        ...result,
+                        {
+                            id: ban.id,
+                            streamer: await this.resolveById(ban.streamer_id),
+                            user: await this.resolveById(ban.user_id),
+                            timeBanned: ban.timebanned,
+                            active: ban.active == 1,
+                            discordMessage: ban.discord_message,
+                        }
+                    ];
+                }
+
+                resolve(result);
+            });
+        });
+    }
+
+}
+
+class TwitchChatService {
+    activeChannelCache = new Cache(60);
+
+    resolveActiveChannels(userId) {
+        return this.activeChannelCache.get(userId, (resolve, reject) => {
+            con.query("SELECT tu.id, max(tc.timesent) as lastActive FROM twitch__chat as tc join twitch__user as tu on tu.id = tc.streamer_id WHERE user_id = ? group by tc.streamer_id;", userId, async (err, res) => {
+                if (err) {reject(err);return;}
+
+                let result = [];
+
+                for (let i = 0;i < res.length;i++) {
+                    let obj = await services.TwitchUserService.resolveById(res[i].id);
+                    obj.lastActive = res[i].lastActive;
+                    result = [
+                        ...result,
+                        obj,
+                    ];
+                }
+
+                resolve(result);
+            });
+        });
+    }
 }
 
 class DiscordUserService {
@@ -400,8 +453,16 @@ class DiscordUserService {
     }
 
     resolveByName(name, discriminator = null) {
+        if (discriminator === null) discriminator = "%%";
         return this.nameCache.get(name + "#" + discriminator, (resolve, reject) => {
-            con.query("select user.* from discord__username as un join discord__user as user on user.id = un.id;");
+            con.query("select user.* from discord__username as un join discord__user as user on user.id = un.id where un.name = ? and un.discriminator like ?;", [name, discriminator], (err, res) => {
+                if (err) {reject(err);return;}
+                if (res.length === 0) {
+                    reject("User not found");
+                } else {
+                    resolve(res);
+                }
+            });
         });
     }
 
@@ -428,7 +489,8 @@ class DiscordUserService {
                         }
                     });
                     console.log("removing roles ", realRoles);
-                    guildMember.roles.remove(realRoles).then(() => {resolve();}).catch(reject);
+                    if (realRoles.length > 0)
+                        guildMember.roles.remove(realRoles).then(() => {resolve();}).catch(reject);
                 } else {
                     reject("User not found in the Mod squad guild");
                 }
@@ -472,11 +534,137 @@ class DiscordUserService {
     }
 }
 
+class ViewService {
+
+    comma(x) {
+        return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+
+    tabulate(table, padding = 3) {
+        let colLengths = [];
+
+        // first scan: identify column lengths
+        table.forEach(row => {
+            row.forEach((col, i) => {
+                if (colLengths[i] === undefined || colLengths[i] < col.length + padding)
+                    colLengths[i] = col.length + padding;
+            });
+        });
+
+        let result = "";
+        // second scan: build table
+        table.forEach(row => {
+            if (result !== "") result += "\n";
+
+            row.forEach((col, i) => {
+                result += col + ' '.repeat(colLengths[i] - col.length);
+            });
+        })
+
+        return result;
+    }
+
+    parseDay(day) {
+        let result = "";
+    
+        switch (day) {
+            case 0:
+                result = "Sun";
+                break;
+            case 1:
+                result = "Mon";
+                break;
+            case 2:
+                result = "Tue";
+                break;
+            case 3:
+                result = "Wed";
+                break;
+            case 4:
+                result = "Thu";
+                break;
+            case 5:
+                result = "Fri";
+                break;
+            case 6:
+                result = "Sat";
+        }
+    
+        return result;
+    }
+    
+    parseDate(timestamp) {
+        let dte = new Date(timestamp);
+    
+        let mo = "" + (dte.getMonth() + 1);
+        let dy = "" + dte.getDate();
+        let yr = dte.getFullYear();
+    
+        if (mo.length === 1) mo = "0" + mo;
+        if (dy.length === 1) dy = "0" + dy;
+    
+        return `${mo}.${dy}.${yr}`;
+    }
+
+    parseTimestamp(timestamp) {
+        let dte = new Date(timestamp);
+    
+        let hr = "" + dte.getHours();
+        let mn = "" + dte.getMinutes();
+        let sc = "" + dte.getSeconds();
+    
+        if (hr.length === 1) hr = "0" + hr;
+        if (mn.length === 1) mn = "0" + mn;
+        if (sc.length === 1) sc = "0" + sc;
+    
+        let mo = "" + (dte.getMonth() + 1);
+        let dy = "" + dte.getDate();
+        let yr = dte.getFullYear();
+    
+        if (mo.length === 1) mo = "0" + mo;
+        if (dy.length === 1) dy = "0" + dy;
+    
+        return `${this.parseDay(dte.getDay())} ${mo}.${dy}.${yr} ${hr}:${mn}:${sc}`;
+    }
+
+}
+
+class BackendAPI {
+    sessionStore = {};
+
+    stringGenerator(length = 32) {
+        let chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let str = '';
+        for (let i = 0; i < length; i++) {
+            str += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+
+        return str;
+    }
+
+    createSession(res, initialValues = {}) {
+        const session = this.stringGenerator(32);
+
+        this.sessionStore[session] = initialValues;
+        res.cookie("session", session, {domain: ".tmsqd.co", maxAge: new Date(Date.now() + 86400000), path: "/", secure: true});
+    }
+
+    getSession(session) {
+        if (this.sessionStore.hasOwnProperty(session)) {
+            return this.sessionStore[session];
+        }
+        return null;
+    }
+}
+
 services = {
     SessionService: new SessionService(),
     IdentityService: new IdentityService(),
     TwitchUserService: new TwitchUserService(),
+    TwitchChatService: new TwitchChatService(),
     DiscordUserService: new DiscordUserService(),
+    ViewService: new ViewService(),
+    BackendAPI: new BackendAPI(),
     TwitchAPI: api,
 };
 
