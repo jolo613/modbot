@@ -11,6 +11,8 @@ const app = express();
 app.use(cookieParser());
 app.use(cors());
 
+app.use('/auth', routes.auth);
+
 app.use('/', (req, res, next) => {
     let session = req.cookies?.session;
 
