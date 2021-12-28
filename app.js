@@ -26,7 +26,7 @@ fetchModerators();
 updateTwitchUsernames();
 updateDiscordUsernames();
 
-setInterval(updateUsers, 30000);
+// setInterval(updateUsers, 10000);
 setInterval(fetchModerators, 30000);
 setInterval(updateTwitchUsernames, 60000);
 setInterval(updateDiscordUsernames, 60000);
