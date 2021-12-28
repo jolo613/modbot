@@ -23,6 +23,7 @@ class Cache {
                     res[key] = this.cache[key];
                 }
             }
+            this.cache = res;
         }, Math.floor(Math.max(1, timeout / 50) * 1000));
     };
 
@@ -230,6 +231,48 @@ class TwitchUserService {
         };
     }
 
+    #requestUser(id) {
+        return new Promise(async (resolve, reject) => {
+            let followers = await TwitchAPI.helix.users.getFollows({followedUser: id});
+            let helixUser = await TwitchAPI.helix.users.getUserById(user.id);
+    
+            if (helixUser === null) {
+                helixUser = {
+                    total: null,
+                    displayName: null,
+                    description: null,
+                    profilePictureUrl: null,
+                    offlinePlaceholderUrl: null,
+                    views: null,
+                    id: null
+                }
+            } else {
+                if (helixUser.displayName.toLowerCase() !== user.display_name.toLowerCase()) {
+                    con.query("update twitch__username set last_seen = now() where id = ? and display_name = ?;", [user.id, user.display_name]);
+                    con.query("insert into twitch__username (id, display_name) values (?, ?);", [user.id, helixUser.displayName]);
+                }
+            }
+    
+            con.query("insert into twitch__user (id, follower_count, display_name, description, profile_image_url, offline_image_url, view_count, last_updated) values (?, ?, ?, ?, ?, ?, ?, now()) on duplicate key update follower_count = ?, display_name = ?, description = ?, profile_image_url = ?, offline_image_url = ?, view_count = ?, last_updated = now();", [
+                id,
+                followers.total,
+                helixUser.displayName,
+                helixUser.description,
+                helixUser.profilePictureUrl,
+                helixUser.offlinePlaceholderUrl,
+                helixUser.views,
+                followers.total,
+                helixUser.displayName,
+                helixUser.description,
+                helixUser.profilePictureUrl,
+                helixUser.offlinePlaceholderUrl,
+                helixUser.views,
+            ], () => {
+                this.resolveById(id, helixUser.displayName, true, false).then(resolve, reject);
+            });
+        });
+    }
+
     resolveByName(userName) {
         return new Promise((resolve, reject) => {
             con.pquery("select twitch__user.id, display_name, identity_id, identity.name as identity_name, email, profile_image_url, offline_image_url, description, view_count, follower_count, affiliation from twitch__user left join identity on identity.id = twitch__user.identity_id where display_name = ?;", [userName]).then(async result => {
@@ -240,8 +283,14 @@ class TwitchUserService {
                     let helixUser = await api.helix.users.getUserByName(userName);
 
                     if (helixUser) {
-                        con.query("insert into twitch__user (id, display_name, identity_id, email, profile_image_url, offline_image_url, description, view_count, follower_count, affiliation) values (?, ?, null, null, ?, ?, ?, ?, null, ?);", [
+                        con.query("insert into twitch__user (id, display_name, identity_id, email, profile_image_url, offline_image_url, description, view_count, follower_count, affiliation) values (?, ?, null, null, ?, ?, ?, ?, null, ?) on duplicate key update display_name = ?, profile_image_url = ?, offline_image_url = ?, description = ?, view_count = ?, affiliation = ?;", [
                             helixUser.id,
+                            helixUser.displayName,
+                            helixUser.profilePictureUrl,
+                            helixUser.offlinePlaceholderUrl,
+                            helixUser.description,
+                            helixUser.views,
+                            (helixUser.broadcasterType === "" ? null : helixUser.broadcasterType),
                             helixUser.displayName,
                             helixUser.profilePictureUrl,
                             helixUser.offlinePlaceholderUrl,
@@ -272,22 +321,27 @@ class TwitchUserService {
         });
     }
 
-    resolveById(userId, displayName = null, overrideCache = false) {
+    resolveById(userId, displayName = null, overrideCache = false, grabNew = false) {
+        if (grabNew) overrideCache = true;
         return this.cache.get(userId, (resolve, reject) => {
-            con.pquery("select twitch__user.id, display_name, identity_id, identity.name as identity_name, email, profile_image_url, offline_image_url, description, view_count, follower_count, affiliation from twitch__user left join identity on identity.id = twitch__user.identity_id where twitch__user.id = ?;", [userId]).then(result => {
-                if (result.length > 0) {
-                    let user = this.#resolveUserObj(result[0]);
-                    resolve(user);
-                } else if (displayName !== null) {
-                    con.query("insert into twitch__user (id, display_name) values (?, ?);", [userId, displayName], err => {
-                        if (err) {reject(err);return;}
-
-                        this.resolveById(userId).then(resolve).catch(reject);
-                    });
-                } else {
-                    reject("Could not retrieve user");
-                }
-            }).catch(reject);
+            if (grabNew) {
+                this.#requestUser(userId).then(resolve, reject);
+            } else {
+                con.pquery("select twitch__user.id, display_name, identity_id, identity.name as identity_name, email, profile_image_url, offline_image_url, description, view_count, follower_count, affiliation from twitch__user left join identity on identity.id = twitch__user.identity_id where twitch__user.id = ?;", [userId]).then(result => {
+                    if (result.length > 0) {
+                        let user = this.#resolveUserObj(result[0]);
+                        resolve(user);
+                    } else if (displayName !== null) {
+                        con.query("insert into twitch__user (id, display_name) values (?, ?);", [userId, displayName], err => {
+                            if (err) {reject(err);return;}
+    
+                            this.resolveById(userId).then(resolve).catch(reject);
+                        });
+                    } else {
+                        reject("Could not retrieve user");
+                    }
+                }).catch(reject);
+            }
         }, overrideCache);
     }
 
