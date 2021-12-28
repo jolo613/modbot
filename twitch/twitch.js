@@ -19,7 +19,7 @@ let clients = [];
 let modSquadGuild = null;
 
 let channels = [];
-let disallowed_channels = ["@everyone", "admin", "server booster", "modbot", "ludwig", "tarzaned"];
+let disallowed_channels = ["ludwig", "tarzaned"];
 
 let bannedList = [];
 let timeoutList = [];
@@ -32,6 +32,44 @@ setInterval(() => {
         bannedPerMinute[streamer] = timestampList.filter(ts => now - ts < 60000);
     }
 }, 1000);
+
+con.query("select * from twitch__ban where active = true;", (err, res) => {
+    if (err) {
+        console.error(err);
+        return;
+    }
+
+    res.forEach(log => {
+        bannedList = [
+            ...bannedList,
+            {
+                streamer_id: log.streamer_id,
+                user_id: log.user_id,
+            }
+        ]
+    });
+
+    console.log("Loaded " + bannedList.length + " bans");
+});
+
+con.query("select * from twitch__timeout where active = true;", (err, res) => {
+    if (err) {
+        console.error(err);
+        return;
+    }
+
+    res.forEach(log => {
+        timeoutList = [
+            ...timeoutList,
+            {
+                streamer_id: log.streamer_id,
+                user_id: log.user_id,
+            }
+        ]
+    });
+
+    console.log("Loaded " + timeoutList.length + " t/o's");
+});
 
 function parseDay(day) {
     let result = "";
@@ -282,13 +320,13 @@ const addTimeout = async (channel, userid, username, reason, duration, timeto) =
     ];
 }
 
-const isBanned = (channel, userid) => {
-    let streamer = TwitchUserService.resolveByName(channel.replace("#",""));
+const isBanned = async (channel, userid) => {
+    let streamer = await TwitchUserService.resolveByName(channel.replace("#",""));
     return bannedList.find(bannedRow => bannedRow.streamer_id === streamer.id && bannedRow.user_id === userid) !== undefined;
 }
 
-const isTimedOut = (channel, userid) => {
-    let streamer = TwitchUserService.resolveByName(channel.replace("#",""));
+const isTimedOut = async (channel, userid) => {
+    let streamer = await TwitchUserService.resolveByName(channel.replace("#",""));
     return timeoutList.find(timeoutRow => timeoutRow.streamer_id === streamer.id && timeoutRow.user_id === userid) !== undefined;
 }
 
@@ -314,7 +352,7 @@ const handle = {
                 if (err) console.error(err);
             });
     
-            if (isBanned(channel, tags["user-id"])) {
+            if (await isBanned(channel, tags["user-id"])) {
                 console.log("Changing ban active state of " + tags["display-name"]);
     
                 con.query("update twitch__ban set active = false where streamer_id = ? and user_id = ?;", [
@@ -325,7 +363,7 @@ const handle = {
                 bannedList = bannedList.filter(brow => brow.streamer_id !== streamer.id && brow.userid !== tags["user-id"]);
             }
     
-            if (isTimedOut(channel, tags["user-id"])) {
+            if (await isTimedOut(channel, tags["user-id"])) {
                 console.log("Changing timeout active state of " + tags["display-name"]);
     
                 con.query("update twitch__timeout set active = false where streamer_id = ? and user_id = ?;", [
@@ -474,6 +512,25 @@ const getFreeClient = () => {
 
     return initializeClient();
 }
+
+const getChannelCount = () => {
+    let total = 0;
+    clients.forEach(client => {
+        total += client.channels.length;
+    })
+    return total;
+}
+
+const updateActivity = () => {
+    let channelCount = getChannelCount();
+    let nodeCount = clients.length;
+    if (global?.client?.discord?.user)
+        global.client.discord.user.setActivity(`${channelCount} channel${channelCount === 1 ? "" : "s"} with ${nodeCount} node${nodeCount === 1 ? "" : "s"}`, {type: "WATCHING"})
+}
+
+setInterval(updateActivity, 30000);
+setTimeout(updateActivity, 3000);
+
 
 const listenOnChannel = channel => {
     getFreeClient().addChannel(channel);
