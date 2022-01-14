@@ -35,7 +35,7 @@ module.exports = () => {
 
             if (helixUser.displayName.toLowerCase() !== user.display_name.toLowerCase()) {
                 con.query("update twitch__username set last_seen = now() where id = ? and display_name = ?;", [user.id, user.display_name]);
-                con.query("insert into twitch__username (id, display_name) values (?, ?);", [user.id, helixUser.displayName]);
+                con.query("insert into twitch__username (id, display_name) values (?, ?) on duplicate key update display_name = ?;", [user.id, helixUser.displayName, helixUser.displayName]);
             }
 
             con.query("update twitch__user set display_name = ?, description = ?, profile_image_url = ?, offline_image_url = ?, view_count = ?, affiliation = ?, last_updated = now() where id = ?;", [
@@ -46,7 +46,9 @@ module.exports = () => {
                 helixUser.views,
                 helixUser.id,
                 helixUser.broadcasterType ? null : helixUser.broadcasterType,
-            ]);
+            ], err => {
+                Twitch.getUserById(helixUser.id, true);
+            });
         });
 
         con.query("update twitch__user set last_updated = now() where id in (" + (", ?").repeat(userIds.length).substring(2) + ");", userIds);
