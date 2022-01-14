@@ -12,6 +12,7 @@ app.use(cookieParser());
 app.use(cors());
 
 app.use('/auth', routes.auth);
+app.use('/contact-us', routes.contactUs)
 
 app.use('/', (req, res, next) => {
     let session = req.cookies?.session;
@@ -51,6 +52,7 @@ app.use('/', (req, res, next) => {
 app.use('/identity', routes.identity);
 app.use('/streamers', routes.streamers);
 app.use('/status', routes.status);
+app.use('/search', routes.search);
 
 app.get('/', (req, res) => {
     res.status(404);
