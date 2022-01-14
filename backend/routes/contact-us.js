@@ -21,8 +21,7 @@ router.post("/", (req, res) => {
     if(req.body['g-recaptcha-response'] === undefined || req.body['g-recaptcha-response'] === '' || req.body['g-recaptcha-response'] === null) {
         return res.json({success: false, error: "Please complete the captcha."});
     }
-    const secretKey = "6LeDsggeAAAAAPnBr7BUZS-hMXgkMeC4WR9fVnPE";
-    const verificationURL = "https://www.google.com/recaptcha/api/siteverify?secret=" + secretKey + "&response=" + req.body['g-recaptcha-response'] + "&remoteip=" + req.connection.remoteAddress;
+    const verificationURL = "https://www.google.com/recaptcha/api/siteverify?secret=" + config.recaptcha.secret + "&response=" + req.body['g-recaptcha-response'] + "&remoteip=" + req.connection.remoteAddress;
 
     let error = "";
 
