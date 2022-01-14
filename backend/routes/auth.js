@@ -24,6 +24,14 @@ const DISCORD_REDIRECT = "https://api.tmsqd.co/auth/discord";
 
 const FOLLOWER_REQUIREMENT = 5000;
 
+const redirect = (req, res) => {
+    if (req.cookies?.hasOwnProperty("return_uri")) {
+        res.redirect(req.cookies.return_uri)
+    }
+
+    res.redirect(PANEL_URL);
+};
+
 const discord = {
     async getToken(code) {
         const oauthResult = await fetch('https://discord.com/api/oauth2/token', {
@@ -203,7 +211,7 @@ router.get("/twitch", async ({ query, cookies }, res) => {
                 res.cookie("session", session.id, {domain: ".tmsqd.co", maxAge: new Date(Date.now() + 86400000), path: "/", secure: true});
                 
                 if (session.identity?.discordAccounts?.length > 0) {
-                    res.redirect(PANEL_URL);
+                    redirect(req, res);
                 } else {
                     res.redirect(DISCORD_URL);
                 }
@@ -323,7 +331,7 @@ router.get('/discord', async ({ query, cookies, invitee }, res) => {
             if (resolvedRoles.length > 0) {
                 global.client.discord.guilds.fetch(config.modsquad_discord).then(guild => {
                     guild.members.add(dus.id, {accessToken: oauthData.access_token, roles: resolvedRoles}).then(member => {
-                        res.redirect(PANEL_URL);
+                        redirect(req, res);
                     }).catch((err) => {
                         console.error(err);
                         res.json({success: false, error: "Could not add user to Discord"});
