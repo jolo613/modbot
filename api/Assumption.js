@@ -1,3 +1,5 @@
+const ReturnableObject = require("./ReturnableObject");
+
 const AssumedDiscordUser = require("./Discord/AssumedDiscordUser");
 const AssumedTwitchUser = require("./Twitch/AssumedTwitchUser");
 
@@ -6,7 +8,7 @@ const AssumedTwitchUser = require("./Twitch/AssumedTwitchUser");
  * 
  * See also: {@link AssumedDiscordUser}, {@link AssumedTwitchUser}
  */
-class Assumption {
+class Assumption extends ReturnableObject {
     /**
      * Property which lead to the assumption
      * 
@@ -28,11 +30,14 @@ class Assumption {
 
     /**
      * Constructor for an Assumption
+     * @param {string} type 
      * @param {string} property 
      * @param {string} queryValue 
      * @param {string} actualValue 
      */
-    constructor(property, queryValue, actualValue) {
+    constructor(type, property, queryValue, actualValue) {
+        super(type);
+
         this.property = property;
         this.queryValue = queryValue;
         this.actualValue = actualValue;

@@ -17,7 +17,7 @@ class AssumedDiscordUser extends DiscordUser {
      * @param {Assumption[]} assumptions
      */
      constructor(user, assumptions) {
-        super(user.id, user.identity, user.name, user.discriminator, user.avatar);
+        super("assumed-discord-user", user.id, user.identity, user.name, user.discriminator, user.avatar);
 
         this.assumptions = assumptions;
     }
