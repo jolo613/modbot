@@ -88,7 +88,7 @@ class Twitch {
                         ));
                     } else {
                         if (requestIfUnavailable) {
-                            this.getUserByNameByForce(id).then(resolve, reject);
+                            this.getUserByIdByForce(id).then(resolve, reject);
                         } else {
                             reject("User not found!");
                         }
