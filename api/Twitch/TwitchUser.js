@@ -20,8 +20,6 @@ const api = new ApiClient({ authProvider });
 
 const tmi = require('tmi.js');
 
-const {listenOnChannel} = require("../../twitch/twitch");
-
 const modClient = new tmi.Client({
     options: { debug: false },
     connection: { reconnect: true },
@@ -213,8 +211,8 @@ class TwitchUser extends User {
                                             ];
                                         }
 
-                                        if (user.follower_count >= FOLLOWER_REQUIREMENT) {
-                                            listenOnChannel(user.display_name.toLowerCase());
+                                        if (user.follower_count >= FOLLOWER_REQUIREMENT && global.listenOnChannel) {
+                                            global.listenOnChannel(user.display_name.toLowerCase());
                                         }
 
                                         con.query("insert into identity__moderator (identity_id, modfor_id, active) values (?, ?, ?) on duplicate key update active = ?;", [thisUser.identity.id, user.identity.id, user.follower_count >= FOLLOWER_REQUIREMENT, user.follower_count >= FOLLOWER_REQUIREMENT]);

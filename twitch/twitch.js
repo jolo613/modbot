@@ -572,6 +572,8 @@ const banClient = new tmi.Client({
 
 banClient.connect();
 
+global.listenOnChannel = listenOnChannel;
+
 module.exports = {
     listenOnChannel: listenOnChannel,
     banClient: banClient,
