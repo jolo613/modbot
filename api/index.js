@@ -2,6 +2,7 @@ const con = require("../database");
 
 const Twitch = require("./Twitch/");
 const Discord = require("./Discord/");
+const SessionService = require("./Session/");
 
 const FullIdentity = require("./FullIdentity");
 
@@ -19,6 +20,12 @@ class API {
      * @type {Discord}
      */
     Discord = new Discord();
+
+    /**
+     * Base Session API
+     * @type {SessionService}
+     */
+    Session = new SessionService();
 
     /**
      * Returns the FullIdentity for an ID
