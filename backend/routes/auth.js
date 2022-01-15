@@ -87,6 +87,20 @@ const twitch = {
     },
 }
 
+router.get("/invite/:invite", (req, res) => {
+    if (req.params.invite) {
+        res.cookie("invite", req.params.invite, {
+            secure: true,
+            httpOnly: true,
+            maxAge: 360000
+        }).send("sending cookie");
+
+        res.redirect(TWITCH_URL);
+    } else {
+        res.json({success: false, error: "Invite parameter not provided"});
+    }
+});
+
 router.use("/", (req, res, next) => {
     const { invite } = req.cookies;
 
