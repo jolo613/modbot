@@ -42,18 +42,18 @@ class Identity {
                     reject(err);
                 } else {
                     if (this.id === null || this.id === undefined) {
-                        con.query("select id from identity where name = ? order by id desc limit 1;", [this.name], (err, res) => {
+                        con.query("select id, name from identity where name = ? order by id desc limit 1;", [this.name], (err, res) => {
                             if (err) {
                                 reject(err);
                             } else if (res.length < 1) {
                                 reject("Could not retrieve inserted id.");
                             } else {
                                 this.id = res[0].id;
-                                resolve(this);
+                                resolve(new Identity(res[0].id, res[0].name));
                             }
                         });
                     } else {
-                        resolve(this);
+                        resolve(new Identity(this.id, this.name));
                     }
                 }
             });
