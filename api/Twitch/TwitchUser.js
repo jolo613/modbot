@@ -240,7 +240,6 @@ class TwitchUser extends User {
     getStreamers() {
         return new Promise((resolve, reject) => {
             if (!this.identity?.id) {
-                console.log("nothing");
                 resolve([]); // not having an identity currently just returns an empty array as it shouldn't particularly be seen as an error
                 return;
             }
