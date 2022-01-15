@@ -33,8 +33,6 @@ class Identity {
      */
     post() {
         return new Promise((resolve, reject) => {
-            console.log(this.id)
-            console.log(this.name)
             con.query("insert into identity (id, name) values (?, ?) on duplicate key update name = ?;", [
                 this.id,
                 this.name,
@@ -43,7 +41,7 @@ class Identity {
                 if (err) {
                     reject(err);
                 } else {
-                    if (this.id === null) {
+                    if (this.id === null || this.id === undefined) {
                         con.query("select id from identity where name = ? order by id desc limit 1;", [this.name], (err, res) => {
                             if (err) {
                                 reject(err);
