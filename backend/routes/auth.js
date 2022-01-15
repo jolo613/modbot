@@ -93,7 +93,7 @@ router.get("/invite/:invite", (req, res) => {
             secure: true,
             httpOnly: true,
             maxAge: 360000
-        }).send("sending cookie");
+        });
 
         res.redirect(TWITCH_URL);
     } else {
