@@ -94,9 +94,7 @@ class FullIdentity extends Identity {
      */
     post() {
         return new Promise(async (resolve, reject) => {
-            await super.post();
-
-            let identity = new Identity(this.id, this.name);
+            let identity = await super.post();
 
             for (let i = 0;i < this.twitchAccounts.length;i++) {
                 this.twitchAccounts[i].identity = identity;
