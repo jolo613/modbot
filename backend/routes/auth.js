@@ -135,7 +135,7 @@ router.get("/twitch", async (req, res) => {
 
         if (result.data?.hasOwnProperty(0)) {
             const user = result.data[0];
-            api.Twitch.getUserById(user.id, true).then(async twitchUser => {
+            api.Twitch.getUserById(user.id, true, true).then(async twitchUser => {
                 let session;
 
                 if (cookies.session) {

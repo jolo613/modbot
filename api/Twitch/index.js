@@ -38,10 +38,11 @@ class Twitch {
      * Gets a user based on a Twitch user ID.
      * @param {number} id 
      * @param {boolean} bypassCache
+     * @param {boolean} requestIfUnavailable
      * 
      * @returns {Promise<TwitchUser>}
      */
-    getUserById(id, bypassCache = false) {
+    getUserById(id, bypassCache = false, requestIfUnavailable = false) {
         return this.userCache.get(id, (resolve, reject) => {
             con.query("select twitch__user.*, identity.name as identity_name from twitch__user left join identity on twitch__user.identity_id = identity.id where twitch__user.id = ?;", [id], (err, res) => {
                 if (err) {
@@ -64,7 +65,11 @@ class Twitch {
                             row.moderator_checked,
                         ));
                     } else {
-                        reject("User not found!");
+                        if (requestIfUnavailable) {
+                            this.getUserByNameByForce(id).then(resolve, reject);
+                        } else {
+                            reject("User not found!");
+                        }
                     }
                 }
             });
