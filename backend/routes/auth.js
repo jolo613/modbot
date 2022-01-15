@@ -166,7 +166,7 @@ router.get("/twitch", async (req, res) => {
 
                 // catch all, if an identity isn't present, make one.
                 if (!session.identity) {
-                    session.identity = new FullIdentity(null, user.display_name, [twitchUser], null);
+                    session.identity = new FullIdentity(null, user.display_name, [twitchUser], []);
                 } else if (!session.identity.twitchAccounts.find(x => x.id === twitchUser.id)) {
                     session.identity.twitchAccounts = [
                         ...session.identity.twitchAccounts,
