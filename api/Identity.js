@@ -33,6 +33,8 @@ class Identity {
      */
     post() {
         return new Promise((resolve, reject) => {
+            console.log(this.id)
+            console.log(this.name)
             con.query("insert into identity (id, name) values (?, ?) on duplicate key update name = ?;", [
                 this.id,
                 this.name,
