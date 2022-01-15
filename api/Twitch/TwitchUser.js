@@ -332,9 +332,6 @@ class TwitchUser extends User {
      */
     post() {
         return new Promise(async (resolve, reject) => {
-            if (this.identity) {
-                this.identity = await this.identity.post();
-            }
             console.log(this.identity);
             con.query("insert into twitch__user (id, display_name, identity_id, email, profile_image_url, offline_image_url, description, view_count, follower_count, affiliation) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) on duplicate key update display_name = ?, identity_id = ?, email = ?, profile_image_url = ?, offline_image_url = ?, description = ?, view_count = ?, follower_count = ?, affiliation = ?;", [
                 this.id,
