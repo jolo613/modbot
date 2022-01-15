@@ -1,4 +1,4 @@
-const CLIENT_CONNECT_TIMEOUT = 10000;
+const CLIENT_CONNECT_TIMEOUT = 5000;
 const CLIENT_MAXIMUM_CHANNELS = 20;
 
 const ACTIVE_CHANNEL_PADDING = 3;
@@ -555,6 +555,10 @@ con.query("select distinct lower(twitch__user.display_name) as name from identit
     res.forEach(streamer => {
         listenOnChannel(streamer.name);
     });
+
+    setTimeout(() => {
+        console.log("Startup completed!");
+    }, (clients.length * CLIENT_CONNECT_TIMEOUT) + 500);
 });
 
 const banClient = new tmi.Client({
