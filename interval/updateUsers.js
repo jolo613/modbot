@@ -1,6 +1,5 @@
 const con = require("../database");
-const {TwitchAPI} = require("../api");
-const {Twitch} = require("../api/index");
+const api = require("../api/index");
 
 let waiting = false;
 
@@ -25,13 +24,13 @@ module.exports = () => {
 
         let startTime = new Date().getTime();
 
-        let helixUsers = await TwitchAPI.helix.users.getUsersByIds(userIds);
+        let helixUsers = await api.Twitch.Direct.helix.users.getUsersByIds(userIds);
 
         console.log(`Received ${helixUsers.length}/${userIds.length} users: ${new Date().getTime() - startTime} ms`);
         waiting = false;
 
         helixUsers.forEach(async helixUser => {
-            let user = await Twitch.getUserById(helixUser.id);
+            let user = await api.Twitch.getUserById(helixUser.id);
 
             if (helixUser.displayName.toLowerCase() !== user.display_name.toLowerCase()) {
                 con.query("update twitch__username set last_seen = now() where id = ? and display_name = ?;", [user.id, user.display_name]);
@@ -47,7 +46,7 @@ module.exports = () => {
                 helixUser.id,
                 helixUser.broadcasterType ? null : helixUser.broadcasterType,
             ], err => {
-                Twitch.getUserById(helixUser.id, true);
+                api.Twitch.getUserById(helixUser.id, true);
             });
         });
 
@@ -55,7 +54,7 @@ module.exports = () => {
         
         userIds.forEach(async userId => {
 
-            let followers = await TwitchAPI.helix.users.getFollows({followedUser: userId});
+            let followers = await api.Twitch.Direct.helix.users.getFollows({followedUser: userId});
 
             con.query("update twitch__user set follower_count = ? where id = ?;", [followers.total, userId]);
         });

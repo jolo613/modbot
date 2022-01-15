@@ -21,12 +21,18 @@ const api = new ApiClient({ authProvider });
 class Twitch {
 
     /**
+     * Direct access to Twitch's API suite
+     * 
+     * @type {ApiClient}
+     */
+    Direct = api;
+
+    /**
      * Twitch user cache (ID)
      * 
      * @type {Cache}
      */
     userCache = new Cache();
-    
 
     /**
      * Gets a user based on a Twitch user ID.
@@ -58,7 +64,7 @@ class Twitch {
                             row.moderator_checked,
                         ));
                     } else {
-                        reject("User was not found!");
+                        reject("User not found!");
                     }
                 }
             });
@@ -76,14 +82,13 @@ class Twitch {
             let helixUser = await api.helix.users.getUserByName(display_name);
 
             if (helixUser) {
-                console.log("broadcaster:"+helixUser.broadcasterType);
                 let user = new TwitchUser(helixUser.id, null, helixUser.displayName, null, helixUser.profilePictureUrl, helixUser.offlinePlaceholderUrl, helixUser.description, helixUser.views, null, null, (helixUser.broadcasterType === "" ? null : helixUser.broadcasterType), null);
                 await user.refreshFollowers();
                 user.post();
 
                 user = new AssumedTwitchUser(user, [new Assumption("display_name", display_name, user.display_name)])
 
-                resolve(user);
+                resolve([user]);
             } else {
                 reject("No users were found!");
             }

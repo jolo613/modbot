@@ -3,12 +3,6 @@ const config = require("../config.json");
 
 const {MessageEmbed} = require("discord.js");
 
-const {ApiClient} = require("twitch");
-const {ClientCredentialsAuthProvider} = require("twitch-auth");
-
-const authProvider = new ClientCredentialsAuthProvider(config.twitch.client_id, config.twitch.client_secret);
-const tapi = new ApiClient({ authProvider });
-
 const api = require("../api/index");
 
 const getLiveChannel = () => {
@@ -34,7 +28,7 @@ module.exports = () => {
         let streams = [];
 
         const getStreams = async () => {
-            const retrievedStreams = await tapi.helix.streams.getStreams({
+            const retrievedStreams = await api.Twitch.Direct.helix.streams.getStreams({
                 limit: 100,
                 userId: userList,
             });

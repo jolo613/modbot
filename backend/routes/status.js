@@ -1,5 +1,5 @@
 const {Router} = require("express");
-const {TwitchUserService} = require("../../api");
+const api = require("../../api/index");
 
 const twitch = require("../../twitch/twitch");
 
@@ -19,7 +19,7 @@ router.get("/", async (req, res) => {
 
             channels = [
                 ...channels,
-                await TwitchUserService.resolveByName(channel)
+                (await api.Twitch.getUserByName(channel, true))[0]
             ];
         }
 

@@ -1,14 +1,12 @@
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 const {Router} = require("express");
 const con = require("../../database");
-const {TwitchUserService, BackendAPI} = require("../../api");
 
 const api = require("../../api/index");
 const Session = require("../../api/Session");
 
 const config = require("../../config.json");
 
-const https = require("https");
 const FullIdentity = require('../../api/FullIdentity');
 const TwitchUser = require('../../api/Twitch/TwitchUser');
 const DiscordUser = require('../../api/Discord/DiscordUser');
@@ -87,50 +85,6 @@ const twitch = {
         });
         return await userResult.json();
     },
-    linkModerators(user) {
-        return new Promise((res, rej) => {
-            https.request({
-                host: "modlookup.3v.fi",
-                path: "/api/user-v3/" + user.display_name.toLowerCase() + "?limit=100&cursor="
-            }, response => {
-                let str = "";
-    
-                response.on('data', function (chunk) {
-                    str += chunk;
-                });
-    
-                response.on('end', async function () {
-                    try {
-                        let data = JSON.parse(str.trim());
-    
-                        if (data.status == 200) {
-                            if (data.hasOwnProperty("channels") && data.channels.length > 0) {
-    
-                                for (let i = 0; i < data.channels.length; i++) {
-                                    let channel = data.channels[i];
-    
-                                    try {
-                                        let streamer = await TwitchUserService.resolveByName(channel.name);
-                                        let streamerIdentity = await TwitchUserService.resolveIdentity(streamer.id, streamer.display_name);
-                                        
-                                        await IdentityService.linkModerator(identity.id, streamerIdentity.id, channel.followers >= FOLLOWER_REQUIREMENT);
-                                    } catch (e) {
-                                        if (e !== "User not found") {
-                                            console.error(e);
-                                        }
-                                    }
-                                }
-                            } else {
-                                rej("User was not listed as a moderator anywhere!");
-                            }
-                        } 
-                    } catch (e) {
-                        console.error(e);
-                    }
-                });
-            }).end();
-        });
-    }
 }
 
 router.use("/", (req, res, next) => {
@@ -152,7 +106,8 @@ router.use("/", (req, res, next) => {
     }
 });
 
-router.get("/twitch", async ({ query, cookies }, res) => {
+router.get("/twitch", async (req, res) => {
+    const { query, cookies } = req;
     const { code } = query;
 
     if (code) {
@@ -224,7 +179,8 @@ router.get("/twitch", async ({ query, cookies }, res) => {
     }
 });
 
-router.get('/discord', async ({ query, cookies, invitee }, res) => {
+router.get('/discord', async (req, res) => {
+    const { query, cookies, invitee } = req;
 	const { code } = query;
 
     let session = undefined;

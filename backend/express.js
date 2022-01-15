@@ -4,7 +4,7 @@ const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const routes = require("./routes");
 const con = require("../database");
-const {IdentityService} = require("../api");
+const api = require("../api/index");
 
 const app = express();
 
@@ -35,7 +35,7 @@ app.use('/', (req, res, next) => {
         } else {
             if (result.length > 0) {
                 let row = result[0];
-                IdentityService.resolveIdentity(row["iid"]).then(identity => {
+                api.getFullIdentity(row["iid"]).then(identity => {
                     req.session = {id: row.sid, created: row.screated, identity: identity};
                     next();
                 }).catch(err => {
