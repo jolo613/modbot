@@ -9,8 +9,10 @@ const checkNumber = _string => !(Number.isNaN(Number(_string)));
 
 
 const search = async (req, res) => {
-    let result = {success: true, identityResults: []};
+    let result = {success: true, identityResults: [], twitchAccountResults: [], discordAccountResults: []};
     let limit = 10;
+
+    let start = (new Date()).getMilliseconds();
 
     if (req.params?.limit && checkNumber(req.params.limit)) {
         limit = Math.min(10, Number(req.params.limit));
@@ -28,6 +30,27 @@ const search = async (req, res) => {
         ];
     }
 
+    let twitchAccounts = await con.pquery("select id from twitch__user where display_name like ? limit ?;", [query + "%", limit]);
+    
+    for (let ti = 0; ti < twitchAccounts.length; ti++) {
+        let twitchAccount = await (api.Twitch.getUserById(twitchAccounts[ti].id));
+        result.twitchAccountResults = [
+            ...result.twitchAccountResults,
+            twitchAccount,
+        ];
+    }
+
+    let discordAccounts = await con.pquery("select id from discord__user where name like ? limit ?;", [query + "%", limit]);
+    
+    for (let di = 0; di < discordAccounts.length; di++) {
+        let discordAccount = await (api.Discord.getUserById(discordAccounts[di].id));
+        result.discordAccountResults = [
+            ...result.discordAccountResults,
+            discordAccount,
+        ];
+    }
+
+    result.elapsed = (new Date()).getMilliseconds() - start;
     res.json(result);
 }
 
