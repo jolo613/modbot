@@ -35,6 +35,28 @@ class Twitch {
     userCache = new Cache();
 
     /**
+     * Requests a user directly from the Twitch Helix API
+     * This method should NEVER be used externally as it can take a substantial amount of time to request and WILL overwrite other data.
+     * @param {string} id 
+     * @returns {Promise<TwitchUser>}
+     */
+    getUserByIdByForce(id) {
+        return new Promise(async (resolve, reject) => {
+            let helixUser = await api.helix.users.getUserById(id);
+
+            if (helixUser) {
+                let user = new TwitchUser(helixUser.id, null, helixUser.displayName, null, helixUser.profilePictureUrl, helixUser.offlinePlaceholderUrl, helixUser.description, helixUser.views, null, null, (helixUser.broadcasterType === "" ? null : helixUser.broadcasterType), null);
+                await user.refreshFollowers();
+                user.post();
+
+                resolve(user);
+            } else {
+                reject("User not found!");
+            }
+        });
+    }
+
+    /**
      * Gets a user based on a Twitch user ID.
      * @param {number} id 
      * @param {boolean} bypassCache
