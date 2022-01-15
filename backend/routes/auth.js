@@ -185,7 +185,7 @@ router.get("/twitch", async (req, res) => {
                     res.redirect(DISCORD_URL);
                 }
             }, err => {
-                console.log(err);
+                console.error(err);
             });
         }
     } else {
@@ -242,8 +242,6 @@ router.get('/discord', async (req, res) => {
             let affiliate = false;
             let partneredModerator = false;
             let affiliateModerator = false;
-
-            console.log(session.identity.twitchAccounts);
 
             for (let ri = 0; ri < session.identity.twitchAccounts.length; ri++) {
                 let twitchAccount = session.identity.twitchAccounts[ri];
