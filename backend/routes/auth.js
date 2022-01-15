@@ -228,7 +228,7 @@ router.get('/discord', async (req, res) => {
                     user.avatar
                 );
 
-            if (session.identity.discordAccounts.length === 0) {
+            if (session.identity.discordAccounts.length === 0 && invitee !== null) {
                 con.query("insert into invite__uses (invited, invitee) values (?,?) on duplicate key update invitee = ?;", [session.identity.id, invitee, invitee]);
             }
 
