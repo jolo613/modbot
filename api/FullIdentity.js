@@ -16,13 +16,21 @@ class FullIdentity extends Identity {
 
     /**
      * List of all twitch accounts connected to this identity
+     * @type {TwitchUser[]}
      */
     twitchAccounts;
 
     /**
      * List of all discord accounts connected to this identity
+     * @type {DiscordUser[]}
      */
     discordAccounts;
+
+    /**
+     * Avatar URL determined for this identity
+     * @type {string}
+     */
+    avatar_url;
 
     /**
      * Main constructor for a full identity
@@ -36,12 +44,24 @@ class FullIdentity extends Identity {
 
         this.twitchAccounts = twitchAccounts;
         this.discordAccounts = discordAccounts;
+
+        if (this.twitchAccounts.length >= 0) {
+            this.avatar_url = this.twitchAccounts[0].profile_image_url;
+        }
+
+        this.discordAccounts.every(discordAccount => {
+            if (discordAccount.avatar) {
+                this.avatar_url = discordAccount.getAvatar();
+                return false;
+            }
+            return true;
+        });
     }
 
     /**
      * Gets a list of user identities that this user moderates
      * @param {boolean} fromCache 
-     * @returns {ModeratorLink[]}
+     * @returns {Promise<ModeratorLink[]>}
      */
     getActiveModeratorChannels(fromCache = true) {
         return new Promise((resolve, reject) => {

@@ -28,6 +28,12 @@ class DiscordUser extends User {
      * @type {?string}
      */
     avatar;
+    
+    /**
+     * Avatar URL
+     * @type {string}
+     */
+    avatar_url;
 
     /**
      * Constructor for a Discord user
@@ -43,6 +49,8 @@ class DiscordUser extends User {
         this.name = name;
         this.discriminator = discriminator;
         this.avatar = avatar;
+
+        this.avatar_url = this.getAvatar();
     };
 
     /**
