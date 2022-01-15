@@ -197,12 +197,16 @@ class TwitchUser extends User {
     
                                     try {
                                         let user = (await global.api.Twitch.getUserByName(channel.name, true))[0];
-                                        await user.refreshFollowers();
 
+                                        let identity;
                                         if (!user.identity?.id) {
-                                            let identity = new FullIdentity(null, user.display_name, [user], []);
-                                            await identity.post();
+                                            identity = new FullIdentity(null, user.display_name, [user], []);
+                                        } else {
+                                            identity = await global.api.getFullIdentity(user.identity.id);
                                         }
+                                        
+                                        await user.refreshFollowers();
+                                        await identity.post();
 
                                         if (!streamers.find(streamer => streamer.id == user.id)) {
                                             streamers = [
@@ -211,11 +215,13 @@ class TwitchUser extends User {
                                             ];
                                         }
 
+                                        console.log(identity);
+
                                         if (user.follower_count >= FOLLOWER_REQUIREMENT && global.listenOnChannel) {
                                             global.listenOnChannel(user.display_name.toLowerCase());
                                         }
 
-                                        con.query("insert into identity__moderator (identity_id, modfor_id, active) values (?, ?, ?) on duplicate key update active = ?;", [thisUser.identity.id, user.identity.id, user.follower_count >= FOLLOWER_REQUIREMENT, user.follower_count >= FOLLOWER_REQUIREMENT]);
+                                        con.query("insert into identity__moderator (identity_id, modfor_id, active) values (?, ?, ?) on duplicate key update active = ?;", [thisUser.identity.id, identity.id, user.follower_count >= FOLLOWER_REQUIREMENT, user.follower_count >= FOLLOWER_REQUIREMENT]);
                                     } catch (e) {
                                         if (e !== "No users were found!") {
                                             console.error(e);
