@@ -73,9 +73,6 @@ class DiscordUser extends User {
      */
     post() {
         return new Promise(async (resolve, reject) => {
-            if (this.identity) {
-                this.identity = await this.identity.post();
-            }
             con.query("insert into discord__user (id, name, discriminator, avatar, identity_id) values (?, ?, ?, ?, ?) on duplicate key update name = ?, discriminator = ?, avatar = ?, identity_id = ?;", [
                 this.id,
                 this.name,
