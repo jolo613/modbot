@@ -45,7 +45,7 @@ class FullIdentity extends Identity {
         this.twitchAccounts = twitchAccounts;
         this.discordAccounts = discordAccounts;
 
-        if (this.twitchAccounts.length >= 0) {
+        if (this.twitchAccounts.length > 0) {
             this.avatar_url = this.twitchAccounts[0].profile_image_url;
         }
 
