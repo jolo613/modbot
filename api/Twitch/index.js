@@ -111,7 +111,7 @@ class Twitch {
             if (helixUser) {
                 let user = new TwitchUser(helixUser.id, null, helixUser.displayName, null, helixUser.profilePictureUrl, helixUser.offlinePlaceholderUrl, helixUser.description, helixUser.views, null, null, (helixUser.broadcasterType === "" ? null : helixUser.broadcasterType), null);
                 await user.refreshFollowers();
-                user.post();
+                await user.post();
 
                 user = new AssumedTwitchUser(user, [new Assumption("display_name", display_name, user.display_name)])
 
