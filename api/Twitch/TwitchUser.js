@@ -359,7 +359,7 @@ class TwitchUser extends User {
                 if (err) {
                     reject(err);
                 } else {
-                    console.log(this.identity.id);
+                    console.log(this.identity?.id);
                     resolve(this);
                 }
             });
