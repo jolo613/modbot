@@ -49,7 +49,7 @@ class Cache {
     async get(key, retrieve, overrideCache = false, attemptInt = true) {
         if (attemptInt && typeof(key) !== "number") {
             try {
-                let pikey = Integer.parseInt(key);
+                let pikey = parseInt(key);
                 key = pikey;
             } catch(e) {}
         }
