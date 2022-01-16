@@ -33,6 +33,7 @@ class Identity {
      */
     post() {
         return new Promise((resolve, reject) => {
+            console.log("identity post: "+this.id);
             con.query("insert into identity (id, name) values (?, ?) on duplicate key update name = ?;", [
                 this.id,
                 this.name,
@@ -49,10 +50,12 @@ class Identity {
                                 reject("Could not retrieve inserted id.");
                             } else {
                                 this.id = res[0].id;
+                                console.log("identity post null: "+this.id);
                                 resolve(new Identity(res[0].id, res[0].name));
                             }
                         });
                     } else {
+                        console.log("identity post non-null: "+this.id);
                         resolve(new Identity(this.id, this.name));
                     }
                 }
