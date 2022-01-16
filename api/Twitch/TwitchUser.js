@@ -359,7 +359,7 @@ class TwitchUser extends User {
                     reject(err);
                 } else {
                     resolve(this);
-                    global.api.Twitch.userCache.delete(this.id);
+                    global.api.Twitch.userCache.remove(this.id);
                 }
             });
         });
