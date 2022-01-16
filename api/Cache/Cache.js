@@ -72,6 +72,8 @@ class Cache {
         try {
             delete this.objectStore[parseInt(key)];
         } catch (e) {}
+
+        console.log(this.objectStore);
     }
 
 }
