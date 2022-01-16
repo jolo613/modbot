@@ -49,6 +49,8 @@ class Twitch {
                 await user.refreshFollowers();
                 user.post();
 
+                await con.pquery("insert into twitch__username (id, display_name) values (?, ?) on duplicate key update last_seen = null;", [user.id, user.display_name]);
+                
                 resolve(user);
             } else {
                 reject("User not found!");
@@ -113,7 +115,9 @@ class Twitch {
                 await user.refreshFollowers();
                 await user.post();
 
-                user = new AssumedTwitchUser(user, [new Assumption("display_name", display_name, user.display_name)])
+                await con.pquery("insert into twitch__username (id, display_name) values (?, ?) on duplicate key update last_seen = null;", [user.id, user.display_name]);
+
+                user = new AssumedTwitchUser(user, [new Assumption("display_name", display_name, user.display_name)]);
 
                 resolve([user]);
             } else {
