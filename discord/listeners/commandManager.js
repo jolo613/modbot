@@ -5,7 +5,6 @@ const listener = {
     eventName: 'interactionCreate',
     eventType: 'on',
     listener (interaction) {
-        console.log(interaction);
         if (!interaction.isCommand()) return;
     
         if (!client.commands.has(interaction.commandName)) return;
