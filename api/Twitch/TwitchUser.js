@@ -187,7 +187,6 @@ class TwitchUser extends User {
 
                                 if (thisUser.identity === null) {
                                     let identity = new FullIdentity(null, thisUser.display_name, [thisUser], []);
-                                    console.log("null identity post");
                                     await identity.post();
                                 }
 
@@ -202,7 +201,6 @@ class TwitchUser extends User {
                                         let identity;
                                         if (!user.identity?.id) {
                                             identity = new FullIdentity(null, user.display_name, [user], []);
-                                            console.log("null identity post:streamer");
                                         } else {
                                             identity = await global.api.getFullIdentity(user.identity.id);
                                         }
@@ -216,8 +214,6 @@ class TwitchUser extends User {
                                                 user
                                             ];
                                         }
-
-                                        console.log(identity);
 
                                         if (user.follower_count >= FOLLOWER_REQUIREMENT && global.listenOnChannel) {
                                             global.listenOnChannel(user.display_name.toLowerCase());
@@ -334,7 +330,6 @@ class TwitchUser extends User {
      */
     post() {
         return new Promise(async (resolve, reject) => {
-            console.trace(this.display_name, this.identity?.id);
             con.query("insert into twitch__user (id, display_name, identity_id, email, profile_image_url, offline_image_url, description, view_count, follower_count, affiliation) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) on duplicate key update display_name = ?, identity_id = ?, email = ?, profile_image_url = ?, offline_image_url = ?, description = ?, view_count = ?, follower_count = ?, affiliation = ?;", [
                 this.id,
                 this.display_name,
