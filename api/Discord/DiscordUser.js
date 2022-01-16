@@ -88,7 +88,7 @@ class DiscordUser extends User {
                     reject(err);
                 } else {
                     resolve(this);
-                    global.api.Discord.userCache.put(parseInt(this.id), this);
+                    global.api.Discord.userCache.delete(this.id);
                 }
             });
         })

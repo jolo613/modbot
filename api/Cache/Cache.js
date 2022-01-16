@@ -66,6 +66,14 @@ class Cache {
         this.objectStore[key] = item;
     }
 
+    remove(key) {
+        delete this.objectStore[key];
+
+        try {
+            delete this.objectStore[parseInt(key)];
+        } catch (e) {}
+    }
+
 }
 
 module.exports = Cache;
