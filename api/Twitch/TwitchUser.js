@@ -334,7 +334,6 @@ class TwitchUser extends User {
      */
     post() {
         return new Promise(async (resolve, reject) => {
-            console.trace(this.identity?.id);
             con.query("insert into twitch__user (id, display_name, identity_id, email, profile_image_url, offline_image_url, description, view_count, follower_count, affiliation) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) on duplicate key update display_name = ?, identity_id = ?, email = ?, profile_image_url = ?, offline_image_url = ?, description = ?, view_count = ?, follower_count = ?, affiliation = ?;", [
                 this.id,
                 this.display_name,
@@ -360,6 +359,7 @@ class TwitchUser extends User {
                     reject(err);
                 } else {
                     resolve(this);
+                    global.api.Twitch.userCache.put(this.id, this);
                 }
             });
         });
