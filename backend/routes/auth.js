@@ -260,7 +260,7 @@ router.get('/discord', async (req, res) => {
                     let streamer = streamers[si];
 
                     followers = await streamer.refreshFollowers();
-                    
+                    console.log(streamer.display_name, followers, streamer.affiliation);
                     if (streamer.affiliation === "partner") {
                         partneredModerator = true;
                     } else if (streamer.affiliation === "affiliate" && followers >= FOLLOWER_REQUIREMENT) {
