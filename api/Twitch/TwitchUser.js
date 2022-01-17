@@ -92,24 +92,12 @@ class TwitchUser extends User {
      * @type {?number}
      */
     follower_count;
-
-    /**
-     * Date the user was last updated
-     * @type {?Date}
-     */
-    last_updated;
     
     /**
      * Affiliation for the user. (partner, affiliate, or blank)
      * @type {?string}
      */
     affiliation;
-
-    /**
-     * Date that TMS last updated the moderators for this user
-     * @type {?Date}
-     */
-    moderator_checked;
 
     /**
      * Constructs a TwitchUser object
@@ -123,12 +111,10 @@ class TwitchUser extends User {
      * @param {?string} description 
      * @param {?number} view_count 
      * @param {?number} follower_count 
-     * @param {?Date} last_updated 
      * @param {?string} affiliation 
-     * @param {?Date} moderator_checked 
      */
 
-    constructor(id, identity, display_name, email, profile_image_url, offline_image_url, description, view_count, follower_count, last_updated, affiliation, moderator_checked) {
+    constructor(id, identity, display_name, email, profile_image_url, offline_image_url, description, view_count, follower_count, affiliation) {
         super(id, identity);
 
         this.display_name = display_name;
@@ -138,9 +124,7 @@ class TwitchUser extends User {
         this.description = description;
         this.view_count = view_count;
         this.follower_count = follower_count;
-        this.last_updated = last_updated;
         this.affiliation = affiliation;
-        this.moderator_checked = moderator_checked;
     }
 
     /**

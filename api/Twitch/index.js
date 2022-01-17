@@ -45,7 +45,7 @@ class Twitch {
             let helixUser = await api.helix.users.getUserById(id);
 
             if (helixUser) {
-                let user = new TwitchUser(helixUser.id, null, helixUser.displayName, null, helixUser.profilePictureUrl, helixUser.offlinePlaceholderUrl, helixUser.description, helixUser.views, null, null, (helixUser.broadcasterType === "" ? null : helixUser.broadcasterType), null);
+                let user = new TwitchUser(helixUser.id, null, helixUser.displayName, null, helixUser.profilePictureUrl, helixUser.offlinePlaceholderUrl, helixUser.description, helixUser.views, null, (helixUser.broadcasterType === "" ? null : helixUser.broadcasterType));
                 await user.refreshFollowers();
                 user.post();
 
@@ -84,9 +84,7 @@ class Twitch {
                             row.description,
                             row.view_count,
                             row.follower_count,
-                            row.last_updated,
                             row.affiliation,
-                            row.moderator_checked,
                         ));
                     } else {
                         if (requestIfUnavailable) {
@@ -111,7 +109,7 @@ class Twitch {
             let helixUser = await api.helix.users.getUserByName(display_name);
 
             if (helixUser) {
-                let user = new TwitchUser(helixUser.id, null, helixUser.displayName, null, helixUser.profilePictureUrl, helixUser.offlinePlaceholderUrl, helixUser.description, helixUser.views, null, null, (helixUser.broadcasterType === "" ? null : helixUser.broadcasterType), null);
+                let user = new TwitchUser(helixUser.id, null, helixUser.displayName, null, helixUser.profilePictureUrl, helixUser.offlinePlaceholderUrl, helixUser.description, helixUser.views, null, (helixUser.broadcasterType === "" ? null : helixUser.broadcasterType));
                 await user.refreshFollowers();
                 await user.post();
 
