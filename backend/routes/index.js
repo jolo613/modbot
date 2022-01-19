@@ -4,6 +4,8 @@ const status = require("./status");
 const auth = require("./auth");
 const search = require("./search");
 const contactUs = require("./contact-us");
+const discord = require("./discord");
+const twitch = require("./twitch");
  
 module.exports = {
     identity,
@@ -12,4 +14,6 @@ module.exports = {
     auth,
     search,
     contactUs,
+    discord,
+    twitch,
 };

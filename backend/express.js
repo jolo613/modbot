@@ -53,6 +53,8 @@ app.use('/identity', routes.identity);
 app.use('/streamers', routes.streamers);
 app.use('/status', routes.status);
 app.use('/search', routes.search);
+app.use('/twitch', routes.twitch);
+app.use('/discord', routes.discord);
 
 app.get('/', (req, res) => {
     res.status(404);
