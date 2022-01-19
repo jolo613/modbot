@@ -1,6 +1,5 @@
 const {Router} = require("express");
 const api = require("../../api/index");
-const {IdentityService} = require("../../api");
  
 const router = Router();
 
