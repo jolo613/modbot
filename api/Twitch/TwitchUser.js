@@ -366,7 +366,7 @@ class TwitchUser extends User {
                             ban.id,
                             await global.api.Twitch.getUserById(ban.streamer_id),
                             await global.api.Twitch.getUserById(ban.user_id),
-                            new Date().setMilliseconds(ban.timebanned),
+                            new Date(ban.timebanned),
                             ban.active == 1,
                             ban.discord_message
                         ),
