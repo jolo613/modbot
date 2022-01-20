@@ -332,7 +332,7 @@ class TwitchUser extends User {
                             timeout.id,
                             await global.api.Twitch.getUserById(timeout.streamer_id),
                             await global.api.Twitch.getUserById(timeout.user_id),
-                            new Date().setMilliseconds(timeout.timeto),
+                            new Date(timeout.timeto),
                             timeout.duration,
                             timeout.active == 1,
                             timeout.discord_message
