@@ -20,7 +20,7 @@ router.get('/:discordId', (req, res) => {
 });
 
 router.get('/:discordId/punishments', (req, res) => {
-    res.json({success: true, timeouts: [], bans: []})
+    res.json({success: true, data:{timeouts: [], bans: []}})
 });
  
 module.exports = router;
