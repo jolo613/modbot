@@ -18,7 +18,7 @@ const search = async (req, res) => {
         limit = Math.min(10, Number(req.params.limit));
     }
 
-    let query = req.params.query.replace(/(?:%|_|\\)/g, '');
+    let query = req.params.query.replace(/(?:%|_|\\)/g, '\\$&');
 
     let identities = await con.pquery("select id from identity where name like ? limit ?;", [query + "%", limit]);
     
