@@ -18,5 +18,23 @@ router.get('/:twitchId', (req, res) => {
         }
     });
 });
+
+router.get('/:twitchId/punishments', (req, res) => {
+    const sendError = err => res.json({success: false, error: err});
+
+    api.Twitch.getUserById(req.params.twitchId).then(twitchUser => {
+        twitchUser.getBans().then(bans => {
+            twitchUser.getTimeouts(timeouts => {
+                res.json({
+                    success: true,
+                    data: {
+                        timeouts: timeouts,
+                        bans: bans,
+                    }
+                });
+            }, sendError);
+        }, sendError);
+    }, sendError);
+});
  
 module.exports = router;

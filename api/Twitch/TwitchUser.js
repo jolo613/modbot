@@ -6,6 +6,9 @@ const User = require("../User");
 const Identity = require("../Identity");
 const FullIdentity = require("../FullIdentity");
 
+const TwitchTimeout = require("./TwitchTimeout");
+const TwitchBan = require("./TwitchBan");
+
 const https = require("https");
 
 const FOLLOWER_REQUIREMENT = 5000;
@@ -304,6 +307,71 @@ class TwitchUser extends User {
             }
 
             resolve(finalMods);
+        });
+    }
+
+    /**
+     * Gets a list of Twitch user timeouts
+     * 
+     * @returns {Promise<TwitchTimeout[]>}
+     */
+     getTimeouts() {
+        return new Promise((resolve, reject) => {
+            con.query("select * from twitch__timeout where user_id = ? order by timeto desc;", [this.id], (err, res) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+
+                let result = [];
+                for (let i = 0; i < res.length; i++) {
+                    let timeout = res[i];
+                    result = [
+                        ...result,
+                        new TwitchTimeout(
+                            timeout.id,
+                            await global.api.Twitch.getUserById(timeout.streamer_id),
+                            await global.api.Twitch.getUserById(timeout.user_id),
+                            new Date().setMilliseconds(timeout.timeto),
+                            timeout.duration,
+                            timeout.active == 1
+                        ),
+                    ];
+                }
+                resolve(result);
+            });
+        });
+    }
+
+    /**
+     * Gets a list of Twitch user bans
+     * 
+     * @returns {Promise<TwitchBan[]>}
+     */
+    getBans() {
+        return new Promise((resolve, reject) => {
+            con.query("select * from twitch__ban where user_id = ? order by timebanned desc;", [this.id], (err, res) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+
+                let result = [];
+                for (let i = 0; i < res.length; i++) {
+                    let ban = res[i];
+                    result = [
+                        ...result,
+                        new TwitchBan(
+                            ban.id,
+                            await global.api.Twitch.getUserById(ban.streamer_id),
+                            await global.api.Twitch.getUserById(ban.user_id),
+                            new Date().setMilliseconds(ban.timebanned),
+                            ban.active == 1
+                        ),
+                    ];
+                }
+                resolve(result);
+            });
         });
     }
 
