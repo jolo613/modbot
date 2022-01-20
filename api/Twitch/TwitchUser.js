@@ -317,7 +317,7 @@ class TwitchUser extends User {
      */
      getTimeouts() {
         return new Promise((resolve, reject) => {
-            con.query("select * from twitch__timeout where user_id = ? order by timeto desc;", [this.id], (err, res) => {
+            con.query("select * from twitch__timeout where user_id = ? order by timeto desc;", [this.id], async (err, res) => {
                 if (err) {
                     reject(err);
                     return;
@@ -350,7 +350,7 @@ class TwitchUser extends User {
      */
     getBans() {
         return new Promise((resolve, reject) => {
-            con.query("select * from twitch__ban where user_id = ? order by timebanned desc;", [this.id], (err, res) => {
+            con.query("select * from twitch__ban where user_id = ? order by timebanned desc;", [this.id], async (err, res) => {
                 if (err) {
                     reject(err);
                     return;
