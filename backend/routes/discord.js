@@ -18,5 +18,9 @@ router.get('/:discordId', (req, res) => {
         }
     });
 });
+
+router.get('/:discordId/punishments', (req, res) => {
+    res.json({success: true, timeouts: [], bans: []})
+});
  
 module.exports = router;
