@@ -24,7 +24,7 @@ router.get('/:twitchId/punishments', (req, res) => {
 
     api.Twitch.getUserById(req.params.twitchId).then(twitchUser => {
         twitchUser.getBans().then(bans => {
-            twitchUser.getTimeouts(timeouts => {
+            twitchUser.getTimeouts().then(timeouts => {
                 res.json({
                     success: true,
                     data: {
