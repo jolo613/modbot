@@ -18,9 +18,10 @@ class TwitchTimeout extends TwitchPunishment {
      * @param {Date} time 
      * @param {number} duration 
      * @param {boolean} active 
+     * @param {string} discord_message
      */
-    constructor(id, channel, user, time, duration, active) {
-        super(id, channel, user, time, active);
+    constructor(id, channel, user, time, duration, active, discord_message) {
+        super(id, channel, user, time, active, discord_message);
 
         this.duration = duration;
     }

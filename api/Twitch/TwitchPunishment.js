@@ -29,8 +29,9 @@ class TwitchPunishment extends Punishment {
      * @param {TwitchUser} user 
      * @param {Date} time 
      * @param {boolean} active 
+     * @param {string} discord_message
      */
-    constructor(id, channel, user, time, active) {
+    constructor(id, channel, user, time, active, discord_message) {
         super(id, time, discord_message);
 
         this.channel = channel;
