@@ -132,7 +132,7 @@ class TwitchChat {
                     result.channel_log = [
                         ...result.channel_log,
                         {
-                            streamer: await global.api.Twitch.getUserById(log.user_id),
+                            user: await global.api.Twitch.getUserById(log.user_id),
                             count: log.chat_count,
                         }
                     ]
