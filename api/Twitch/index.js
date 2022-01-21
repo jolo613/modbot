@@ -1,5 +1,7 @@
 const con = require("../../database");
 
+const TwitchChat = require("./TwitchChat");
+
 const Identity = require("../Identity");
 const TwitchUser = require("./TwitchUser");
 
@@ -26,6 +28,13 @@ class Twitch {
      * @type {ApiClient}
      */
     Direct = api;
+
+    /**
+     * Access to Chat methods
+     * 
+     * @type {TwitchChat}
+     */
+    Chat = new TwitchChat();
 
     /**
      * Twitch user cache (ID)
