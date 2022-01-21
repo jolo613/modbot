@@ -79,10 +79,11 @@ class TwitchChat {
     /**
      * Get overview of where the user has chatted
      * @param {number} user 
+     * @param {number} logLimit
      */
-    getChatterOverview(user) {
+    getChatterOverview(user, logLimit = 25) {
         return new Promise((resolve, reject) => {
-            con.query("SELECT streamer_id, count(streamer_id) as chat_count FROM twitch__chat where user_id = ? group by streamer_id;", [user], async (err, res) => {
+            con.query("SELECT streamer_id, count(streamer_id) as chat_count FROM twitch__chat where user_id = ? group by streamer_id order by chat_count desc;", [user], async (err, res) => {
                 if (err) {
                     reject(err);
                     return;
@@ -95,13 +96,15 @@ class TwitchChat {
 
                 for (let i = 0; i < res.length; i++) {
                     let log = res[i];
-                    result.channel_log = [
-                        ...result.channel_log,
-                        {
-                            streamer: await global.api.Twitch.getUserById(log.streamer_id),
-                            count: log.chat_count,
-                        }
-                    ]
+                    if (result.channel_log.length < logLimit) {
+                        result.channel_log = [
+                            ...result.channel_log,
+                            {
+                                streamer: await global.api.Twitch.getUserById(log.streamer_id),
+                                count: log.chat_count,
+                            }
+                        ];
+                    }
                     result.total += log.chat_count;
                 }
 
@@ -113,10 +116,11 @@ class TwitchChat {
     /**
      * Get overview of users who have chatted in a stream
      * @param {number} user 
+     * @param {number} logLimit
      */
-    getStreamerOverview(user) {
+    getStreamerOverview(user, logLimit = 6) {
         return new Promise((resolve, reject) => {
-            con.query("SELECT user_id, count(user_id) as chat_count FROM twitch__chat where streamer_id = ? group by user_id;", [user], async (err, res) => {
+            con.query("SELECT user_id, count(user_id) as chat_count FROM twitch__chat where streamer_id = ? group by user_id order by chat_count desc;", [user], async (err, res) => {
                 if (err) {
                     reject(err);
                     return;
@@ -129,13 +133,15 @@ class TwitchChat {
 
                 for (let i = 0; i < res.length; i++) {
                     let log = res[i];
-                    result.channel_log = [
-                        ...result.channel_log,
-                        {
-                            user: await global.api.Twitch.getUserById(log.user_id),
-                            count: log.chat_count,
-                        }
-                    ]
+                    if (result.channel_log.length < logLimit) {
+                        result.channel_log = [
+                            ...result.channel_log,
+                            {
+                                user: await global.api.Twitch.getUserById(log.user_id),
+                                count: log.chat_count,
+                            }
+                        ];
+                    }
                     result.total += log.chat_count;
                 }
 
