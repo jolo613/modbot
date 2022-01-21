@@ -6,6 +6,7 @@ const search = require("./search");
 const contactUs = require("./contact-us");
 const discord = require("./discord");
 const twitch = require("./twitch");
+const chat = require("./chat");
  
 module.exports = {
     identity,
@@ -16,4 +17,5 @@ module.exports = {
     contactUs,
     discord,
     twitch,
+    chat,
 };
