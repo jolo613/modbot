@@ -39,7 +39,7 @@ class TwitchChat {
             if (timeStart !== null) addToQuery("timesent <= ?", timeStart.getUTCMilliseconds());
             if (timeEnd !== null) addToQuery("timesent >= ?", timeEnd.getUTCMilliseconds());
             
-            con.query("select * from twitch__chat where " + buildQuery + " limit ?, ?;", [...queryParams, offset, limit], async(err, res) => {
+            con.query("select * from twitch__chat where " + buildQuery + " order by timesent desc limit ?, ?;", [...queryParams, offset, limit], async(err, res) => {
                 if (err) {
                     reject(err);
                     return;
