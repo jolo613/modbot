@@ -3,7 +3,7 @@ const api = require("../../api/index");
  
 const router = Router();
 
-router.on("/", (req, res) => {
+router.get("/", (req, res) => {
     api.Twitch.Chat.getLogs(
         req.params.channel,
         req.params.user,
