@@ -91,7 +91,10 @@ class TwitchChat {
 
                 let result = {
                     channel_log: [],
-                    total: 0,
+                    total: {
+                        chats: 0,
+                        channels: 0,
+                    },
                 };
 
                 for (let i = 0; i < res.length; i++) {
@@ -105,7 +108,8 @@ class TwitchChat {
                             }
                         ];
                     }
-                    result.total += log.chat_count;
+                    result.total.chats += log.chat_count;
+                    result.total.channels++;
                 }
 
                 resolve(result);
@@ -128,7 +132,10 @@ class TwitchChat {
 
                 let result = {
                     channel_log: [],
-                    total: 0,
+                    total: {
+                        chats: 0,
+                        channels: 0,
+                    },
                 };
 
                 for (let i = 0; i < res.length; i++) {
@@ -142,7 +149,8 @@ class TwitchChat {
                             }
                         ];
                     }
-                    result.total += log.chat_count;
+                    result.total.chats += log.chat_count;
+                    result.total.channels++;
                 }
 
                 resolve(result);
