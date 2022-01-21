@@ -11,6 +11,17 @@ const app = express();
 app.use(cookieParser());
 app.use(cors());
 
+app.use('/', (req, res, next) => {
+    let elapsed_start = (new Date()).getMilliseconds();
+
+    let oldJson = res.json;
+    res.json = jsonObj => {
+        jsonObj.elapsed = (new Date()).getMilliseconds() - elapsed_start;
+        oldJson(jsonObj);
+    }
+    next();
+});
+
 app.use('/auth', routes.auth);
 app.use('/contact-us', routes.contactUs)
 

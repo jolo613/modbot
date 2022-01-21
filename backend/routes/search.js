@@ -12,8 +12,6 @@ const search = async (req, res) => {
     let result = {success: true, identityResults: [], twitchAccountResults: [], discordAccountResults: []};
     let limit = 10;
 
-    let start = (new Date()).getMilliseconds();
-
     if (req.params?.limit && checkNumber(req.params.limit)) {
         limit = Math.min(10, Number(req.params.limit));
     }
@@ -50,7 +48,6 @@ const search = async (req, res) => {
         ];
     }
 
-    result.elapsed = (new Date()).getMilliseconds() - start;
     res.json(result);
 }
 
