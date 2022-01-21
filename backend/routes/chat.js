@@ -5,12 +5,12 @@ const router = Router();
 
 router.get("/", (req, res) => {
     api.Twitch.Chat.getLogs(
-        req.params.channel,
-        req.params.user,
-        req.params.time_start,
-        req.params.time_end,
-        req.params.limit,
-        req.params.offset
+        req.query.channel,
+        req.query.user,
+        req.query.time_start,
+        req.query.time_end,
+        req.query.limit,
+        req.query.offset
     ).then(logs => {
         res.json({success: true, data: logs});
     }, err => {
