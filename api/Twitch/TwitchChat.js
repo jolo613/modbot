@@ -57,7 +57,7 @@ class TwitchChat {
                             chatLog.message,
                             chatLog.deleted == 1,
                             chatLog.color,
-                            new Date(chatLog.timesent),
+                            chatLog.timesent,
                         )
                     ]
                 });
