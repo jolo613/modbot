@@ -44,7 +44,7 @@ class TwitchChatLog {
     /**
      * Time the message was sent
      * 
-     * @type {Date}
+     * @type {number}
      */
     timesent;
 
@@ -56,7 +56,7 @@ class TwitchChatLog {
      * @param {string} message 
      * @param {boolean} deleted 
      * @param {string} color 
-     * @param {Date} timesent 
+     * @param {number} timesent 
      */
     constructor(id, streamer_id, user_id, message, deleted, color, timesent) {
         this.id = id;

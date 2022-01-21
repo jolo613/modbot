@@ -7,8 +7,8 @@ router.get("/", (req, res) => {
     api.Twitch.Chat.getLogs(
         req.query.channel,
         req.query.user,
-        req.query.time_start ? new Date(req.query.time_start) : undefined,
-        req.query.time_end ? new Date(req.query.time_end) : undefined,
+        req.query.time_start,
+        req.query.time_end,
         req.query.limit ? Number(req.query.limit) : undefined,
         req.query.offset ? Number(req.query.offset) : undefined
     ).then(logs => {
@@ -30,8 +30,8 @@ router.get("/:channel", (req, res) => {
     api.Twitch.Chat.getLogs(
         req.params.channel,
         req.query.user,
-        req.query.time_start ? new Date(req.query.time_start) : undefined,
-        req.query.time_end ? new Date(req.query.time_end) : undefined,
+        req.query.time_start,
+        req.query.time_end,
         req.query.limit ? Number(req.query.limit) : undefined,
         req.query.offset ? Number(req.query.offset) : undefined
     ).then(logs => {
@@ -46,8 +46,8 @@ router.get("/:channel/:user", (req, res) => {
     api.Twitch.Chat.getLogs(
         req.params.channel,
         req.params.user,
-        req.query.time_start ? new Date(req.query.time_start) : undefined,
-        req.query.time_end ? new Date(req.query.time_end) : undefined,
+        req.query.time_start,
+        req.query.time_end,
         req.query.limit ? Number(req.query.limit) : undefined,
         req.query.offset ? Number(req.query.offset) : undefined
     ).then(logs => {
