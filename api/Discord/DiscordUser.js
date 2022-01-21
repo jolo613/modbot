@@ -62,7 +62,7 @@ class DiscordUser extends User {
         if (this.avatar) {
             return DISCORD_CDN + `avatars/${this.id}/${this.avatar}.png`;
         } else {
-            return DISCORD_CDN + `embed/avatars/${this.discriminator}.png`;
+            return DISCORD_CDN + `embed/avatars/${this.discriminator % 5}.png`;
         }
     }
 
