@@ -12,7 +12,7 @@ router.get("/", (req, res) => {
         req.query.limit ? Number(req.query.limit) : undefined,
         req.query.offset ? Number(req.query.offset) : undefined
     ).then(logs => {
-        res.json({success: true, data: logs});
+        res.elapsedJson({success: true, data: logs});
     }, err => {
         res.json({success: false, error: err});
     });
@@ -20,7 +20,7 @@ router.get("/", (req, res) => {
 
 router.get("/overview/:user", (req, res) => {
     api.Twitch.Chat.getOverview(req.params.user).then(overview => {
-        res.json({success: true, data: overview});
+        res.elapsedJson({success: true, data: overview});
     }, err => {
         res.json({success: false, error: err});
     })
@@ -35,7 +35,7 @@ router.get("/:channel", (req, res) => {
         req.query.limit ? Number(req.query.limit) : undefined,
         req.query.offset ? Number(req.query.offset) : undefined
     ).then(logs => {
-        res.json({success: true, data: logs});
+        res.elapsedJson({success: true, data: logs});
     }, err => {
         res.json({success: false, error: err});
     });
@@ -51,7 +51,7 @@ router.get("/:channel/:user", (req, res) => {
         req.query.limit ? Number(req.query.limit) : undefined,
         req.query.offset ? Number(req.query.offset) : undefined
     ).then(logs => {
-        res.json({success: true, data: logs});
+        res.elapsedJson({success: true, data: logs});
     }, err => {
         res.json({success: false, error: err});
     });
