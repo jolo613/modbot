@@ -15,9 +15,9 @@ app.use('/', (req, res, next) => {
     let elapsed_start = (new Date()).getMilliseconds();
 
     let oldJson = res.json;
-    res.json = jsonObj => {
-        jsonObj.elapsed = (new Date()).getMilliseconds() - elapsed_start;
-        oldJson(jsonObj);
+    res.json = () => {
+        arguments[0].elapsed = (new Date()).getMilliseconds() - elapsed_start;
+        oldJson(...arguments);
     }
     next();
 });
