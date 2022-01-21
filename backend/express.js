@@ -14,9 +14,9 @@ app.use(cors());
 app.use('/', (req, res, next) => {
     let elapsed_start = (new Date()).getMilliseconds();
 
-    res.elapsedJson = () => {
-        arguments[0].elapsed = (new Date()).getMilliseconds() - elapsed_start;
-        res.json(...arguments);
+    res.elapsedJson = json => {
+        json.elapsed = (new Date()).getMilliseconds() - elapsed_start;
+        res.json(json);
     }
     next();
 });
