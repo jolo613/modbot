@@ -66,9 +66,9 @@ class TwitchChat {
 
                 for (let i = 0; i < result.length; i++) {
                     let chatLog = result[i];
-                    if (!userTable[chatLog.streamer_id]) userTable[chatLog.streamer_id] = await api.Twitch.getUserById(chatLog.streamer_id);
+                    if (!userTable[chatLog.streamer_id]) userTable[chatLog.streamer_id] = await global.api.Twitch.getUserById(chatLog.streamer_id);
 
-                    if (!userTable[chatLog.user_id]) userTable[chatLog.user_id] = await api.Twitch.getUserById(chatLog.user_id);
+                    if (!userTable[chatLog.user_id]) userTable[chatLog.user_id] = await global.api.Twitch.getUserById(chatLog.user_id);
                 }
 
                 resolve({log: result, user_table: userTable});
