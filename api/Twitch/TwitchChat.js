@@ -36,8 +36,8 @@ class TwitchChat {
 
             if (channel !== null) addToQuery("streamer_id = ?", channel);
             if (user !== null) addToQuery("user_id = ?", user);
-            if (timeStart !== null) addToQuery("timesent <= ?", timeStart.getUTCMilliseconds());
-            if (timeEnd !== null) addToQuery("timesent >= ?", timeEnd.getUTCMilliseconds());
+            if (timeStart !== null) addToQuery("timesent <= ?", timeStart);
+            if (timeEnd !== null) addToQuery("timesent >= ?", timeEnd);
             
             con.query("select * from twitch__chat where " + buildQuery + " order by timesent desc limit ?, ?;", [...queryParams, offset, limit], async(err, res) => {
                 if (err) {
