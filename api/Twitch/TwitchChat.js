@@ -75,6 +75,91 @@ class TwitchChat {
             });
         });
     }
+
+    /**
+     * Get overview of where the user has chatted
+     * @param {number} user 
+     */
+    getChatterOverview(user) {
+        return new Promise((resolve, reject) => {
+            con.query("SELECT streamer_id, count(streamer_id) as chat_count FROM twitch__chat where user_id = ? group by streamer_id;", [user], async (err, res) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+
+                let result = {
+                    channel_log: [],
+                    total: 0,
+                };
+
+                for (let i = 0; i < res.length; i++) {
+                    let log = res[i];
+                    result.channel_log = [
+                        ...result.channel_log,
+                        {
+                            streamer: await global.api.Twitch.getUserById(log.streamer_id),
+                            count: log.chat_count,
+                        }
+                    ]
+                    result.total += log.chat_count;
+                }
+
+                resolve(result);
+            });
+        });
+    }
+
+    /**
+     * Get overview of users who have chatted in a stream
+     * @param {number} user 
+     */
+    getStreamerOverview(user) {
+        return new Promise((resolve, reject) => {
+            con.query("SELECT user_id, count(user_id) as chat_count FROM twitch__chat where streamer_id = ? group by user_id;", [user], async (err, res) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+
+                let result = {
+                    channel_log: [],
+                    total: 0,
+                };
+
+                for (let i = 0; i < res.length; i++) {
+                    let log = res[i];
+                    result.channel_log = [
+                        ...result.channel_log,
+                        {
+                            streamer: await global.api.Twitch.getUserById(log.user_id),
+                            count: log.chat_count,
+                        }
+                    ]
+                    result.total += log.chat_count;
+                }
+
+                resolve(result);
+            });
+        });
+    }
+
+    /**
+     * Get user overview for a user ID
+     * @param {number} user 
+     */
+    getOverview(user) {
+        return new Promise((resolve, reject) => {
+            this.getChatterOverview(user).then(chatterOverview => {
+                this.getStreamerOverview(user).then(streamerOverview => {
+                    resolve({
+                        chatter_overview: chatterOverview,
+                        streamer_overview: streamerOverview,
+                    })
+                }, reject);
+            }, reject);
+        });
+    }
 }
 
 module.exports = TwitchChat;
