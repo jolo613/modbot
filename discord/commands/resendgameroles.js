@@ -15,7 +15,7 @@ const command = {
 
             let selectMenu = new Discord.MessageSelectMenu();
 
-            let options = games.map(x => {return {value: x.role, label: x.label, emoji: x.emoji}});
+            let options = games.map(x => {return {type: "MessageSelectOptionData", value: x.role, label: x.label, emoji: x.emoji, default: false}});
             selectMenu.setOptions(options);
 
             const addButton = new Discord.MessageButton()
