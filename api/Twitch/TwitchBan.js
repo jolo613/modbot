@@ -8,7 +8,7 @@ class TwitchBan extends TwitchPunishment {
      * @param {number} id 
      * @param {TwitchUser} channel 
      * @param {TwitchUser} user 
-     * @param {Date} time 
+     * @param {number} time 
      * @param {number} duration 
      * @param {boolean} active 
      * @param {string} discord_message

@@ -332,7 +332,7 @@ class TwitchUser extends User {
                             timeout.id,
                             await global.api.Twitch.getUserById(timeout.streamer_id),
                             await global.api.Twitch.getUserById(timeout.user_id),
-                            new Date(timeout.timeto),
+                            timeout.timeto,
                             timeout.duration,
                             timeout.active == 1,
                             timeout.discord_message
@@ -366,7 +366,7 @@ class TwitchUser extends User {
                             ban.id,
                             await global.api.Twitch.getUserById(ban.streamer_id),
                             await global.api.Twitch.getUserById(ban.user_id),
-                            new Date(ban.timebanned),
+                            ban.timebanned,
                             ban.active == 1,
                             ban.discord_message
                         ),

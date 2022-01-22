@@ -12,7 +12,7 @@
     /**
      * Time of the punishment
      * 
-     * @type {Date}
+     * @type {number}
      */
     time;
 
@@ -27,7 +27,7 @@
      * Constructor for Punishment
      * 
      * @param {number} id 
-     * @param {Date} time 
+     * @param {number} time 
      * @param {string} discord_message 
      */
     constructor(id, time, discord_message) {
