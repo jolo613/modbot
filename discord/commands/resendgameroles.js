@@ -28,10 +28,10 @@ const command = {
                     .setLabel("Remove Role")
                     .setStyle("DANGER");
 
-            const row1 = new Discord.MessageContentRow()
+            const row1 = new Discord.MessageActionRow()
                     .addComponents(options);
             
-            const row2 = new Discord.MessageContentRow()
+            const row2 = new Discord.MessageActionRow()
                     .addComponents(addButton, removeButton);
             
             interaction.channel.send({content: ' ', embeds: [embed], components: [row1, row2]});
