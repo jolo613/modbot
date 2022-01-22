@@ -25,8 +25,8 @@ module.exports = [
         role: "934489392293216266",
     },
     {
-        label: "Project Zombovalue",
-        emoji: "<:projectzombovalue:934495105757380628>",
+        label: "Project Zomboid",
+        emoji: "<:projectzomboid:934495105757380628>",
         role: "934491665324974091",
     },
     {

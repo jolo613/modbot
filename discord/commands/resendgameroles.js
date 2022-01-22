@@ -21,28 +21,10 @@ const command = {
                 .setMinValues(1)
                 .setMaxValues(options.length);
 
-        const row1 = new Discord.MessageActionRow()
+        const row = new Discord.MessageActionRow()
                 .addComponents(selectMenu);
-
-        const addButton = new Discord.MessageButton()
-                .setCustomId("add-roles")
-                .setLabel("Add Roles")
-                .setStyle("SUCCESS");
-
-        const removeButton = new Discord.MessageButton()
-                .setCustomId("remove-roles")
-                .setLabel("Remove Roles")
-                .setStyle("DANGER");
-
-        const setButton = new Discord.MessageButton()
-                .setCustomId("set-roles")
-                .setLabel("Set Roles")
-                .setStyle("PRIMARY");
         
-        const row2 = new Discord.MessageActionRow()
-                .addComponents(addButton, removeButton, setButton);
-        
-        interaction.reply({content: ' ', embeds: [embed], components: [row1, row2], ephemeral: true});
+        interaction.reply({content: ' ', embeds: [embed], components: [row], ephemeral: true});
     }
 };
 
