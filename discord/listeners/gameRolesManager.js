@@ -1,4 +1,8 @@
+const Discord = require("discord.js");
+
 const games = require("../games");
+
+let storedGameLists = {};
 
 const listener = {
     name: 'gameRolesManager',
@@ -6,9 +10,11 @@ const listener = {
     eventType: 'on',
     listener (interaction) {
         if (interaction.isButton()) {
-            console.log(interaction);
+            console.log(storedGameLists[interaction.id]);
+            interaction.reply("oop");
         } else if (interaction.isSelectMenu()) {
-            console.log(interaction);
+            storedGameLists[interaction.id] = interaction.values;
+            interaction.reply({content: ' ', embeds: [new Discord.MessageEmbed().setTitle("Saved Game Choices!").setDescription(`You've selected ${interaction.values.length} game${interaction.values.length === 1 ? "" : "s"}. Use a button above to save.`).setColor(0x2dad3e)], ephemeral: true});
         }
     }
 };
