@@ -20,13 +20,13 @@ const command = {
 
             const addButton = new Discord.MessageButton()
                     .setLabel("Add Role")
-                    .setStyle(Discord.MessageButtonStyle.PRIMARY);
+                    .setStyle("PRIMARY");
 
             const removeButton = new Discord.MessageButton()
                     .setLabel("Remove Role")
-                    .setStyle(Discord.MessageButtonStyle.DANGER);
+                    .setStyle("DANGER");
             
-            interaction.reply({content: ' ', embeds: [embed], components: [selectMenu, addButton, removeButton]});
+            interaction.channel.send({content: ' ', embeds: [embed], components: [selectMenu, addButton, removeButton]});
         } else {
             interaction.reply({content: 'https://www.youtube.com/watch?v=dIhFU8JG_j0', ephemeral: true});
         }
