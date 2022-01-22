@@ -6,9 +6,9 @@ const listener = {
     eventType: 'on',
     listener (interaction) {
         if (interaction.isButton()) {
-
+            console.log(interaction);
         } else if (interaction.isSelectMenu()) {
-
+            console.log(interaction);
         }
     }
 };

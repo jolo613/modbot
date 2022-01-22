@@ -19,14 +19,22 @@ const command = {
             selectMenu.setOptions(options);
 
             const addButton = new Discord.MessageButton()
+                    .setCustomId("add-role")
                     .setLabel("Add Role")
                     .setStyle("PRIMARY");
 
             const removeButton = new Discord.MessageButton()
+                    .setCustomId("remove-role")
                     .setLabel("Remove Role")
                     .setStyle("DANGER");
+
+            const row1 = new Discord.MessageContentRow()
+                    .addComponents(options);
             
-            interaction.channel.send({content: ' ', embeds: [embed], components: [selectMenu, addButton, removeButton]});
+            const row2 = new Discord.MessageContentRow()
+                    .addComponents(addButton, removeButton);
+            
+            interaction.channel.send({content: ' ', embeds: [embed], components: [row1, row2]});
         } else {
             interaction.reply({content: 'https://www.youtube.com/watch?v=dIhFU8JG_j0', ephemeral: true});
         }
