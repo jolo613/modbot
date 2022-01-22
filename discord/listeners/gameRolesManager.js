@@ -10,9 +10,38 @@ const listener = {
     eventType: 'on',
     listener (interaction) {
         if (interaction.isButton()) {
-            console.log(storedGameLists[interaction.member.id]);
-            interaction.reply("oop");
-        } else if (interaction.isSelectMenu()) {
+            let buttonId = interaction.component.customId;
+
+            const handleSuccess = message => {
+                interaction.reply({content: ' ', embeds: [new Discord.MessageEmbed().setTitle(message).setColor(0x2dad3e)], ephemeral: true})
+            }
+
+            const handleError = err => {
+                interaction.reply({content: ' ', embeds: [new Discord.MessageEmbed().setTitle(err).setColor(0x9e392f)], ephemeral: true})
+            }
+
+            if ((buttonId === "set-roles" || buttonId === "remove-roles" || buttonId === "add-roles") && storedGameLists[interaction.member.id]) {
+                if (buttonId === "set-roles") {
+                    let gameRoles = games.map(x => x.role);
+
+                    interaction.member.roles.remove(gameRoles).then(() => {
+                        interaction.member.roles.add(storedGameLists[interaction.member.id]).then(() => {
+                            handleSuccess("Successfully set selected roles!");
+                        }, handleError)
+                    }, handleError);
+                } else if (buttonId === "remove-roles") {
+                    interaction.member.roles.remove(storedGameLists[interaction.member.id]).then(() => {
+                        handleSuccess("Successfully removed selected roles!");
+                    }, handleError);
+                } else if (buttonId === "add-roles") {
+                    interaction.member.roles.add(storedGameLists[interaction.member.id]).then(() => {
+                        handleSuccess("Successfully added selected roles!");
+                    }, handleError);
+                }
+            } else {
+                handleError(err);
+            }
+        } else if (interaction.isSelectMenu() && interaction.component.customId === "role-select") {
             storedGameLists[interaction.member.id] = interaction.values;
             
 
