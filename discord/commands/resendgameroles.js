@@ -18,7 +18,8 @@ const command = {
                 .setCustomId("role-select")
                 .addOptions(options)
                 .setPlaceholder("Select games to add or remove!")
-                .setMinValues(options);
+                .setMinValues(1)
+                .setMaxValues(options.length);
 
         const row1 = new Discord.MessageActionRow()
                 .addComponents(selectMenu);
