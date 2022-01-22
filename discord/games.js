@@ -39,4 +39,9 @@ module.exports = [
         emoji: "<:stardewvalley:934495020273254480>",
         role: "934489263351939132",
     },
+    {
+        label: "Terraria",
+        emoji: "<:terraria:934520650276679750>",
+        role: "934520888659968081",
+    },
 ];
