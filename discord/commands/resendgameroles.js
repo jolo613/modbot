@@ -13,10 +13,15 @@ const command = {
                     .setDescription('Select a game role below then "Add Role" or "Remove Role" to manage your games.')
                     .setColor(0x00FFFF);
 
-            let selectMenu = new Discord.MessageSelectMenu();
+            let options = games.map(x => {return {value: x.role, label: x.label, emoji: x.emoji}});
 
-            let options = games.map(x => {return {type: "MessageSelectOptionData", value: x.role, label: x.label, emoji: x.emoji, default: false}});
-            selectMenu.setOptions(options);
+            let selectMenu = new Discord.MessageSelectMenu()
+                    .setCustomId("role-select")
+                    .addOptions(options)
+                    .setPlaceholder("Select a game to add or remove!");
+
+            const row1 = new Discord.MessageActionRow()
+                    .addComponents(selectMenu);
 
             const addButton = new Discord.MessageButton()
                     .setCustomId("add-role")
@@ -27,9 +32,6 @@ const command = {
                     .setCustomId("remove-role")
                     .setLabel("Remove Role")
                     .setStyle("DANGER");
-
-            const row1 = new Discord.MessageActionRow()
-                    .addComponents(options);
             
             const row2 = new Discord.MessageActionRow()
                     .addComponents(addButton, removeButton);
