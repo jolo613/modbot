@@ -197,7 +197,7 @@ const addBan = async (channel, userid, username, reason, timebanned) => {
                 ], async (err, res) => {
                     const embed = new MessageEmbed()
                             .setTitle(`User was Banned!`)
-                            // .setURL(`https://panel.twitchmodsquad.com/user/${username}`)
+                            .setURL(speaker.getShortlink())
                             .setAuthor(streamer.display_name, streamer.profile_image_url, "https://twitch.tv/" + channelStripped)
                             .setDescription(`User \`${username}\` was banned from channel \`${channel}\``)
                             .setColor(0xe83b3b)

@@ -67,6 +67,18 @@ class DiscordUser extends User {
     }
 
     /**
+     * Gets TMS short link to user's page
+     * @returns {string}
+     */
+    getShortlink() {
+        if (this.identity?.id) {
+            return "https://tms.to/i/" + this.identity.id;
+        } else {
+            return "https://tms.to/d/" + this.id;
+        }
+    }
+
+    /**
      * Updates or creates the user with the information in this Object
      * 
      * @returns {Promise<DiscordUser>}

@@ -27,6 +27,14 @@ class Identity {
     }
 
     /**
+     * Gets TMS short link to user's page
+     * @returns {string}
+     */
+    getShortlink() {
+        return "https://tms.to/i/" + this.id;
+    }
+
+    /**
      * Updates or creates the identity with the information in this Object
      * 
      * @returns {Promise<Identity>}
