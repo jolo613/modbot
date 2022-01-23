@@ -106,6 +106,9 @@ const command = {
             allMods[i] = mods;
         }
 
+        console.log(mentionString);
+        console.log(embed);
+
         if (mentionString === "") {
             handleError("No mods were mentioned");
             return;
