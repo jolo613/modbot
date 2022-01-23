@@ -68,7 +68,8 @@ const command = {
         for (i = 0; i < streamers.length; i++) {
             let streamer;
             try {
-                streamer = await api.Twitch.getUserByName(streamers[i])[0];
+                streamer = await api.Twitch.getUserByName(streamers[i]);
+                console.log(streamer);
                 streamers[i] = streamer;
             } catch (e) {
                 try {
