@@ -35,8 +35,8 @@ class Assumption extends ReturnableObject {
      * @param {string} queryValue 
      * @param {string} actualValue 
      */
-    constructor(type, property, queryValue, actualValue) {
-        super(type);
+    constructor(property, queryValue, actualValue) {
+        super("assumption");
 
         this.property = property;
         this.queryValue = queryValue;
