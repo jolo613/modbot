@@ -91,7 +91,7 @@ const command = {
         for (i = 0; i < streamers.length; i++) {
             let twitchMods = await streamers[i].getMods();
             let mods = [];
-            for (let tm = 0; tm < twitchMods.length; i++) {
+            for (let tm = 0; tm < twitchMods.length; tm++) {
                 if (twitchMods[tm].identity?.id) {
                     let identity = await api.getFullIdentity(twitchMods[tm].identity.id);
                     identity.discordAccounts.forEach(discordAccount => {
