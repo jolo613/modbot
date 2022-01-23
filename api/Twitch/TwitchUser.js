@@ -311,6 +311,37 @@ class TwitchUser extends User {
     }
 
     /**
+     * Returns the moderators of a certain channel.
+     * 
+     * @returns {Promise<TwitchUser[]>}
+     */
+    getMods() {
+        return new Promise((resolve, reject) => {
+            if (!this.identity?.id) {
+                resolve([]); // not having an identity currently just returns an empty array as it shouldn't particularly be seen as an error
+                return;
+            }
+
+            con.query("select tu.id from identity__moderator as im join twitch__user as tu on tu.identity_id = im.identity_id where im.modfor_id = ?;", [this.identity.id], async (err, res) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    let users = [];
+
+                    for (let i = 0; i < res.length; i++) {
+                        users = [
+                            ...users,
+                            await global.api.Twitch.getUserById(res[i].id),
+                        ]
+                    }
+
+                    resolve(users);
+                }
+            });
+        });
+    }
+
+    /**
      * Gets a list of Twitch user timeouts
      * 
      * @returns {Promise<TwitchTimeout[]>}
