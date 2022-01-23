@@ -44,4 +44,9 @@ module.exports = [
         emoji: "<:terraria:934520650276679750>",
         role: "934520888659968081",
     },
+    {
+        label: "Rainbow Six Siege",
+        emoji: "<:rainbowsix:934616817249435708>",
+        role: "934617192790630410",
+    },
 ];
