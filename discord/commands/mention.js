@@ -60,8 +60,6 @@ const command = {
         if (streamer4) streamers = [...streamers, streamer4];
         if (streamer5) streamers = [...streamers, streamer5];
 
-        console.log(streamers);
-
         let mentionString = "";
 
         let i;
@@ -88,12 +86,9 @@ const command = {
             }
         }
 
-        console.log(streamers);
-
         let allMods = [];
 
         for (i = 0; i < streamers.length; i++) {
-            console.log(streamers[i]);
             let twitchMods = await streamers[i].getMods();
             let mods = [];
             for (let tm = 0; tm < twitchMods.length; i++) {
@@ -129,6 +124,9 @@ const command = {
             });
             embed.addField(streamer.display_name, modString, true);
         });
+
+        console.log(mentionString);
+        console.log(embed);
 
         interaction.reply({content: mentionString, embeds: [embed]});
     }
