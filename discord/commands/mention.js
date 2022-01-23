@@ -106,9 +106,6 @@ const command = {
             allMods[i] = mods;
         }
 
-        console.log(mentionString);
-        console.log(embed);
-
         if (mentionString === "") {
             handleError("No mods were mentioned");
             return;
@@ -127,9 +124,6 @@ const command = {
             });
             embed.addField(streamer.display_name, modString, true);
         });
-
-        console.log(mentionString);
-        console.log(embed);
 
         interaction.reply({content: mentionString, embeds: [embed]});
     }
