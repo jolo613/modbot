@@ -3,16 +3,17 @@ const CLIENT_MAXIMUM_CHANNELS = 20;
 
 const ACTIVE_CHANNEL_PADDING = 3;
 
+// Load application config file
 const config = require("../config.json");
 
+// Load local API module
 const api = require("../api/index");
 
 const tmi = require('tmi.js');
 const con = require("../database");
 
 const discordClient = require("../discord/discord");
-
-const {MessageEmbed} = require("discord.js");
+const { MessageEmbed } = require("discord.js");
 
 let clients = [];
 
@@ -26,6 +27,7 @@ let timeoutList = [];
 
 let bannedPerMinute = {};
 
+// Refresh the bans per minute stat for each watched channel every second
 setInterval(() => {
     for (const [streamer, timestampList] of Object.entries(bannedPerMinute)) {
         let now = Date.now();
@@ -33,6 +35,7 @@ setInterval(() => {
     }
 }, 1000);
 
+// Load a list of bans from the database
 con.query("select * from twitch__ban where active = true;", (err, res) => {
     if (err) {
         console.error(err);
@@ -52,6 +55,7 @@ con.query("select * from twitch__ban where active = true;", (err, res) => {
     console.log("Loaded " + bannedList.length + " bans");
 });
 
+// Load a list of timeouts from the database
 con.query("select * from twitch__timeout where active = true;", (err, res) => {
     if (err) {
         console.error(err);
@@ -71,6 +75,10 @@ con.query("select * from twitch__timeout where active = true;", (err, res) => {
     console.log("Loaded " + timeoutList.length + " t/o's");
 });
 
+/**
+ * @param {Number} day - 0-6 as a representation of the day of the week (0 = Sunday)
+ * @returns {String} The corresponding day of the week as a 3 character String
+*/
 function parseDay(day) {
     let result = "";
 
@@ -100,6 +108,11 @@ function parseDay(day) {
     return result;
 }
 
+/**
+ * 
+ * @param { Number | String | Date | undefined } timestamp - The timestamp to parse, if provided, otherwise the current time is parsed
+ * @returns {String} The parsed Date in the format MM:DD:YY HH:MM:SS
+ */
 function parseDate(timestamp) {
     let dte = new Date(timestamp);
 
@@ -121,7 +134,16 @@ function parseDate(timestamp) {
     return `${parseDay(dte.getDay())} ${mo}.${dy}.${yr} ${hr}:${mn}:${sc}`;
 }
 
-/* I think reason may be deprecated here, so it may always be null. I'll have to check on that. */
+// I think reason may be deprecated here, so it may always be null. I'll have to check on that.
+/**
+ * Add a ban event to the database
+ * @param {String} channel - The twitch channel where the user was banned
+ * @param {String} userid - The twitch user id to add to the ban list
+ * @param {String} username - The twitch username of the offending user
+ * @param {String} reason - The reason for the ban
+ * @param {Number} timebanned - The timestamp of the ban event as a unix timestamp
+ * @returns {void}
+ */
 const addBan = async (channel, userid, username, reason, timebanned) => {
     let channelStripped = channel.replace("#", "");
 
@@ -138,6 +160,12 @@ const addBan = async (channel, userid, username, reason, timebanned) => {
         Date.now()
     ];
 
+    
+    /* 
+     When a twitch channel hits the BPM rate of 60 or greater, the bot will print a warning message and part 
+     from the channel of interest for 15 minutes. On the first instance of a BPM overload of 61, the bot will 
+     also send an alert to the mod squad Discord if it can find the liveban text channel.
+    */
     if (bannedPerMinute[channel].length > 60) {
         console.log("More than 60 bans per minute in " + channel + ". Parting for 15 minutes.");
 
@@ -166,6 +194,10 @@ const addBan = async (channel, userid, username, reason, timebanned) => {
         return;
     }
 
+    /*
+     If the BPM rate of the channel of interest is under the BPM cap, the bot will add the ban to the list
+     and continue without printing a rate limit message.
+    */
     if (bannedPerMinute[channel].length <= 30) {
         con.query("insert into twitch__ban (timebanned, streamer_id, user_id) values (?, ?, ?);", [
             timebanned,
@@ -184,8 +216,10 @@ const addBan = async (channel, userid, username, reason, timebanned) => {
         console.log(`Not logging ban in ${channel} due to exceeding BPM threshold (${bannedPerMinute[channel].length}>30)`);
     }
 
-    // send ban message, if the liveban channel is present.
-
+    /* 
+     If the BPM rate of the channel of interest is healthy (under the BPM cap) and the liveban text channel is 
+     found, the bot will send a message detailing the twitch ban information to the liveban text channel.
+    */
     if (bannedPerMinute[channel].length <= 5) {
         if (config.hasOwnProperty("liveban_channel")) {
             let dchnl = modSquadGuild.channels.cache.find(dchnl => dchnl.id == config.liveban_channel);
@@ -195,6 +229,7 @@ const addBan = async (channel, userid, username, reason, timebanned) => {
                     streamer_id,
                     userid
                 ], async (err, res) => {
+                    // Build the skeleton embed for the ban message 
                     const embed = new MessageEmbed()
                             .setTitle(`User was Banned!`)
                             .setURL(speaker.getShortlink())
@@ -203,6 +238,7 @@ const addBan = async (channel, userid, username, reason, timebanned) => {
                             .setColor(0xe83b3b)
                             .setFooter("Bans per Minute: " + bannedPerMinute[channel].length);
 
+                    // If the query returns results, parse the results and add them to the embed.
                     if (typeof(res) === "object") {
                         let logs = "";
 
@@ -231,7 +267,7 @@ const addBan = async (channel, userid, username, reason, timebanned) => {
 
                     let bannedChannels = [];
 
-                    // grab banned channels from the database
+                    // Get a list of all the channels the user is banned from
                     try {
                         let gbcRes = await con.pquery("select distinct tu.display_name as channel from twitch__ban as tb join twitch__user as tu on tb.streamer_id = tu.id where tb.user_id = ? and active = true;", [userid]);
 
@@ -248,7 +284,7 @@ const addBan = async (channel, userid, username, reason, timebanned) => {
                     let longestChannelName = 7;
                     let activeChannels = "";
 
-                    // calculate longest channel name
+                    // Calculate longest channel name
                     lares.forEach(xchnl => {
                         if (xchnl.channel.length > longestChannelName) longestChannelName = xchnl.channel.length;
                     });
@@ -257,14 +293,14 @@ const addBan = async (channel, userid, username, reason, timebanned) => {
                         if (chnl.length > longestChannelName) longestChannelName = chnl.length;
                     });
 
-                    // assemble active channels
+                    // Assemble active channels
                     lares.forEach(xchnl => {
                         activeChannels += "\n" + xchnl.channel + (' '.repeat(Math.max(1, longestChannelName + ACTIVE_CHANNEL_PADDING - xchnl.channel.length))) + parseDate(parseInt(xchnl.lastactive)) + (bannedChannels.includes(xchnl.channel) || xchnl.channel === channel ? ' [❌ banned]' : '');
 
                         bannedChannels.splice(bannedChannels.indexOf(xchnl.channel), 1);
                     });
 
-                    // assemble "also banned in" section
+                    // Assemble "also banned in" section
                     if (bannedChannels.length > 0) {
                         activeChannels += "\nAlso banned in:";
                     }
@@ -273,8 +309,7 @@ const addBan = async (channel, userid, username, reason, timebanned) => {
                         activeChannels += "\n" + chnl + (' '.repeat(Math.max(1, longestChannelName + ACTIVE_CHANNEL_PADDING - chnl.length))) + "Never Active" + (' '.repeat(12)) + '[❌ banned]';
                     });
 
-                    // add the field, if any active channels were found (which should pretty much always be true)
-
+                    // Add the field, if any active channels were found (which should pretty much always be true)
                     if (activeChannels !== "")
                         embed.addField(`Active in Channels:`, `\`\`\`\nChannel${' '.repeat(longestChannelName + ACTIVE_CHANNEL_PADDING - 7)}Last Active${activeChannels}\`\`\``);
 
@@ -298,6 +333,15 @@ const addBan = async (channel, userid, username, reason, timebanned) => {
     }
 }
 
+/**
+ * Add a timeout event to the database
+ * @param {String} channel - The twitch channel where the user was timed out 
+ * @param {String} userid - The twitch user id to add to the timeout list
+ * @param {String} username - The twitch username of the offending user
+ * @param {String} reason - The reason for the timeout
+ * @param {Number} duration - The duration of the timeout
+ * @param {Number} timeto - The timestamp of the timeout event as a unix timestamp
+*/
 const addTimeout = async (channel, userid, username, reason, duration, timeto) => {
     let streamer = (await api.Twitch.getUserByName(channel.replace("#", ""), true))[0];
     let user = (await api.Twitch.getUserByName(username, true))[0];
@@ -318,16 +362,35 @@ const addTimeout = async (channel, userid, username, reason, duration, timeto) =
     ];
 }
 
+/**
+ * 
+ * @param {String} channel - The twitch channel to check for ban records on a user
+ * @param {String} userid - The twitch user id of the possibly banned user
+ * @returns {Object | null} The ban record if found, null if not
+ */
 const isBanned = async (channel, userid) => {
     let streamer = (await api.Twitch.getUserByName(channel.replace("#",""), true))[0];
     return bannedList.find(bannedRow => bannedRow.streamer_id === streamer.id && bannedRow.user_id === userid) !== undefined;
 }
 
+/**
+ * 
+ * @param {String} channel - The twitch channel to check for timeout records on a user
+ * @param {String} userid - The twitch user id of the possibly timed out user
+ * @returns {Object | null} The timeout record if found, null if not
+ */
 const isTimedOut = async (channel, userid) => {
     let streamer = (await api.Twitch.getUserByName(channel.replace("#",""), true))[0];
     return timeoutList.find(timeoutRow => timeoutRow.streamer_id === streamer.id && timeoutRow.user_id === userid) !== undefined;
 }
 
+/**
+ * A parent function used to easily call event functions when twitch events are triggered
+ * @method message - The twitch message event handler
+ * @method messageDeleted - The twitch messageDeleted event handler
+ * @method ban - The twitch ban event handler
+ * @method timeout - The twitch timeout event handler
+ */
 const handle = {
     message: async (channel, tags, message, self) => {
         try {
@@ -416,6 +479,11 @@ con.query("select streamer_id, user_id from twitch__timeout where active = true;
     });
 });
 
+/**
+ * Check if a twitch channel is already being listened to by the bot
+ * @param {String} channel - The twitch channel to check for a listener
+ * @returns {Boolean} True if a listener is found, false if not
+ */
 const isChannelListenedTo = channel => {
     for (let client of clients) {
         if (client.channels.includes(channel)) {
@@ -425,6 +493,10 @@ const isChannelListenedTo = channel => {
     return false;
 }
 
+/**
+ * Initialize a new TMI.js client and create a parent object to house it
+ * @returns {ClientObject} A new client object which contains a TMI.js client, a list of channels it is listening to, and the object status.
+ */
 const initializeClient = () => {
     const client = new tmi.Client({
         options: { debug: false },
@@ -435,19 +507,19 @@ const initializeClient = () => {
         },
     });
 
+    // Activate event handlers for the TMI client
     client.on('message', handle.message);
-
     client.on("messagedeleted", handle.messageDeleted);
-
     client.on('ban', handle.ban);
-    
     client.on("timeout", handle.timeout);
 
+    // Create the parent object to house the client
     let clientObj = {
         client: client,
         status: "initializing",
         channels: []
     };
+
 
     clientObj.addChannel = name => {
         name = name.toLowerCase();
@@ -459,6 +531,7 @@ const initializeClient = () => {
         }
     };
 
+    // Add the created client object to the list of clients
     clients = [
         ...clients,
         clientObj
@@ -501,6 +574,10 @@ const initializeClient = () => {
     return clientObj;
 }
 
+/**
+ * Finds a client object that has space to listen to new channels, if none are found, creates a new client object
+ * @returns {ClientObject} A client object which is ready to be used
+ */
 const getFreeClient = () => {
     for (let client of clients) {
         if (client.channels.length < CLIENT_MAXIMUM_CHANNELS) {
@@ -511,6 +588,10 @@ const getFreeClient = () => {
     return initializeClient();
 }
 
+/**
+ * 
+ * @returns {Number} The total number of channels currently being listened to by the bot
+ */
 const getChannelCount = () => {
     let total = 0;
     clients.forEach(client => {
@@ -519,6 +600,10 @@ const getChannelCount = () => {
     return total;
 }
 
+/**
+ * Update the Discord bot's presence to reflect the current number of channels being listened to
+ * @returns {void} 
+*/
 const updateActivity = () => {
     let channelCount = getChannelCount();
     let nodeCount = clients.length;
@@ -529,11 +614,18 @@ const updateActivity = () => {
 setInterval(updateActivity, 30000);
 setTimeout(updateActivity, 3000);
 
-
+/**
+ * 
+ * @param {String} channel - The twitch channel to add to the bot's listening list
+ */
 const listenOnChannel = channel => {
     getFreeClient().addChannel(channel);
 }
 
+/**
+ * 
+ * @param {String} channel - The twitch channel to remove from the bot's listening list
+ */
 const partFromChannel = channel => {
     channel = channel.replace('#', "");
     for (let client of channels) {
@@ -545,8 +637,9 @@ const partFromChannel = channel => {
     }
 }
 
-discordClient.guilds.fetch(config.modsquad_discord).then(msg => {
-    modSquadGuild = msg;
+// Fetch the current mod squad Discord Guild object
+discordClient.guilds.fetch(config.modsquad_discord).then(guild => {
+    modSquadGuild = guild;
 });
 
 con.query("select distinct lower(twitch__user.display_name) as name from identity__moderator join identity on modfor_id = identity.id join twitch__user on twitch__user.identity_id = identity.id where identity__moderator.active = true;", (err, res) => {
@@ -561,6 +654,7 @@ con.query("select distinct lower(twitch__user.display_name) as name from identit
     }, (clients.length * CLIENT_CONNECT_TIMEOUT) + 500);
 });
 
+// Create a singular client object to execute bans
 const banClient = new tmi.Client({
     options: { debug: false },
     connection: { reconnect: true },
@@ -572,6 +666,7 @@ const banClient = new tmi.Client({
 
 banClient.connect();
 
+// Bind listenOnChannel to the global scope
 global.listenOnChannel = listenOnChannel;
 
 module.exports = {
