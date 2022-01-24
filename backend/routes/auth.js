@@ -15,10 +15,10 @@ const router = Router();
 
 const PANEL_URL = "https://panel.twitchmodsquad.com";
 
-const TWITCH_URL = "https://id.twitch.tv/oauth2/authorize?response_type=code&client_id=qsedbwr82672tfg7fvobxlf01ljoov&redirect_uri=https%3A%2F%2Fapi.twitchmodsquad.com%2Fauth%2Ftwitch&scope=user%3Aread%3Aemail";
-const TWITCH_REDIRECT = "https://api.twitchmodsquad.com/auth/twitch";
-const DISCORD_URL = "https://discord.com/api/oauth2/authorize?client_id=819821932253937686&redirect_uri=https%3A%2F%2Fapi.twitchmodsquad.com%2Fauth%2Fdiscord&response_type=code&scope=guilds.join%20identify";
-const DISCORD_REDIRECT = "https://api.twitchmodsquad.com/auth/discord";
+const TWITCH_URL = "https://id.twitch.tv/oauth2/authorize?response_type=code&client_id=qsedbwr82672tfg7fvobxlf01ljoov&redirect_uri=" + encodeURIComponent(config.api_domain) + "auth%2Ftwitch&scope=user%3Aread%3Aemail";
+const TWITCH_REDIRECT = config.api_domain + "auth/twitch";
+const DISCORD_URL = "https://discord.com/api/oauth2/authorize?client_id=" + config.discord_auth.client_id + "&redirect_uri=" + encodeURIComponent(config.api_domain) + "auth%2Fdiscord&response_type=code&scope=guilds.join%20identify";
+const DISCORD_REDIRECT = config.api_domain + "auth/discord";
 
 const FOLLOWER_REQUIREMENT = 5000;
 
@@ -166,7 +166,7 @@ router.get("/twitch", async (req, res) => {
 
                 // catch all, if an identity isn't present, make one.
                 if (!session.identity) {
-                    session.identity = new FullIdentity(null, user.display_name, [twitchUser], []);
+                    session.identity = new FullIdentity(null, user.display_name, false, [twitchUser], []);
                 } else if (!session.identity.twitchAccounts.find(x => x.id === twitchUser.id)) {
                     session.identity.twitchAccounts = [
                         ...session.identity.twitchAccounts,
@@ -177,7 +177,7 @@ router.get("/twitch", async (req, res) => {
                 // post that sh!t
                 session = await session.post();
 
-                res.cookie("session", session.id, {domain: ".twitchmodsquad.com", maxAge: new Date(Date.now() + 86400000), path: "/", secure: true});
+                res.cookie("session", session.id, {domain: config.main_domain, maxAge: new Date(Date.now() + 86400000), path: "/", secure: true});
                 
                 if (session.identity?.discordAccounts?.length > 0) {
                     redirect(req, res);
@@ -297,6 +297,9 @@ router.get('/discord', async (req, res) => {
             }
 
             if (resolvedRoles.length > 0) {
+                session.identity.authenticated = true;
+                await session.identity.post();
+
                 global.client.discord.guilds.fetch(config.modsquad_discord).then(guild => {
                     guild.members.add(dus.id, {accessToken: oauthData.access_token, roles: resolvedRoles}).then(member => {
                         redirect(req, res);

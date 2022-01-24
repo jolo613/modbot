@@ -39,8 +39,8 @@ class FullIdentity extends Identity {
      * @param {TwitchUser[]} twitchAccounts 
      * @param {DiscordUser[]} discordAccounts 
      */
-    constructor(id, name, twitchAccounts, discordAccounts) {
-        super(id, name);
+    constructor(id, name, authenticated, twitchAccounts, discordAccounts) {
+        super(id, name, authenticated);
 
         this.twitchAccounts = twitchAccounts;
         this.discordAccounts = discordAccounts;
