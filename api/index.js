@@ -39,10 +39,12 @@ class API {
                     if (res.length > 0) {
                         let i_id = res[0].id;
                         let i_name = res[0].name;
+                        let i_auth = res[0].authenticated;
 
                         resolve(new FullIdentity(
                             i_id,
                             i_name,
+                            i_auth,
                             await this.Twitch.getUsersByIdentity(i_id),
                             await this.Discord.getUsersByIdentity(i_id)
                             ));

@@ -17,13 +17,22 @@ class Identity {
     name;
 
     /**
+     * Whether the user has authenticated properly with TMS or not
+     * 
+     * @type {boolean}
+     */
+    authenticated;
+
+    /**
      * Constructor for the Identity class.
      * @param {number} id 
      * @param {string} name 
+     * @param {boolean} authenticated
      */
-    constructor(id, name) {
+    constructor(id, name, authenticated) {
         this.id = id;
         this.name = name;
+        this.authenticated = authenticated;
     }
 
     /**
@@ -41,27 +50,29 @@ class Identity {
      */
     post() {
         return new Promise((resolve, reject) => {
-            con.query("insert into identity (id, name) values (?, ?) on duplicate key update name = ?;", [
+            con.query("insert into identity (id, name, authenticated) values (?, ?, ?) on duplicate key update name = ?, authenticated = ?;", [
                 this.id,
                 this.name,
+                this.authenticated,
                 this.name,
+                this.authenticated,
             ], err => {
                 if (err) {
                     reject(err);
                 } else {
                     if (this.id === null || this.id === undefined) {
-                        con.query("select id, name from identity where name = ? order by id desc limit 1;", [this.name], (err, res) => {
+                        con.query("select id, name, authenticated from identity where name = ? order by id desc limit 1;", [this.name], (err, res) => {
                             if (err) {
                                 reject(err);
                             } else if (res.length < 1) {
                                 reject("Could not retrieve inserted id.");
                             } else {
                                 this.id = res[0].id;
-                                resolve(new Identity(res[0].id, res[0].name));
+                                resolve(new Identity(res[0].id, res[0].name, res[0].authenticated));
                             }
                         });
                     } else {
-                        resolve(new Identity(this.id, this.name));
+                        resolve(new Identity(this.id, this.name, this.authenticated));
                     }
                 }
             });

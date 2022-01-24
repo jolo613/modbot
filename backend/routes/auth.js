@@ -166,7 +166,7 @@ router.get("/twitch", async (req, res) => {
 
                 // catch all, if an identity isn't present, make one.
                 if (!session.identity) {
-                    session.identity = new FullIdentity(null, user.display_name, [twitchUser], []);
+                    session.identity = new FullIdentity(null, user.display_name, false, [twitchUser], []);
                 } else if (!session.identity.twitchAccounts.find(x => x.id === twitchUser.id)) {
                     session.identity.twitchAccounts = [
                         ...session.identity.twitchAccounts,
@@ -297,6 +297,9 @@ router.get('/discord', async (req, res) => {
             }
 
             if (resolvedRoles.length > 0) {
+                session.identity.authenticated = true;
+                await session.identity.post();
+
                 global.client.discord.guilds.fetch(config.modsquad_discord).then(guild => {
                     guild.members.add(dus.id, {accessToken: oauthData.access_token, roles: resolvedRoles}).then(member => {
                         redirect(req, res);

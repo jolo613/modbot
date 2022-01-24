@@ -30,7 +30,7 @@ class Discord {
                 let row = res[0];
                 resolve(new DiscordUser(
                     row.id,
-                    row.identity_id === null ? null : new Identity(row.identity_id, row.identity_name),
+                    row.identity_id === null ? null : new Identity(row.identity_id, row.identity_name, row.authenticated),
                     row.name,
                     row.discriminator,
                     row.avatar
@@ -50,7 +50,7 @@ class Discord {
      */
     getUserById(id, overrideCache = false) {
         return this.userCache.get(id, (resolve, reject) => {
-            con.query("select discord__user.*, identity.name as identity_name from discord__user left join identity on discord__user.identity_id = identity.id where discord__user.id = ?;", [id], (err, res) => {
+            con.query("select discord__user.*, identity.name as identity_name, identity.authenticated from discord__user left join identity on discord__user.identity_id = identity.id where discord__user.id = ?;", [id], (err, res) => {
                 this.#resolveUser(err, res, resolve, reject);
             });
         }, overrideCache);
