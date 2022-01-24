@@ -30,10 +30,9 @@ class Assumption extends ReturnableObject {
 
     /**
      * Constructor for an Assumption
-     * @param {string} type 
-     * @param {string} property 
-     * @param {string} queryValue 
-     * @param {string} actualValue 
+     * @param {string} property - Property which lead to the assumption
+     * @param {string} queryValue - Value contained in the search query
+     * @param {string} actualValue - Value which is contained in this record, replacing the search query
      */
     constructor(property, queryValue, actualValue) {
         super("assumption");
