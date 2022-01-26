@@ -60,10 +60,9 @@ class Discord {
     /**
      * Gets a list of users which have/have had a specific name.
      * @param {string} name 
-     * @param {boolean} overrideCache 
      * @returns {Promise<AssumedDiscordUser[]>}
      */
-    getUserByName(name, overrideCache = false) {
+    getUserByName(name) {
         return new Promise((resolve, reject) => {
             con.query("select id from discord__username where name = ?;", [name], async (err, res) => {
                 if (err) {
