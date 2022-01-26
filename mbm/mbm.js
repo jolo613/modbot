@@ -11,7 +11,6 @@ client.listeners = new Discord.Collection();
 
 // Load application config file
 const config = require("../config.json");
-const Module = require('module');
 
 /** 
  * @param {String} path - Relative path to the file to be loaded
