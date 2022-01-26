@@ -50,6 +50,8 @@ class DiscordGuild {
      */
     post() {
         return new Promise(async (resolve, reject) => {
+            this.represents = await this.represents.post();
+            this.owner = await this.owner.post();
             con.query("insert into discord__guild (id, represents_id, owner_id, name) values (?, ?, ?, ?) on duplicate key update represents_id = ?, owner_id = ?, name = ?;", [
                 this.id,
                 this.represents.id,
