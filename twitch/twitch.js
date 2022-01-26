@@ -1,5 +1,6 @@
 const CLIENT_MAXIMUM_CHANNELS = 15;
 const CHANNEL_CONNECT_INTERVAL = 500;
+const CLIENT_CONNECT_INTERVAL = 5000;
 
 const ACTIVE_CHANNEL_PADDING = 3;
 
@@ -15,6 +16,7 @@ const con = require("../database");
 const discordClient = require("../discord/discord");
 const { MessageEmbed } = require("discord.js");
 
+let nextClient = Date.now();
 let clients = [];
 
 let modSquadGuild = null;
@@ -562,8 +564,18 @@ const initializeClient = () => {
         clientObj
     ];
 
-    console.log("Initializing client...");
-    client.connect();
+    const connectClient = () => {
+        console.log("Initializing client...");
+        client.connect();
+    }
+
+    let now = Date.now();
+    if (now >= nextClient) {
+        connectClient();
+    } else {
+        setTimeout(connectClient, nextClient - now);
+    }
+    nextClient = Math.max(now, nextClient) + CLIENT_CONNECT_INTERVAL;
 
     const interval = setInterval(() => {
         if (client.readyState() === "OPEN") {
@@ -587,7 +599,7 @@ const initializeClient = () => {
 
             clientObj.status = "initialized";
         }
-    }, 1000);
+    }, 200);
 
     return clientObj;
 }
