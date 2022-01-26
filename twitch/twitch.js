@@ -1,5 +1,5 @@
-const CLIENT_CONNECT_TIMEOUT = 5000;
 const CLIENT_MAXIMUM_CHANNELS = 15;
+const CHANNEL_CONNECT_INTERVAL = 500;
 
 const ACTIVE_CHANNEL_PADDING = 3;
 
@@ -19,7 +19,6 @@ let clients = [];
 
 let modSquadGuild = null;
 
-let channels = [];
 let disallowed_channels = ["ludwig", "tarzaned"];
 
 let bannedList = [];
@@ -517,9 +516,28 @@ const initializeClient = () => {
     let clientObj = {
         client: client,
         status: "initializing",
-        channels: []
+        nextConnect: Date.now(),
+        channels: [],
     };
 
+    const listen = name => {
+        const join = () => {
+            client.join(name).catch(err => {
+                console.error(`Error connecting to ${name}: ${err} - Will retry once.`);
+                client.join(name).catch(err => {
+                    console.error(`Error connecting to ${name}: ${err} - Will not retry.`);
+                });
+            });
+        };
+
+        let now = Date.now();
+        if (now >= clientObj.nextConnect) {
+            join();
+        } else {
+            setTimeout(join, clientObj.nextConnect - now);
+        }
+        clientObj.nextConnect = Math.max(now, clientObj.nextConnect) + 500;
+    };
 
     clientObj.addChannel = name => {
         name = name.toLowerCase();
@@ -537,39 +555,32 @@ const initializeClient = () => {
         clientObj
     ];
 
-    let delay = clients.filter(client => client.client.readyState() === "CLOSED").length * CLIENT_CONNECT_TIMEOUT;
+    console.log("Initializing client...");
+    client.connect();
 
-    console.log(`Initializing new client with delay of ${delay}`);
+    const interval = setInterval(() => {
+        if (client.readyState() === "OPEN") {
+            console.log("Client opened. Connecting clients.");
+            clearInterval(interval);
 
-    setTimeout(() => {
-        console.log("Initializing client...");
-        client.connect();
+            clientObj.addChannel = name => {
+                name = name.toLowerCase();
+                if (!isChannelListenedTo(name) && !disallowed_channels.includes(name)) {
+                    clientObj.channels = [
+                        ...clientObj.channels,
+                        name
+                    ];
+                    listen(name);
+                }
+            };
+    
+            clientObj.channels.forEach(channel => {
+                listen(channel);
+            });
 
-        const interval = setInterval(() => {
-            if (client.readyState() === "OPEN") {
-                console.log("Client opened. Connecting clients.");
-                clearInterval(interval);
-
-                clientObj.addChannel = name => {
-                    name = name.toLowerCase();
-                    if (!isChannelListenedTo(name) && !disallowed_channels.includes(name)) {
-                        clientObj.channels = [
-                            ...clientObj.channels,
-                            name
-                        ];
-                        client.join(name);
-                    }
-                };
-        
-                clientObj.channels.forEach(channel => {
-                    client.join(channel).catch(console.error);
-                });
-
-                clientObj.status = "initialized";
-            }
-        }, 1000);
-        
-    }, delay);
+            clientObj.status = "initialized";
+        }
+    }, 1000);
 
     return clientObj;
 }
@@ -649,9 +660,7 @@ con.query("select distinct lower(twitch__user.display_name) as name from identit
         listenOnChannel(streamer.name);
     });
 
-    setTimeout(() => {
-        console.log("Startup completed!");
-    }, (clients.length * CLIENT_CONNECT_TIMEOUT) + 500);
+    console.log("Startup completed!");
 });
 
 // Create a singular client object to execute bans
