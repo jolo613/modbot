@@ -523,6 +523,11 @@ const initializeClient = () => {
     const listen = name => {
         const join = () => {
             client.join(name).catch(err => {
+                if (err === "Not connected to server.") {
+                    setTimeout(() => listen(name), 500);
+                    return;
+                }
+
                 console.error(`Error connecting to ${name}: ${err} - Will retry once.`);
                 setTimeout(() => {
                     client.join(name).catch(err => {
