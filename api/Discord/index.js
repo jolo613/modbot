@@ -7,7 +7,6 @@ const DiscordGuild = require("./DiscordGuild");
 const Cache = require("../Cache/Cache");
 const AssumedDiscordUser = require("./AssumedDiscordUser");
 const Assumption = require("../Assumption");
-const DiscordGuild = require("./DiscordGuild");
 
 /**
  * Utility class for Discord services
