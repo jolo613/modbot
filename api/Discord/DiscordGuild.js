@@ -42,6 +42,32 @@ class DiscordGuild {
         this.owner = owner;
         this.name = name;
     }
+
+    /**
+     * Updates or creates the guild with the information in this Object
+     * 
+     * @returns {Promise<DiscordGuild>}
+     */
+    post() {
+        return new Promise(async (resolve, reject) => {
+            con.query("insert into discord__guild (id, represents_id, owner_id, name) values (?, ?, ?, ?) on duplicate key update represents_id = ?, owner_id = ?, name = ?;", [
+                this.id,
+                this.represents.id,
+                this.owner.id,
+                this.name,
+                this.represents.id,
+                this.owner.id,
+                this.name
+            ], err => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(this);
+                    global.api.Discord.guildCache.remove(this.id);
+                }
+            });
+        })
+    }
 }
 
 module.exports = DiscordGuild;
