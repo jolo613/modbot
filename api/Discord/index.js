@@ -2,7 +2,7 @@ const con = require("../../database");
 
 const Identity = require("../Identity");
 const DiscordUser = require("./DiscordUser");
-const DiscordUser = require("./DiscordGuild");
+const DiscordGuild = require("./DiscordGuild");
 
 const Cache = require("../Cache/Cache");
 const AssumedDiscordUser = require("./AssumedDiscordUser");
