@@ -2,10 +2,12 @@ const con = require("../../database");
 
 const Identity = require("../Identity");
 const DiscordUser = require("./DiscordUser");
+const DiscordUser = require("./DiscordGuild");
 
 const Cache = require("../Cache/Cache");
 const AssumedDiscordUser = require("./AssumedDiscordUser");
 const Assumption = require("../Assumption");
+const DiscordGuild = require("./DiscordGuild");
 
 /**
  * Utility class for Discord services
@@ -18,6 +20,13 @@ class Discord {
      * @type {Cache}
      */
     userCache = new Cache();
+
+    /**
+     * Discord guild cache (ID)
+     * 
+     * @type {Cache}
+     */
+    guildCache = new Cache();
 
     /**
      * Transforms SQL response into a response.
@@ -155,6 +164,34 @@ class Discord {
                 }
             });
         });
+    }
+
+    /**
+     * Returns the DiscordGuild via an ID
+     * @param {number} id 
+     * @param {boolean} overrideCache
+     * @returns {Promise<DiscordGuild>}
+     */
+    getGuild(id, overrideCache) {
+        return this.guildCache.get(id, (resolve, reject) => {
+            con.query("select * from discord__guild where id = ?;", [id], (err, res) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+                if (res.length !== 1) {
+                    let row = res[0];
+                    resolve(new DiscordGuild(
+                        row.id,
+                        this.getUserById(row.represents_id),
+                        this.getUserById(row.owner_id),
+                        row.name
+                    ));
+                } else {
+                    reject("No guild was found!");
+                }
+            });
+        }, overrideCache);
     }
 }
 
