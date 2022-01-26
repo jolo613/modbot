@@ -1,3 +1,4 @@
+const {Discord} = require("../../api/index");
 const DiscordUser = require("../../api/discord/DiscordUser");
 
 const listener = {
@@ -5,14 +6,16 @@ const listener = {
     eventName: 'guildMemberAdd',
     eventType: 'on',
     listener (member) {
-        let discordUser = new DiscordUser(
-            member.id,
-            null,
-            member.user.username,
-            member.user.discriminator,
-            member.users.avatar
-        );
-        discordUser.post().catch(console.error);
+        Discord.getUserById(member.id).then(() => {}, err => {
+            let discordUser = new DiscordUser(
+                member.id,
+                null,
+                member.user.username,
+                member.user.discriminator,
+                member.users.avatar
+            );
+            discordUser.post().catch(console.error);
+        })
     }
 };
 
