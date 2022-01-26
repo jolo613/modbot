@@ -28,38 +28,49 @@ class Discord {
     guildCache = new Cache();
 
     /**
-     * Transforms SQL response into a response.
+     * Internal method for retrieving a user if it is not present in the database
+     * @param {number} id 
      */
-    #resolveUser(err, res, resolve, reject) {
-        if (err) {
-            reject(err);
-        } else {
-            if (res.length > 0) {
-                let row = res[0];
-                resolve(new DiscordUser(
-                    row.id,
-                    row.identity_id === null ? null : new Identity(row.identity_id, row.identity_name, row.authenticated),
-                    row.name,
-                    row.discriminator,
-                    row.avatar
-                    ));
-            } else {
-                reject("User was not found!");
-            }
-        }
+    getUserByIdByForce(id) {
+        return new Promise((resolve, reject) => {
+            global.client.mbm.users.fetch(id).then(async user => {
+                let discordUser = new DiscordUser(user.id, null, user.username, user.discriminator, user.avatar);
+                await discordUser.post();
+                resolve(discordUser);
+            }, reject);
+        });
     }
 
     /**
      * Gets a user based on a Discord user ID.
      * @param {number} id 
      * @param {?boolean} overrideCache
+     * @param {?boolean} requestIfUnavailable
      * 
      * @returns {Promise<DiscordUser>}
      */
-    getUserById(id, overrideCache = false) {
+    getUserById(id, overrideCache = false, requestIfUnavailable = false) {
         return this.userCache.get(id, (resolve, reject) => {
             con.query("select discord__user.*, identity.name as identity_name, identity.authenticated from discord__user left join identity on discord__user.identity_id = identity.id where discord__user.id = ?;", [id], (err, res) => {
-                this.#resolveUser(err, res, resolve, reject);
+                if (err) {
+                    reject(err);
+                } else {
+                    if (res.length > 0) {
+                        let row = res[0];
+                        resolve(new DiscordUser(
+                            row.id,
+                            row.identity_id === null ? null : new Identity(row.identity_id, row.identity_name, row.authenticated),
+                            row.name,
+                            row.discriminator,
+                            row.avatar
+                        ));
+                    } else {
+                        if (requestIfUnavailable) {
+                            getUserByIdByForce(id).then(resolve, reject);
+                        } else
+                            reject("User was not found!");
+                    }
+                }
             });
         }, overrideCache);
     }
