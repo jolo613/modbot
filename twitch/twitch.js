@@ -1,5 +1,6 @@
 const CLIENT_MAXIMUM_CHANNELS = 15;
 const CHANNEL_CONNECT_INTERVAL = 500;
+const CLIENT_CONNECT_INTERVAL = 5000;
 
 const ACTIVE_CHANNEL_PADDING = 3;
 
@@ -15,6 +16,7 @@ const con = require("../database");
 const discordClient = require("../discord/discord");
 const { MessageEmbed } = require("discord.js");
 
+let nextClient = Date.now();
 let clients = [];
 
 let modSquadGuild = null;
@@ -523,10 +525,17 @@ const initializeClient = () => {
     const listen = name => {
         const join = () => {
             client.join(name).catch(err => {
+                if (err === "Not connected to server.") {
+                    setTimeout(() => listen(name), 500);
+                    return;
+                }
+
                 console.error(`Error connecting to ${name}: ${err} - Will retry once.`);
-                client.join(name).catch(err => {
-                    console.error(`Error connecting to ${name}: ${err} - Will not retry.`);
-                });
+                setTimeout(() => {
+                    client.join(name).catch(err => {
+                        console.error(`Error connecting to ${name}: ${err} - Will not retry.`);
+                    });
+                }, 200);
             });
         };
 
@@ -536,7 +545,7 @@ const initializeClient = () => {
         } else {
             setTimeout(join, clientObj.nextConnect - now);
         }
-        clientObj.nextConnect = Math.max(now, clientObj.nextConnect) + 500;
+        clientObj.nextConnect = Math.max(now, clientObj.nextConnect) + CHANNEL_CONNECT_INTERVAL;
     };
 
     clientObj.addChannel = name => {
@@ -555,8 +564,18 @@ const initializeClient = () => {
         clientObj
     ];
 
-    console.log("Initializing client...");
-    client.connect();
+    const connectClient = () => {
+        console.log("Initializing client...");
+        client.connect();
+    }
+
+    let now = Date.now();
+    if (now >= nextClient) {
+        connectClient();
+    } else {
+        setTimeout(connectClient, nextClient - now);
+    }
+    nextClient = Math.max(now, nextClient) + CLIENT_CONNECT_INTERVAL;
 
     const interval = setInterval(() => {
         if (client.readyState() === "OPEN") {
@@ -580,7 +599,7 @@ const initializeClient = () => {
 
             clientObj.status = "initialized";
         }
-    }, 1000);
+    }, 200);
 
     return clientObj;
 }
