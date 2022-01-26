@@ -536,7 +536,7 @@ const initializeClient = () => {
         } else {
             setTimeout(join, clientObj.nextConnect - now);
         }
-        clientObj.nextConnect = Math.max(now, clientObj.nextConnect) + 500;
+        clientObj.nextConnect = Math.max(now, clientObj.nextConnect) + CHANNEL_CONNECT_INTERVAL;
     };
 
     clientObj.addChannel = name => {
