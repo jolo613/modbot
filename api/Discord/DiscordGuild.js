@@ -9,9 +9,9 @@ class DiscordGuild {
     id;
     
     /**
-     * The discord user that the Guild represents
+     * The identity that the Guild represents
      * 
-     * @type {DiscordUser}
+     * @type {FullIdentity}
      */
     represents;
 
@@ -32,7 +32,7 @@ class DiscordGuild {
     /**
      * Constructor for a DiscordGuild
      * @param {number} id 
-     * @param {DiscordUser} represents 
+     * @param {FullIdentity} represents 
      * @param {DiscordUser} owner 
      * @param {string} name 
      */
