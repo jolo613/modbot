@@ -178,7 +178,7 @@ class Discord {
                     reject(err);
                     return;
                 }
-                if (res.length !== 1) {
+                if (res.length === 1) {
                     let row = res[0];
                     resolve(new DiscordGuild(
                         row.id,
