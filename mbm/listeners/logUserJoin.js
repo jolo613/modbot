@@ -7,12 +7,12 @@ const listener = {
     listener (member) {
         con.query("insert into discord__user (id, name, discriminator, avatar) values (?, ?, ?, ?) on duplicate key update name = ?, discriminator = ?, avatar = ?;", [
             member.id,
-            member.displayName,
-            member.discriminator,
-            member.avatar,
-            member.displayName,
-            member.discriminator,
-            member.avatar,
+            member.user.username,
+            member.user.discriminator,
+            member.user.avatar,
+            member.user.username,
+            member.user.discriminator,
+            member.user.avatar,
         ]);
     }
 };
