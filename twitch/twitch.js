@@ -524,9 +524,11 @@ const initializeClient = () => {
         const join = () => {
             client.join(name).catch(err => {
                 console.error(`Error connecting to ${name}: ${err} - Will retry once.`);
-                client.join(name).catch(err => {
-                    console.error(`Error connecting to ${name}: ${err} - Will not retry.`);
-                });
+                setTimeout(() => {
+                    client.join(name).catch(err => {
+                        console.error(`Error connecting to ${name}: ${err} - Will not retry.`);
+                    });
+                }, 200);
             });
         };
 
