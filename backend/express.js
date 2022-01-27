@@ -46,6 +46,10 @@ app.use('/', (req, res, next) => {
             if (result.length > 0) {
                 let row = result[0];
                 api.getFullIdentity(row["iid"]).then(identity => {
+                    if (!identity.authenticated) {
+                        res.status(403);
+                        res.json({success: false, error: "Forbidden"});
+                    }
                     req.session = {id: row.sid, created: row.screated, identity: identity};
                     next();
                 }).catch(err => {
