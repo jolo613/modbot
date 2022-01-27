@@ -1,3 +1,4 @@
+const con = require("../../database");
 const DiscordUser = require("./DiscordUser");
 
 class DiscordGuild {
