@@ -184,7 +184,7 @@ class Discord {
      */
     getGuild(id, overrideCache) {
         return this.guildCache.get(id, (resolve, reject) => {
-            con.query("select * from discord__guild where id = ?;", [id], (err, res) => {
+            con.query("select * from discord__guild where id = ?;", [id], async (err, res) => {
                 if (err) {
                     reject(err);
                     return;
