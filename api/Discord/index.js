@@ -66,7 +66,7 @@ class Discord {
                         ));
                     } else {
                         if (requestIfUnavailable) {
-                            getUserByIdByForce(id).then(resolve, reject);
+                            this.getUserByIdByForce(id).then(resolve, reject);
                         } else
                             reject("User was not found!");
                     }
@@ -193,8 +193,8 @@ class Discord {
                     let row = res[0];
                     resolve(new DiscordGuild(
                         row.id,
-                        this.getUserById(row.represents_id),
-                        this.getUserById(row.owner_id),
+                        await this.getUserById(row.represents_id),
+                        await this.getUserById(row.owner_id),
                         row.name
                     ));
                 } else {
