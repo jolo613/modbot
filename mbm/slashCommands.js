@@ -17,7 +17,7 @@ for (const file of commandFiles) {
 
 const rest = new REST({ version: '9' }).setToken(config.mbm.token);
 
-module.exports = (async client => {
+module.exports = (async () => {
     try {
         await rest.put(
 			Routes.applicationCommands(config.mbm.application),

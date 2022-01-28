@@ -41,10 +41,6 @@ client.listeners.forEach(listener => {
 client.login(config.mbm.token);
 
 // Register slash commands.
-require("./slashCommands")(client);
-
-setTimeout(() => {
-    // require("./interval/crossban")(client);
-}, 500);
+require("./slashCommands")();
 
 module.exports = client;
