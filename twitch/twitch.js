@@ -314,12 +314,15 @@ const addBan = async (channel, userid, username, reason, timebanned) => {
                     if (activeChannels !== "")
                         embed.addField(`Active in Channels:`, `\`\`\`\nChannel${' '.repeat(longestChannelName + ACTIVE_CHANNEL_PADDING - 7)}Last Active${activeChannels}\`\`\``);
                     
-                    const crossbanButton = new Discord.MessageButton();
+                    const crossbanButton = new Discord.MessageButton()
+                            .setCustomId("cb-" + speaker.id)
+                            .setLabel("Crossban")
+                            .setStyle("DANGER");
                     
                     const row = new Discord.MessageActionRow()
                             .addComponents(crossbanButton);
 
-                    dchnl.send({content: ' ', embeds: [embed], components: row}).then(message => {
+                    dchnl.send({content: ' ', embeds: [embed], components: [row]}).then(message => {
                         con.query("update twitch__ban set discord_message = ? where timebanned = ? and streamer_id = ? and user_id = ?;", [
                             message.id,
                             timebanned,
