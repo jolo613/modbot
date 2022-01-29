@@ -701,6 +701,8 @@ banClient.connect();
 // Bind listenOnChannel to the global scope
 global.listenOnChannel = listenOnChannel;
 
+global.client.ban = banClient;
+
 module.exports = {
     listenOnChannel: listenOnChannel,
     banClient: banClient,
