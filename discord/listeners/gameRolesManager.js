@@ -20,26 +20,28 @@ const listener = {
                 interaction.reply({content: ' ', embeds: [new Discord.MessageEmbed().setTitle(err).setColor(0x9e392f)], ephemeral: true})
             }
 
-            if ((buttonId === "set-roles" || buttonId === "remove-roles" || buttonId === "add-roles") && storedGameLists[interaction.member.id]) {
-                if (buttonId === "set-roles") {
-                    let gameRoles = games.map(x => x.role);
+            if (buttonId === "set-roles" || buttonId === "remove-roles" || buttonId === "add-roles") {
+                if (storedGameLists[interaction.member.id]) {
+                    if (buttonId === "set-roles") {
+                        let gameRoles = games.map(x => x.role);
 
-                    interaction.member.roles.remove(gameRoles).then(() => {
+                        interaction.member.roles.remove(gameRoles).then(() => {
+                            interaction.member.roles.add(storedGameLists[interaction.member.id]).then(() => {
+                                handleSuccess("Successfully set selected roles!");
+                            }, handleError)
+                        }, handleError);
+                    } else if (buttonId === "remove-roles") {
+                        interaction.member.roles.remove(storedGameLists[interaction.member.id]).then(() => {
+                            handleSuccess("Successfully removed selected roles!");
+                        }, handleError);
+                    } else if (buttonId === "add-roles") {
                         interaction.member.roles.add(storedGameLists[interaction.member.id]).then(() => {
-                            handleSuccess("Successfully set selected roles!");
-                        }, handleError)
-                    }, handleError);
-                } else if (buttonId === "remove-roles") {
-                    interaction.member.roles.remove(storedGameLists[interaction.member.id]).then(() => {
-                        handleSuccess("Successfully removed selected roles!");
-                    }, handleError);
-                } else if (buttonId === "add-roles") {
-                    interaction.member.roles.add(storedGameLists[interaction.member.id]).then(() => {
-                        handleSuccess("Successfully added selected roles!");
-                    }, handleError);
+                            handleSuccess("Successfully added selected roles!");
+                        }, handleError);
+                    }
+                } else {
+                    handleError("No game list stored.");
                 }
-            } else {
-                handleError(err);
             }
         } else if (interaction.isSelectMenu() && interaction.component.customId === "role-select") {
             storedGameLists[interaction.member.id] = interaction.values;
