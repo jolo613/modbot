@@ -10,7 +10,7 @@ const command = {
     execute(interaction) {
         let code = api.stringGenerator(6);
 
-        api.Discord.getUserById(interaction.user.id).then(discordAccount => {
+        api.Discord.getUserById(interaction.user.id, false, true).then(discordAccount => {
             if (discordAccount.identity?.id) {
                 con.query("insert into invite (invite, initiated_by, expiry) values (?, ?, date_add(now(), interval 30 minute));", [code, discordAccount.identity.id], () => {
                     const embed = new MessageEmbed()

@@ -14,7 +14,7 @@ const tmi = require('tmi.js');
 const con = require("../database");
 
 const discordClient = require("../discord/discord");
-const { MessageEmbed } = require("discord.js");
+const Discord = require("discord.js");
 
 let nextClient = Date.now();
 let clients = [];
@@ -174,7 +174,7 @@ const addBan = async (channel, userid, username, reason, timebanned) => {
             let dchnl = modSquadGuild.channels.cache.find(dchnl => dchnl.id == config.liveban_channel);
 
             if (dchnl.isText()) {
-                const embed = new MessageEmbed()
+                const embed = new Discord.MessageEmbed()
                         // Set the title of the field
                         .setTitle(`Bot Action Detected`)
                         // Set the description of the field
@@ -231,13 +231,13 @@ const addBan = async (channel, userid, username, reason, timebanned) => {
                     userid
                 ], async (err, res) => {
                     // Build the skeleton embed for the ban message 
-                    const embed = new MessageEmbed()
+                    const embed = new Discord.MessageEmbed()
                             .setTitle(`User was Banned!`)
                             .setURL(speaker.getShortlink())
-                            .setAuthor(streamer.display_name, streamer.profile_image_url, "https://twitch.tv/" + channelStripped)
+                            .setAuthor({name: streamer.display_name, iconURL: streamer.profile_image_url, url: "https://twitch.tv/" + channelStripped})
                             .setDescription(`User \`${username}\` was banned from channel \`${channel}\``)
                             .setColor(0xe83b3b)
-                            .setFooter("Bans per Minute: " + bannedPerMinute[channel].length);
+                            .setFooter({text: "Bans per Minute: " + bannedPerMinute[channel].length});
 
                     // If the query returns results, parse the results and add them to the embed.
                     if (typeof(res) === "object") {
@@ -313,18 +313,22 @@ const addBan = async (channel, userid, username, reason, timebanned) => {
                     // Add the field, if any active channels were found (which should pretty much always be true)
                     if (activeChannels !== "")
                         embed.addField(`Active in Channels:`, `\`\`\`\nChannel${' '.repeat(longestChannelName + ACTIVE_CHANNEL_PADDING - 7)}Last Active${activeChannels}\`\`\``);
-
-                    // embed.addField("Crossban", "Click the `❌` reaction on this message to ban this user in the channels you're mod on.", true);
                     
-                    dchnl.send({content: ' ', embeds: [embed]}).then(message => {
+                    const crossbanButton = new Discord.MessageButton()
+                            .setCustomId("cb-" + speaker.id)
+                            .setLabel("Crossban")
+                            .setStyle("DANGER");
+                    
+                    const row = new Discord.MessageActionRow()
+                            .addComponents(crossbanButton);
+
+                    dchnl.send({content: ' ', embeds: [embed], components: [row]}).then(message => {
                         con.query("update twitch__ban set discord_message = ? where timebanned = ? and streamer_id = ? and user_id = ?;", [
                             message.id,
                             timebanned,
                             streamer_id,
                             userid
                         ]);
-
-                        // message.react('❌');
                     }).catch(console.error);
                 });
             }
@@ -696,6 +700,8 @@ banClient.connect();
 
 // Bind listenOnChannel to the global scope
 global.listenOnChannel = listenOnChannel;
+
+global.client.ban = banClient;
 
 module.exports = {
     listenOnChannel: listenOnChannel,
