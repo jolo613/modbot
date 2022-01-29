@@ -29,18 +29,18 @@ const command = {
                 required: true,
             },
         ]
+        , default_permission: false
     },
+    global: false,
     execute(interaction) {
         if (interaction.member?.id === interaction.guild?.ownerId) {
-            if (interaction.guild.id !== config.modsquad_discord || true) {
-                console.log('get guild');
+            if (interaction.guild.id !== config.modsquad_discord || true) { //TODO: Remove true
                 api.Discord.getGuild(interaction.guild.id).then(() => {
                     interaction.reply(errorEmbed("This guild has already been registered!"));
                 }).catch(async err => {
                     try {
-                        console.log("get owner");
                         let ownerDiscord = await api.Discord.getUserById(interaction.guild.ownerId, false, true);
-                        console.log(ownerDiscord);
+                        
                         let representsDiscord = await api.Discord.getUserById(interaction.options.getUser("represents-discord").id);
                         let representsTwitch = await api.Twitch.getUserByName(interaction.options.getString("represents-twitch"), true);
                         if (representsTwitch.length > 0) {
@@ -49,39 +49,39 @@ const command = {
                             interaction.reply(errorEmbed("Represents twitch user was not found!"));
                             return;
                         }
-                        console.log(representsDiscord, representsTwitch)
 
                         let identity = null;
                         if (representsTwitch.identity?.id) identity = representsTwitch.identity;
                         if (representsDiscord.identity?.id) {
                             if (!(identity?.id) || identity.id == representsDiscord.identity.id) {
-                                identity = representsDiscord.identity.id;
+                                identity = representsDiscord.identity;
                             } else {
                                 interaction.reply(errorEmbed("Represents twitch and discord user both exist with two separate identities...That doesn't work!"));
                                 return;
                             }
                         }
-                        console.log(identity);
 
                         if (identity?.id) {
                             identity = await api.getFullIdentity(identity.id);
                         } else {
                             identity = new FullIdentity(null, representsTwitch.display_name, false, [representsTwitch], [representsDiscord])
+                            identity = await identity.post();
                         }
 
                         if (!identity.twitchAccounts.find(x => x.id = representsTwitch.id)) identity.twitchAccounts = [...identity.twitchAccounts, representsTwitch];
                         if (!identity.discordAccounts.find(x => x.id = representsDiscord.id)) identity.discordAccounts = [...identity.discordAccounts, representsDiscord];
 
-                        console.log(identity);
                         let guild = new DiscordGuild(
                             interaction.guild.id,
                             identity,
                             ownerDiscord,
-                            interaction.guild.name
+                            interaction.guild.name,
+                            []
                         );
 
                         guild.post().then(guild => {
                             interaction.reply({content: "Registered!", ephemeral: true})
+                            interaction.command?.delete().then(() => {}, console.error);
                         }).catch(err => {
                             console.error(err);
                             interaction.reply(errorEmbed("An error occurred: " + err));

@@ -3,6 +3,7 @@ const con = require("../../database");
 const Identity = require("../Identity");
 const DiscordUser = require("./DiscordUser");
 const DiscordGuild = require("./DiscordGuild");
+const DiscordGuildSetting = require("./DiscordGuildSetting");
 
 const Cache = require("../Cache/Cache");
 const AssumedDiscordUser = require("./AssumedDiscordUser");
@@ -191,12 +192,29 @@ class Discord {
                 }
                 if (res.length === 1) {
                     let row = res[0];
-                    resolve(new DiscordGuild(
-                        row.id,
-                        await this.getUserById(row.represents_id),
-                        await this.getUserById(row.owner_id),
-                        row.name
-                    ));
+                    con.query("select * from discord__setting where guild_id = ?;", [id], async (err, res) => {
+                        if (err) {
+                            reject(err);
+                            return;
+                        }
+
+                        let settings = [];
+
+                        res.forEach(setting => {
+                            settings = [
+                                ...settings,
+                                new DiscordGuildSetting(setting.setting, setting.value, setting.type),
+                            ]
+                        });
+
+                        resolve(new DiscordGuild(
+                            row.id,
+                            await global.api.getFullIdentity(row.represents_id),
+                            await this.getUserById(row.owner_id),
+                            row.name,
+                            settings
+                        ));
+                    });
                 } else {
                     reject("No guild was found!");
                 }

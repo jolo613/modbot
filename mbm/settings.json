@@ -1,0 +1,32 @@
+[
+    {
+        "name":"[LDE] Send Local Discord Events",
+        "value":"lde-enabled",
+        "type":"boolean",
+        "default":false
+    },
+    {
+        "name":"[LDE] Local Discord Events Channel",
+        "value":"lde-channel",
+        "type":"channel",
+        "default":null
+    },
+    {
+        "name":"[RM] Role Management: Administrator Role",
+        "value":"rm-admin",
+        "type":"role",
+        "default":null
+    },
+    {
+        "name":"[RM] Role Management: Moderator Role",
+        "value":"rm-mod",
+        "type":"role",
+        "default":null
+    },
+    {
+        "name":"[RM] Role Management: Helper Role",
+        "value":"rm-helper",
+        "type":"role",
+        "default":null
+    }
+]

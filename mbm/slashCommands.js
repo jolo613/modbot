@@ -9,10 +9,12 @@ let commands = [];
 
 for (const file of commandFiles) {
     const command = require(`./commands/${file}`);
-    commands = [
-        ...commands,
-        command.data
-    ]
+    if (command.global) {
+        commands = [
+            ...commands,
+            command.data
+        ]
+    }
 }
 
 const rest = new REST({ version: '9' }).setToken(config.mbm.token);

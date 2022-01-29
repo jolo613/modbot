@@ -6,6 +6,7 @@ const command = {
         name: 'resources'
         , description: 'View resources for suicide, sexual assault, domestic violence, and more.'
     },
+    global: true,
     execute(interaction) {
         let embed = new MessageEmbed()
             .setTitle("National Hotlines")

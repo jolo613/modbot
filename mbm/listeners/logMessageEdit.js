@@ -1,4 +1,6 @@
+const { MessageEmbed } = require("discord.js");
 const {Discord} = require("../../api/index");
+const con = require("../../database");
 
 const listener = {
     name: 'logMessageEdit',
@@ -7,8 +9,8 @@ const listener = {
     listener (oldMessage, newMessage) {
         if (oldMessage.guildId && oldMessage.content !== newMessage.content) {
             Discord.getGuild(oldMessage.guildId).then(guild => {
-                Discord.getUserById(oldMessage.author.id).then(user => {
-                    con.query("insert into discord_edit (guild_id, channel_id, message_id, user_id, old_message, new_message) values (?, ?, ?, ?, ?, ?);", [
+                Discord.getUserById(oldMessage.author.id, false, true).then(user => {
+                    con.query("insert into discord__edit (guild_id, channel_id, message_id, user_id, old_message, new_message) values (?, ?, ?, ?, ?, ?);", [
                         guild.id,
                         oldMessage.channel.id,
                         oldMessage.id,
@@ -23,6 +25,20 @@ const listener = {
                 }).catch(err => {
                     console.error(err);
                 });
+
+                guild.getSetting("lde-enabled", "boolean").then(enabled => {
+                    if (enabled) {
+                        guild.getSetting("lde-channel", "channel").then(channel => {
+                            channel.send({content: ' ', embeds: [new MessageEmbed()
+                                    .setTitle("Message Edited")
+                                    .setDescription(`A message was edited in ${oldMessage.channel}, created by ${oldMessage.author}`)
+                                    .addField("Old Message", "```\n" + oldMessage.content.replace(/`/g, "\\`") + "```", false)
+                                    .addField("New Message", "```\n" + newMessage.content.replace(/`/g, "\\`") + "```", false)
+                                    .setColor(0x4c80d4)
+                                    .setAuthor({name: oldMessage.author.username, iconURL: oldMessage.author.avatarURL()})]});
+                        }).catch(console.error);
+                    }
+                }).catch(console.error);
             }).catch(err => {
                 console.error(err);
             });
