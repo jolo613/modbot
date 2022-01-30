@@ -172,7 +172,12 @@ const listener = {
                     }
 
                     if (userClient) {
-                        console.log(await addBan(channel.id, modId, accessToken, user.id, url));
+                        let result = await addBan(channel.id, modId, accessToken, user.id, url);
+
+                        if (result?.message) {
+                            errors += `\n${channel?.display_name ? channel.display_name : channel}: ${result.message}`;
+                            continue;
+                        }
                     } else {
                         await global.client.ban.ban(channel.display_name.toLowerCase(), user.display_name.toLowerCase(), url);
                     }
