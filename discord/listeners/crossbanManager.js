@@ -1,9 +1,11 @@
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 const Discord = require("discord.js");
 const api = require("../../api/index");
 const config = require("../../config.json");
+const con = require("../../database");
 
 let crossbanable = [];
-api.Twitch.getUserById(config.twitch.id).then(tmsUser => {
+api.Twitch.getUserById(config.twitch.id, false, true).then(tmsUser => {
     tmsUser.refreshStreamers().then(streamers => {
         streamers.forEach(streamer => {
             crossbanable = [
@@ -14,7 +16,40 @@ api.Twitch.getUserById(config.twitch.id).then(tmsUser => {
     }).catch(console.error);
 }).catch(console.error);
 
+const refreshToken = refresh_token => {
+    return new Promise(async (resolve, reject) => {
+        const oauthResult = await fetch("https://id.twitch.tv/oauth2/token", {
+            method: 'POST',
+            body: new URLSearchParams({
+                client_id: config.twitch.client_id,
+                client_secret: config.twitch.client_secret,
+                refresh_token: refresh_token,
+                grant_type: "refresh_token",
+            }),
+        });
+    
+        oauthResult.json().then(resolve, reject);
+    });
+}
+
+const addBan = (broadcaster_id, moderator_id, access_token, user_id, reason) => {
+    return new Promise(async (resolve, reject) => {
+        const oauthResult = await fetch(`https://api.twitch.tv/helix/moderation/bans?broadcaster_id=${encodeURIComponent(broadcaster_id)}&moderator_id=${encodeURIComponent(moderator_id)}`, {
+            method: 'POST',
+            headers: {
+                Authorization: "Bearer " + access_token,
+                "Client-Id": config.twitch.client_id,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({data:{user_id: user_id, reason: reason}}),
+        });
+    
+        oauthResult.json().then(resolve, reject);
+    });
+}
+
 let storedCrossBanChannels = [];
+let storedCrossBanUser = [];
 
 const listener = {
     name: 'crossbanManager',
@@ -25,9 +60,9 @@ const listener = {
             interaction.reply({content: ' ', embeds: [new Discord.MessageEmbed().setTitle(message).setColor(0x2dad3e)], ephemeral: true})
         }
 
-        const handleError = err => {
+        const handleError = (err, method = "reply") => {
             console.error(err);
-            interaction.reply({content: ' ', embeds: [new Discord.MessageEmbed().setTitle("Uh oh!").setDescription(err).setColor(0x9e392f)], ephemeral: true})
+            interaction[method]({content: ' ', embeds: [new Discord.MessageEmbed().setTitle("Uh oh!").setDescription(err).setColor(0x9e392f)], ephemeral: true})
         }
 
         if (interaction.isButton() && interaction.component.customId.startsWith("cb-")) {
@@ -39,9 +74,17 @@ const listener = {
                         let options = [];
                         
                         for (let i = 0; i < identity.twitchAccounts.length; i++) {
+                            let refreshToken;
+                            try {
+                                refreshToken = (await con.pquery("select refresh_token from twitch__user where id = ?;", [identity.twitchAccounts[i].id]))?.[0]?.refresh_token;
+                                storedCrossBanUser[interaction.member.id] = identity.twitchAccounts[i];
+                            } catch(err) {
+                                console.error(err);
+                            }
+
                             let streamers = await identity.twitchAccounts[i].getStreamers();
                             for (let s = 0; s < streamers.length; s++) {
-                                if (crossbanable.indexOf(streamers[s].id) !== -1) {
+                                if (refreshToken || crossbanable.indexOf(streamers[s].id) !== -1) {
                                     options = [
                                         ...options,
                                         {
@@ -82,16 +125,36 @@ const listener = {
                 storedCrossBanChannels[interaction.member.id] &&
                 (interaction.component.customId.startsWith("cbauth-") ||
                 interaction.component.customId.startsWith("cbperm-"))) {
-            
+            await interaction.deferReply({ ephemeral: true });
+
             let crossBanChannels = storedCrossBanChannels[interaction.member.id];
             let twitchId = interaction.component.customId.substring(7);
 
             let user;
 
+            let userClient = false;
+            let banClient = global.client.ban;
+
+            let modId;
+            let accessToken;
+
             try {
-                user = await api.Twitch.getUserById(twitchId);
+                user = await api.Twitch.getUserById(twitchId, false, true);
+
+                if (storedCrossBanUser[interaction.member.id]) {
+                    let modUser = storedCrossBanUser[interaction.member.id];
+                    let refresh_token = (await con.pquery("select refresh_token from twitch__user where id = ?;", [modUser.id]))?.[0]?.refresh_token;
+
+                    const oauthData = await refreshToken(refresh_token);
+
+                    if (oauthData?.access_token) {
+                        userClient = true;
+                        modId = modUser.id;
+                        accessToken = oauthData.access_token;
+                    }
+                }
             } catch (err) {
-                handleError(err);
+                handleError(err, "editReply");
                 return;
             }
 
@@ -101,14 +164,18 @@ const listener = {
             for (let i = 0; i < crossBanChannels.length; i++) {
                 let channel = crossBanChannels[i];
                 try {
-                    channel = await api.Twitch.getUserById(channel);
+                    channel = await api.Twitch.getUserById(channel, false, true);
                     let url = "tms.to/t/" + user.id;
 
                     if (interaction.component.customId.startsWith("cb-perm")) {
                         // TODO: Put something here
                     }
 
-                    await global.client.ban.ban(channel.display_name.toLowerCase(), user.display_name.toLowerCase(), url);
+                    if (userClient) {
+                        console.log(await addBan(channel.id, modId, accessToken, user.id, url));
+                    } else {
+                        await global.client.ban.ban(channel.display_name.toLowerCase(), user.display_name.toLowerCase(), url);
+                    }
 
                     successes += `\n${channel.display_name}`;
                 } catch(err) {
@@ -128,7 +195,7 @@ const listener = {
                 embed.addField("Unsuccessful Bans", "```" + errors + "```", true);
             }
 
-            interaction.reply({content: ' ', embeds: [embed], ephemeral: true})
+            interaction.editReply({content: ' ', embeds: [embed], ephemeral: true})
         } else if (interaction.isSelectMenu() && interaction.component.customId.startsWith("cbsel-")) {
             let twitchId = interaction.component.customId.substring(6);
             storedCrossBanChannels[interaction.member.id] = interaction.values;
