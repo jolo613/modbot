@@ -31,9 +31,10 @@ const listener = {
                         guild.getSetting("lde-channel", "channel").then(channel => {
                             channel.send({content: ' ', embeds: [new MessageEmbed()
                                     .setTitle("Message Edited")
-                                    .setDescription(`A message was edited in ${oldMessage.channel}, created by ${oldMessage.author}`)
-                                    .addField("Old Message", "```\n" + oldMessage.content.replace(/`/g, "\\`") + "```", false)
-                                    .addField("New Message", "```\n" + newMessage.content.replace(/`/g, "\\`") + "```", false)
+                                    .addField("Channel", oldMessage.channel.toString(), true)
+                                    .addField("Author", oldMessage.author.toString(), true)
+                                    .addField("Old Message", "```\n" + oldMessage.content.replace(/\\`/g, "`").replace(/`/g, "\\`") + "```", false)
+                                    .addField("New Message", "```\n" + newMessage.content.replace(/\\`/g, "`").replace(/`/g, "\\`") + "```", false)
                                     .setColor(0x4c80d4)
                                     .setAuthor({name: oldMessage.author.username, iconURL: oldMessage.author.avatarURL()})]});
                         }).catch(console.error);
