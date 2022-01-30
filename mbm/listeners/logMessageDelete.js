@@ -2,19 +2,44 @@ const { MessageEmbed } = require("discord.js");
 const {Discord} = require("../../api/index");
 const con = require("../../database");
 
+const getExecutor = message => {
+    return new Promise((resolve, reject) => {
+        setTimeout(async () => {
+            // Fetch a couple audit logs than just one as new entries could've been added right after this event was emitted.
+            const fetchedLogs = await message.guild.fetchAuditLogs({
+                limit: 6,
+                type: 'MESSAGE_DELETE'
+            }).catch(console.error);
+        
+            const auditEntry = fetchedLogs.entries.find(a =>
+                // Small filter function to make use of the little discord provides to narrow down the correct audit entry.
+                a.target.id === message.author.id &&
+                a.extra.channel.id === message.channel.id &&
+                // Ignore entries that are older than 1. seconds to reduce false positives.
+                Date.now() - a.createdTimestamp < 1500
+            );
+        
+            // If entry exists, grab the user that deleted the message and display username + tag, if none, display 'Unknown'. 
+            resolve(auditEntry?.executor ? auditEntry.executor : null);
+        }, 750);
+    });
+}
+
 const listener = {
     name: 'logMessageDelete',
     eventName: 'messageDelete',
     eventType: 'on',
     listener (message) {
         if (message.guildId) {
-            Discord.getGuild(message.guildId).then(guild => {
+            Discord.getGuild(message.guildId).then(async guild => {
+                const executor = await getExecutor(message);
                 Discord.getUserById(message.author.id, false, true).then(user => {
-                    con.query("insert into discord__edit (guild_id, channel_id, message_id, user_id, old_message, new_message) values (?, ?, ?, ?, ?, null);", [
+                    con.query("insert into discord__edit (guild_id, channel_id, message_id, user_id, executor, old_message, new_message) values (?, ?, ?, ?, ?, ?, null);", [
                         guild.id,
                         message.channel.id,
                         message.id,
                         user.id,
+                        executor !== null ? executor.id : null,
                         message.content
                     ], err => {
                         if (err) {
@@ -30,12 +55,24 @@ const listener = {
                         if (enabled) {
                             guild.getSetting("lde-channel", "channel").then(async channel => {
                                 let author = message.author;
-                                channel.send({content: ' ', embeds: [new MessageEmbed()
+
+                                if (executor) author = executor;
+
+                                const embed = new MessageEmbed()
                                         .setTitle("Message Deleted")
-                                        .setDescription(`A message was deleted in ${message.channel}, created by ${message.author}`)
-                                        .addField("Message Content", "```\n" + message.content.replace(/`/g, "/`") + "```", false)
+                                        .addField("Channel", message.channel.toString(), true)
+                                        .addField("Author", message.author.toString(), true)
                                         .setColor(0x4c80d4)
-                                        .setAuthor({name: author.username, iconURL: author.avatarURL()})]});
+                                        .setAuthor({name: author.username, iconURL: author.avatarURL()});
+
+
+                                if (executor !== null) {
+                                    embed.addField("Moderator", executor.toString(), true);
+                                }
+                                if (message?.content && message.content.trim() !== "") {
+                                    embed.addField("Message Content", "```\n" + message.content.replace(/`/g, "/`") + "```", false);
+                                }
+                                channel.send({content: ' ', embeds: [embed]});
                             }).catch(console.error);
                         }
                     }).catch(console.error);

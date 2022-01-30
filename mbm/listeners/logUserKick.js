@@ -1,20 +1,20 @@
 const {MessageEmbed} = require("discord.js");
 const {Discord} = require("../../api/index");
 
-const getBanInfo = ban => {
+const getKickInfo = member => {
     return new Promise((resolve, reject) => {
         setTimeout(async () => {
             // Fetch a couple audit logs than just one as new entries could've been added right after this event was emitted.
-            const fetchedLogs = await ban.guild.fetchAuditLogs({
+            const fetchedLogs = await member.guild.fetchAuditLogs({
                 limit: 6,
-                type: 'GUILD_BAN_ADD'
+                type: 'MEMBER_KICK'
             }).catch(console.error);
 
             fetchedLogs.entries.forEach(e => console.log(e.extra));
             const auditEntry = fetchedLogs.entries.find(a =>
                 // Small filter function to make use of the little discord provides to narrow down the correct audit entry.
-                a.target.id === ban.user.id &&
-                // Ignore entries that are older than 1. seconds to reduce false positives.
+                a.target.id === member.id &&
+                // Ignore entries that are older than 1.5 seconds to reduce false positives.
                 Date.now() - a.createdTimestamp < 1500
             );
         
@@ -25,43 +25,43 @@ const getBanInfo = ban => {
 }
 
 const listener = {
-    name: 'logUserBan',
-    eventName: 'guildBanAdd',
+    name: 'logUserKick',
+    eventName: 'guildMemberRemove',
     eventType: 'on',
-    listener (ban) {
-        Discord.getGuild(ban.guild.id).then(async guild => {
-            const banInfo = await getBanInfo(ban);
-            let bannedBy = null;
+    listener (member) {
+        Discord.getGuild(member.guild.id).then(async guild => {
+            const kickInfo = await getKickInfo(member);
+            let kickedBy = null;
 
-            if (banInfo?.executor?.id) {
+            if (kickInfo?.executor?.id) {
                 try {
-                    bannedBy = await Discord.getUserById(banInfo.executor.id, false, true);
+                    kickedBy = await Discord.getUserById(kickInfo.executor.id, false, true);
                 } catch(err) {
                     console.error(err);
                 }
-            }
 
-            Discord.getUserById(ban.user.id, false, true).then(user => {
-                guild.addUserBan(user, banInfo?.reason ? banInfo.reason : null, bannedBy).then(() => {}, console.error);
-            }).catch(console.error);
+                Discord.getUserById(member.id, false, true).then(user => {
+                    guild.addUserKick(user, kickInfo?.reason ? kickInfo.reason : null, kickedBy).then(() => {}, console.error);
+                }).catch(console.error);
+            }
 
             guild.getSetting("lde-enabled", "boolean").then(enabled => {
                 if (enabled) {
                     guild.getSetting("lde-channel", "channel").then(async channel => {
-                        let author = ban.user;
+                        let author = member.user;
 
                         let embed = new MessageEmbed()
-                                .setTitle("User Banned")
-                                .setDescription(`User ${ban.user} was banned from the guild`)
+                                .setTitle("Member Left the Guild")
+                                .setDescription(`User ${member} ${kickInfo ? "was kicked from" : "has left"} the guild.`)
                                 .setColor(0xb53131)
                                 .setAuthor({name: author.username, iconURL: author.avatarURL()});
 
-                        if (banInfo?.reason) {
-                            embed.addField("Reason", "`" + banInfo.reason.toString().replace(/\\`/g, "`").replace(/`/g, "\\`") + "`", true);
+                        if (kickInfo?.reason) {
+                            embed.addField("Reason", "`" + kickInfo.reason.toString().replace(/\\`/g, "`").replace(/`/g, "\\`") + "`", true);
                         }
 
-                        if (banInfo?.executor) {
-                            embed.addField("Moderator", banInfo.executor.toString(), true);
+                        if (kickInfo?.executor) {
+                            embed.addField("Moderator", kickInfo.executor.toString(), true);
                         }
 
                         channel.send({content: ' ', embeds: [embed]});
