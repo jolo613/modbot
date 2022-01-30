@@ -15,7 +15,7 @@ const router = Router();
 
 const PANEL_URL = "https://panel.twitchmodsquad.com";
 
-const TWITCH_URL = "https://id.twitch.tv/oauth2/authorize?response_type=code&client_id=qsedbwr82672tfg7fvobxlf01ljoov&redirect_uri=" + encodeURIComponent(config.api_domain) + "auth%2Ftwitch&scope=user%3Aread%3Aemail%20chat%3Aread%20chat%3Aedit%20channel:moderate%20moderator%3Amanage%3Abanned_users";
+const TWITCH_URL = "https://id.twitch.tv/oauth2/authorize?response_type=code&client_id=qsedbwr82672tfg7fvobxlf01ljoov&redirect_uri=" + encodeURIComponent(config.api_domain) + "auth%2Ftwitch&scope=user%3Aread%3Aemail%20moderator%3Amanage%3Abanned_users";
 const TWITCH_REDIRECT = config.api_domain + "auth/twitch";
 const DISCORD_URL = "https://discord.com/api/oauth2/authorize?client_id=" + config.discord_auth.client_id + "&redirect_uri=" + encodeURIComponent(config.api_domain) + "auth%2Fdiscord&response_type=code&scope=guilds.join%20identify";
 const DISCORD_REDIRECT = config.api_domain + "auth/discord";
