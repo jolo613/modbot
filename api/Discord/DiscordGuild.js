@@ -161,15 +161,20 @@ class DiscordGuild {
     }
 
     /**
-     * Add a ban for a user
+     * Add a punishment for a user
+     * @param {"kick"|"ban"} punishmentType
      * @param {DiscordUser} user 
-     * @returns {Promise<undefined>}
+     * @param {string?} reason
+     * @param {DiscordUser?} executor
+     * @returns {Promise<void>}
      */
-    addUserBan(user) {
+    #addUserPunishment(punishmentType, user, reason, executor) {
         return new Promise((resolve, reject) => {
-            con.query("insert into discord__ban (guild_id, user_id) values (?, ?);", [
+            con.query("insert into discord__" + punishmentType + " (guild_id, user_id, reason, executor) values (?, ?, ?, ?);", [
                 this.id,
-                user.id
+                user.id,
+                reason,
+                executor?.id ? executor.id : null
             ], err => {
                 if (!err) {
                     resolve();
@@ -177,6 +182,28 @@ class DiscordGuild {
                     reject(err);
             });
         });
+    }
+
+    /**
+     * Add a ban for a user
+     * @param {DiscordUser} user 
+     * @param {string?} reason
+     * @param {DiscordUser?} executor
+     * @returns {Promise<void>}
+     */
+    addUserBan(user, reason, executor) {
+        return this.#addUserPunishment("ban", user, reason, executor);
+    }
+
+    /**
+     * Add a kick for a user
+     * @param {DiscordUser} user 
+     * @param {string?} reason
+     * @param {DiscordUser?} executor
+     * @returns {Promise<void>}
+     */
+    addUserKick(user, reason, executor) {
+        return this.#addUserPunishment("kick", user, reason, executor);
     }
 
     /**
