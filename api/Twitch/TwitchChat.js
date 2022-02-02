@@ -1,5 +1,6 @@
 const api = require("..");
 const con = require("../../database");
+const TwitchChatFiller = require("./TwitchChatFiller");
 const TwitchChatLog = require("./TwitchChatLog");
 
 class TwitchChat {
@@ -11,8 +12,9 @@ class TwitchChat {
      * @param {Date=} timeEnd 
      * @param {number=} [limit=200] 
      * @param {number=} [offset=0]
+     * @param {boolean=} [includeFillers=true] 
      */
-    getLogs(channel = null, user = null, timeStart = null, timeEnd = null, limit = 250, offset = 0) {
+    getLogs(channel = null, user = null, timeStart = null, timeEnd = null, limit = 250, offset = 0, includeFillers = true) {
         return new Promise((resolve, reject) => {
             if (channel === null && user === null && timeStart === null) {
                 reject("Query must have one of the following parameters: channel, user, timeStart");
@@ -35,7 +37,7 @@ class TwitchChat {
             }
 
             if (channel !== null) addToQuery("streamer_id = ?", channel);
-            if (user !== null) addToQuery("user_id = ?", user);
+            if (user !== null && (channel === null || !includeFillers)) addToQuery("user_id = ?", user);
             if (timeStart !== null) addToQuery("timesent <= ?", timeStart);
             if (timeEnd !== null) addToQuery("timesent >= ?", timeEnd);
             
@@ -47,28 +49,61 @@ class TwitchChat {
 
                 let result = [];
 
+                let fillerFrom = null;
+                let lastFiller = null;
+                let fillerCount = 0;
+
                 res.forEach(chatLog => {
-                    result = [
-                        ...result,
-                        new TwitchChatLog(
-                            chatLog.id,
-                            Number(chatLog.streamer_id),
-                            Number(chatLog.user_id),
-                            chatLog.message,
-                            chatLog.deleted == 1,
-                            chatLog.color,
-                            chatLog.timesent,
-                        )
-                    ]
+                    if (user === null || chatLog.user_id == user) {
+                        if (fillerFrom !== null) {
+                            result = [
+                                ...result,
+                                new TwitchChatFiller(
+                                    fillerCount,
+                                    fillerFrom,
+                                    lastFiller
+                                )
+                            ];
+                            fillerFrom = null;
+                            lastFiller = null;
+                            fillerCount = 0;
+                        }
+
+                        result = [
+                            ...result,
+                            new TwitchChatLog(
+                                chatLog.id,
+                                Number(chatLog.streamer_id),
+                                Number(chatLog.user_id),
+                                chatLog.message,
+                                chatLog.deleted == 1,
+                                chatLog.color,
+                                chatLog.timesent,
+                            )
+                        ];
+                    } else {
+                        if (fillerFrom === null) {
+                            fillerFrom = chatLog.timesent;
+                        }
+                        lastFiller = chatLog.timesent;
+                        fillerCount++;
+                    }
                 });
 
                 let userTable = {};
 
                 for (let i = 0; i < result.length; i++) {
                     let chatLog = result[i];
-                    if (!userTable[Number(chatLog.streamer_id)]) userTable[Number(chatLog.streamer_id)] = await global.api.Twitch.getUserById(chatLog.streamer_id);
+                    if (chatLog.type === "chatlog") {
+                        try {
+                            if (!userTable[Number(chatLog.streamer_id)]) userTable[Number(chatLog.streamer_id)] = await global.api.Twitch.getUserById(chatLog.streamer_id);
 
-                    if (!userTable[Number(chatLog.user_id)]) userTable[Number(chatLog.user_id)] = await global.api.Twitch.getUserById(chatLog.user_id);
+                            if (!userTable[Number(chatLog.user_id)]) userTable[Number(chatLog.user_id)] = await global.api.Twitch.getUserById(chatLog.user_id);
+                        } catch (err) {
+                            console.error(err);
+                            return;
+                        }
+                    }
                 }
 
                 resolve({log: result, user_table: userTable});

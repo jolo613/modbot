@@ -1,5 +1,11 @@
 class TwitchChatLog {
     /**
+     * Indicates that the log is a chat log.
+     * @type {string}
+     */
+    type = "chatlog";
+
+    /**
      * Represents a string UUID set by twitch for messages
      * 
      * @type {string}
