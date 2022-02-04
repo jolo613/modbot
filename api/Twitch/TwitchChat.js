@@ -15,7 +15,7 @@ class TwitchChat {
      * @param {boolean=} [includeFillers=true] 
      */
     getLogs(channel = null, user = null, timeStart = null, timeEnd = null, limit = 250, offset = 0, includeFillers = true) {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             if (channel === null && user === null && timeStart === null) {
                 reject("Query must have one of the following parameters: channel, user, timeStart");
                 return;
@@ -38,8 +38,27 @@ class TwitchChat {
 
             if (channel !== null) addToQuery("streamer_id = ?", channel);
             if (user !== null && (channel === null || !includeFillers)) addToQuery("user_id = ?", user);
+
+            if (includeFillers && channel !== null && user !== null) {
+                const timeEndQuery = (await con.pquery("select timesent from twitch__chat where streamer_id = ? and user_id = ? order by timesent desc limit 0, 1;", [channel, user]));
+                const timeStartQuery = (await con.pquery("select timesent from twitch__chat where streamer_id = ? and user_id = ? order by timesent desc limit 0, ?;", [channel, user, limit]));
+
+                if (timeEndQuery.length > 0 && timeStartQuery.length > 0) {
+                    timeStart = timeEndQuery[0].timesent;
+                    timeEnd = timeStartQuery[timeStartQuery.length - 1].timesent;
+                }
+
+                limit = 1500;
+            }
+
+            console.log(timeEnd);
+            console.log(timeStart);
+
             if (timeStart !== null) addToQuery("timesent <= ?", timeStart);
             if (timeEnd !== null) addToQuery("timesent >= ?", timeEnd);
+            
+            console.log(buildQuery);
+            console.log(queryParams);
             
             con.query("select * from twitch__chat where " + buildQuery + " order by timesent desc limit ?, ?;", [...queryParams, offset, limit], async(err, res) => {
                 if (err) {
