@@ -7,7 +7,10 @@ module.exports = () => {
     if (waiting) return;
     waiting = true;
     con.query("select id, display_name from twitch__user where follower_count is null or date_add(last_updated, interval 7 day) < now() limit 100;", async (err, res) => {
-        if (err) return;
+        if (err) {
+            console.error(err);
+            return;
+        }
 
         let userIds = [];
 

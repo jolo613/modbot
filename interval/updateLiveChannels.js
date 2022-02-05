@@ -87,7 +87,7 @@ module.exports = () => {
                                 .addField("Game", stream.gameName, true)
                                 .addField("Viewer Count", ""+stream.viewers, true)
                                 .setTimestamp(stream.startDate)
-                                .setFooter(`${user.display_name} : Live 🔴`, user.profile_image_url);
+                                .setFooter({text: `${user.display_name} : Live 🔴`, iconURL: user.profile_image_url});
                 
                             channel.send({content: ' ', embeds: [embed]});
                         });
@@ -113,7 +113,7 @@ module.exports = () => {
                         .setColor(0x451b7f)
                         .setURL("https://twitch.tv/" + user.display_name.toLowerCase())
                         .setTimestamp(new Date())
-                        .setFooter(`${user.display_name} : Offline`, user.profile_image_url);
+                        .setFooter({text: `${user.display_name} : Offline`, iconURL: user.profile_image_url});
         
                     channel.send({content: ' ', embeds: [embed]});
                 });
