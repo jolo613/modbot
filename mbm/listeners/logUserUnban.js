@@ -12,16 +12,18 @@ const listener = {
             }).catch(console.error);
 
             guild.getSetting("lde-enabled", "boolean").then(enabled => {
-                if (enabled) {
-                    guild.getSetting("lde-channel", "channel").then(async channel => {
-                        let author = ban.user;
-                        channel.send({content: ' ', embeds: [new MessageEmbed()
-                                .setTitle("User Unbanned")
-                                .setDescription(`User ${ban.user} was unbanned from the guild`)
-                                .setColor(0x595959)
-                                .setAuthor({name: author.username, iconURL: author.avatarURL()})]});
-                    }).catch(console.error);
-                }
+                guild.getSetting("lde-user-unban", "boolean").then(unbanEnabled => {
+                    if (enabled && unbanEnabled) {
+                        guild.getSetting("lde-channel", "channel").then(async channel => {
+                            let author = ban.user;
+                            channel.send({content: ' ', embeds: [new MessageEmbed()
+                                    .setTitle("User Unbanned")
+                                    .setDescription(`User ${ban.user} was unbanned from the guild`)
+                                    .setColor(0x595959)
+                                    .setAuthor({name: author.username, iconURL: author.avatarURL()})]});
+                        }).catch(console.error);
+                    }
+                }).catch(console.error);
             }).catch(console.error);
         }).catch(console.error);
     }

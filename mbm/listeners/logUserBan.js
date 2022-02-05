@@ -46,27 +46,29 @@ const listener = {
             }).catch(console.error);
 
             guild.getSetting("lde-enabled", "boolean").then(enabled => {
-                if (enabled) {
-                    guild.getSetting("lde-channel", "channel").then(async channel => {
-                        let author = ban.user;
-
-                        let embed = new MessageEmbed()
-                                .setTitle("User Banned")
-                                .setDescription(`User ${ban.user} was banned from the guild`)
-                                .setColor(0xb53131)
-                                .setAuthor({name: author.username, iconURL: author.avatarURL()});
-
-                        if (banInfo?.reason) {
-                            embed.addField("Reason", "`" + banInfo.reason.toString().replace(/\\`/g, "`").replace(/`/g, "\\`") + "`", true);
-                        }
-
-                        if (banInfo?.executor) {
-                            embed.addField("Moderator", banInfo.executor.toString(), true);
-                        }
-
-                        channel.send({content: ' ', embeds: [embed]});
-                    }).catch(console.error);
-                }
+                guild.getSetting("lde-user-ban", "boolean").then(banEnabled => {
+                    if (enabled && banEnabled) {
+                        guild.getSetting("lde-channel", "channel").then(async channel => {
+                            let author = ban.user;
+    
+                            let embed = new MessageEmbed()
+                                    .setTitle("User Banned")
+                                    .setDescription(`User ${ban.user} was banned from the guild`)
+                                    .setColor(0xb53131)
+                                    .setAuthor({name: author.username, iconURL: author.avatarURL()});
+    
+                            if (banInfo?.reason) {
+                                embed.addField("Reason", "`" + banInfo.reason.toString().replace(/\\`/g, "`").replace(/`/g, "\\`") + "`", true);
+                            }
+    
+                            if (banInfo?.executor) {
+                                embed.addField("Moderator", banInfo.executor.toString(), true);
+                            }
+    
+                            channel.send({content: ' ', embeds: [embed]});
+                        }).catch(console.error);
+                    }
+                }).catch(console.error);
             }).catch(console.error);
         }).catch(console.error);
     }

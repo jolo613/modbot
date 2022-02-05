@@ -9,13 +9,12 @@ const getKickInfo = member => {
                 limit: 6,
                 type: 'MEMBER_KICK'
             }).catch(console.error);
-
-            fetchedLogs.entries.forEach(e => console.log(e.extra));
+            
             const auditEntry = fetchedLogs.entries.find(a =>
                 // Small filter function to make use of the little discord provides to narrow down the correct audit entry.
                 a.target.id === member.id &&
-                // Ignore entries that are older than 1.5 seconds to reduce false positives.
-                Date.now() - a.createdTimestamp < 1500
+                // Ignore entries that are older than 5 seconds to reduce false positives.
+                Date.now() - a.createdTimestamp < 25000
             );
         
             // If entry exists, grab the user that deleted the message and display username + tag, if none, display 'Unknown'. 
@@ -48,23 +47,29 @@ const listener = {
             guild.getSetting("lde-enabled", "boolean").then(enabled => {
                 if (enabled) {
                     guild.getSetting("lde-channel", "channel").then(async channel => {
-                        let author = member.user;
+                        guild.getSetting("lde-user-kick", "boolean").then(kickEnabled => {
+                            guild.getSetting("lde-user-leave", "boolean").then(leaveEnabled => {
+                                let author = member.user;
 
-                        let embed = new MessageEmbed()
-                                .setTitle("Member Left the Guild")
-                                .setDescription(`User ${member} ${kickInfo ? "was kicked from" : "has left"} the guild.`)
-                                .setColor(0xb53131)
-                                .setAuthor({name: author.username, iconURL: author.avatarURL()});
-
-                        if (kickInfo?.reason) {
-                            embed.addField("Reason", "`" + kickInfo.reason.toString().replace(/\\`/g, "`").replace(/`/g, "\\`") + "`", true);
-                        }
-
-                        if (kickInfo?.executor) {
-                            embed.addField("Moderator", kickInfo.executor.toString(), true);
-                        }
-
-                        channel.send({content: ' ', embeds: [embed]});
+                                if (!((kickInfo && kickEnabled) || (!kickInfo && leaveEnabled))) return;
+        
+                                let embed = new MessageEmbed()
+                                        .setTitle("Member Left the Guild")
+                                        .setDescription(`User ${member} ${kickInfo ? "was kicked from" : "has left"} the guild.`)
+                                        .setColor(0xb53131)
+                                        .setAuthor({name: author.username, iconURL: author.avatarURL()});
+        
+                                if (kickInfo?.reason) {
+                                    embed.addField("Reason", "`" + kickInfo.reason.toString().replace(/\\`/g, "`").replace(/`/g, "\\`") + "`", true);
+                                }
+        
+                                if (kickInfo?.executor) {
+                                    embed.addField("Moderator", kickInfo.executor.toString(), true);
+                                }
+        
+                                channel.send({content: ' ', embeds: [embed]});
+                            }).catch(console.error);
+                        }).catch(console.error);
                     }).catch(console.error);
                 }
             }).catch(console.error);

@@ -10,18 +10,18 @@ const getExecutor = message => {
                 limit: 6,
                 type: 'MESSAGE_DELETE'
             }).catch(console.error);
-        
+            
             const auditEntry = fetchedLogs.entries.find(a =>
                 // Small filter function to make use of the little discord provides to narrow down the correct audit entry.
                 a.target.id === message.author.id &&
                 a.extra.channel.id === message.channel.id &&
-                // Ignore entries that are older than 1. seconds to reduce false positives.
-                Date.now() - a.createdTimestamp < 1500
+                // Ignore entries that are older than 5 seconds to reduce false positives.
+                Date.now() - a.createdTimestamp < 5000
             );
         
             // If entry exists, grab the user that deleted the message and display username + tag, if none, display 'Unknown'. 
             resolve(auditEntry?.executor ? auditEntry.executor : null);
-        }, 750);
+        }, 1500);
     });
 }
 
@@ -52,29 +52,31 @@ const listener = {
 
                 if (!message.author.bot) {
                     guild.getSetting("lde-enabled", "boolean").then(enabled => {
-                        if (enabled) {
-                            guild.getSetting("lde-channel", "channel").then(async channel => {
-                                let author = message.author;
-
-                                if (executor) author = executor;
-
-                                const embed = new MessageEmbed()
-                                        .setTitle("Message Deleted")
-                                        .addField("Channel", message.channel.toString(), true)
-                                        .addField("Author", message.author.toString(), true)
-                                        .setColor(0x4c80d4)
-                                        .setAuthor({name: author.username, iconURL: author.avatarURL()});
-
-
-                                if (executor !== null) {
-                                    embed.addField("Moderator", executor.toString(), true);
-                                }
-                                if (message?.content && message.content.trim() !== "") {
-                                    embed.addField("Message Content", "```\n" + message.content.replace(/`/g, "/`") + "```", false);
-                                }
-                                channel.send({content: ' ', embeds: [embed]});
-                            }).catch(console.error);
-                        }
+                        guild.getSetting("lde-message-delete", "boolean").then(messageDeleteEnabled => {
+                            if (enabled && messageDeleteEnabled) {
+                                guild.getSetting("lde-channel", "channel").then(async channel => {
+                                    let author = message.author;
+    
+                                    if (executor) author = executor;
+    
+                                    const embed = new MessageEmbed()
+                                            .setTitle("Message Deleted")
+                                            .addField("Channel", message.channel.toString(), true)
+                                            .addField("Author", message.author.toString(), true)
+                                            .setColor(0x4c80d4)
+                                            .setAuthor({name: author.username, iconURL: author.avatarURL()});
+    
+    
+                                    if (executor !== null) {
+                                        embed.addField("Moderator", executor.toString(), true);
+                                    }
+                                    if (message?.content && message.content.trim() !== "") {
+                                        embed.addField("Message Content", "```\n" + message.content.replace(/`/g, "/`") + "```", false);
+                                    }
+                                    channel.send({content: ' ', embeds: [embed]});
+                                }).catch(console.error);
+                            }
+                        }).catch(console.error);
                     }).catch(console.error);
                 }
             }).catch(console.error);
