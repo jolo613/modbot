@@ -12,10 +12,10 @@ app.use(cookieParser());
 app.use(cors());
 
 app.use('/', (req, res, next) => {
-    let elapsed_start = (new Date()).getMilliseconds();
+    let elapsed_start = Date.now();
 
     res.elapsedJson = json => {
-        json.elapsed = (new Date()).getMilliseconds() - elapsed_start;
+        json.elapsed = Date.now() - elapsed_start;
         res.json(json);
     }
     next();

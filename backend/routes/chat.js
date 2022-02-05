@@ -75,7 +75,7 @@ router.get("/select-menu", (req, res) => {
             res.json({success: true, data: result});
         });
     } else if (req.query.channel) {
-        con.query("select user_id, count(user_id) as chat_count from twitch__chat where streamer_id = ? group by user_id order by chat_count desc;", [req.query.channel], async (err, response) => {
+        con.query("select user_id, count(user_id) as chat_count from twitch__chat where streamer_id = ? group by user_id order by chat_count desc limit 150;", [req.query.channel], async (err, response) => {
             if (err) {
                 console.error(err);
                 res.json({success: false, error: err});
