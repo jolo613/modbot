@@ -30,8 +30,8 @@ const listener = {
     eventName: 'messageDeleteBulk',
     eventType: 'on',
     listener (messages) {
-        if (messages.size > 0 && messages[0].guildId) {
-            Discord.getGuild(messages[0].guildId).then(async guild => {
+        if (messages.size > 0 && messages?.[0]?.guild.id) {
+            Discord.getGuild(messages[0].guild.id).then(async guild => {
                 const executor = await getExecutor(messages[0]);
                 messages.each(message => {
                     Discord.getUserById(message.author.id, false, true).then(user => {
