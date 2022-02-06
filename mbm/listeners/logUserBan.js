@@ -59,7 +59,7 @@ const listener = {
                                     .setAuthor({name: author.username, iconURL: author.avatarURL()});
     
                             if (banInfo?.reason) {
-                                embed.addField("Reason", "`" + banInfo.reason.toString().replace(/\\`/g, "`").replace(/`/g, "\\`") + "`", true);
+                                embed.addField("Reason", "```" + banInfo.reason.toString().replace(/\\`/g, "`").replace(/`/g, "\\`") + "```", true);
                             }
     
                             if (banInfo?.executor) {
@@ -80,7 +80,7 @@ const listener = {
                         .setColor(0xb53131)
                         .setAuthor({name: ban.guild.name, iconURL: ban.guild.iconURL()});
 
-                if (banInfo?.reason) embed.addField("Reason", "`" + banInfo.reason.toString().replace(/\\`/g, "`").replace(/`/g, "\\`") + "`", true);
+                if (banInfo?.reason) embed.addField("Reason", "```" + banInfo.reason.toString().replace(/\\`/g, "`").replace(/`/g, "\\`") + "```", true);
 
                 if (banInfo?.executor) embed.addField("Moderator", banInfo.executor.toString(), true);
 
