@@ -185,6 +185,38 @@ class DiscordGuild {
     }
 
     /**
+     * Adds a user to display as a member of a guild
+     * @param {DiscordUser} user 
+     * @returns {DiscordGuild}
+     */
+    addUser(user) {
+        return new Promise((resolve, reject) => {
+            con.query("insert into discord__guild_user (guild_id, user_id) values (?, ?) on duplicate key update guild_id = ?;", [this.id, user.id, this.id], err => {
+                if (err) {
+                    console.error(err);
+                    reject(err);
+                } else resolve(this);
+            });
+        });
+    }
+
+    /**
+     * Removes a user from a guild
+     * @param {DiscordUser} user 
+     * @returns {DiscordGuild}
+     */
+    removeUser(user) {
+        return new Promise((resolve, reject) => {
+            con.query("delete from discord__guild_user where guild_id = ? and user_id = ?;", [this.id, user.id], err => {
+                if (err) {
+                    console.error(err);
+                    reject(err);
+                } else resolve(this);
+            });
+        });
+    }
+
+    /**
      * Add a ban for a user
      * @param {DiscordUser} user 
      * @param {string?} reason
