@@ -1,0 +1,81 @@
+const {MessageEmbed} = require("discord.js");
+const {Discord} = require("../../api/index");
+
+const getKickInfo = member => {
+    return new Promise((resolve, reject) => {
+        setTimeout(async () => {
+            // Fetch a couple audit logs than just one as new entries could've been added right after this event was emitted.
+            const fetchedLogs = await member.guild.fetchAuditLogs({
+                limit: 6,
+                type: 'MEMBER_KICK'
+            }).catch(console.error);
+            
+            const auditEntry = fetchedLogs.entries.find(a =>
+                // Small filter function to make use of the little discord provides to narrow down the correct audit entry.
+                a.target.id === member.id &&
+                // Ignore entries that are older than 5 seconds to reduce false positives.
+                Date.now() - a.createdTimestamp < 25000
+            );
+        
+            // If entry exists, grab the user that deleted the message and display username + tag, if none, display 'Unknown'. 
+            resolve(auditEntry ? auditEntry : null);
+        }, 750);
+    });
+}
+
+const listener = {
+    name: 'logUserKick',
+    eventName: 'guildMemberRemove',
+    eventType: 'on',
+    listener (member) {
+        Discord.getGuild(member.guild.id).then(async guild => {
+            const kickInfo = await getKickInfo(member);
+            let kickedBy = null;
+
+            if (kickInfo?.executor?.id) {
+                try {
+                    kickedBy = await Discord.getUserById(kickInfo.executor.id, false, true);
+                } catch(err) {
+                    console.error(err);
+                }
+
+                Discord.getUserById(member.id, false, true).then(user => {
+                    guild.addUserKick(user, kickInfo?.reason ? kickInfo.reason : null, kickedBy).then(() => {}, console.error);
+                    guild.removeUser(user).then(() => {}, console.error);
+                }).catch(console.error);
+            }
+
+            guild.getSetting("lde-enabled", "boolean").then(enabled => {
+                if (enabled) {
+                    guild.getSetting("lde-channel", "channel").then(async channel => {
+                        guild.getSetting("lde-user-kick", "boolean").then(kickEnabled => {
+                            guild.getSetting("lde-user-leave", "boolean").then(leaveEnabled => {
+                                let author = member.user;
+
+                                if (!((kickInfo && kickEnabled) || (!kickInfo && leaveEnabled))) return;
+        
+                                let embed = new MessageEmbed()
+                                        .setTitle("Member Left the Guild")
+                                        .setDescription(`User ${member} ${kickInfo ? "was kicked from" : "has left"} the guild.`)
+                                        .setColor(0xb53131)
+                                        .setAuthor({name: author.username, iconURL: author.avatarURL()});
+        
+                                if (kickInfo?.reason) {
+                                    embed.addField("Reason", "```" + kickInfo.reason.toString().replace(/\\`/g, "`").replace(/`/g, "\\`") + "```", true);
+                                }
+        
+                                if (kickInfo?.executor) {
+                                    embed.addField("Moderator", kickInfo.executor.toString(), true);
+                                }
+        
+                                channel.send({content: ' ', embeds: [embed]});
+                            }).catch(console.error);
+                        }).catch(console.error);
+                    }).catch(console.error);
+                }
+            }).catch(console.error);
+        }).catch(console.error);
+    }
+};
+
+module.exports = listener;

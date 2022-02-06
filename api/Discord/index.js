@@ -2,6 +2,8 @@ const con = require("../../database");
 
 const Identity = require("../Identity");
 const DiscordUser = require("./DiscordUser");
+const DiscordGuild = require("./DiscordGuild");
+const DiscordGuildSetting = require("./DiscordGuildSetting");
 
 const Cache = require("../Cache/Cache");
 const AssumedDiscordUser = require("./AssumedDiscordUser");
@@ -20,38 +22,56 @@ class Discord {
     userCache = new Cache();
 
     /**
-     * Transforms SQL response into a response.
+     * Discord guild cache (ID)
+     * 
+     * @type {Cache}
      */
-    #resolveUser(err, res, resolve, reject) {
-        if (err) {
-            reject(err);
-        } else {
-            if (res.length > 0) {
-                let row = res[0];
-                resolve(new DiscordUser(
-                    row.id,
-                    row.identity_id === null ? null : new Identity(row.identity_id, row.identity_name, row.authenticated),
-                    row.name,
-                    row.discriminator,
-                    row.avatar
-                    ));
-            } else {
-                reject("User was not found!");
-            }
-        }
+    guildCache = new Cache();
+
+    /**
+     * Internal method for retrieving a user if it is not present in the database
+     * @param {number} id 
+     */
+    getUserByIdByForce(id) {
+        return new Promise((resolve, reject) => {
+            global.client.mbm.users.fetch(id).then(async user => {
+                let discordUser = new DiscordUser(user.id, null, user.username, user.discriminator, user.avatar);
+                await discordUser.post();
+                resolve(discordUser);
+            }, reject);
+        });
     }
 
     /**
      * Gets a user based on a Discord user ID.
      * @param {number} id 
      * @param {?boolean} overrideCache
+     * @param {?boolean} requestIfUnavailable
      * 
      * @returns {Promise<DiscordUser>}
      */
-    getUserById(id, overrideCache = false) {
+    getUserById(id, overrideCache = false, requestIfUnavailable = false) {
         return this.userCache.get(id, (resolve, reject) => {
             con.query("select discord__user.*, identity.name as identity_name, identity.authenticated from discord__user left join identity on discord__user.identity_id = identity.id where discord__user.id = ?;", [id], (err, res) => {
-                this.#resolveUser(err, res, resolve, reject);
+                if (err) {
+                    reject(err);
+                } else {
+                    if (res.length > 0) {
+                        let row = res[0];
+                        resolve(new DiscordUser(
+                            row.id,
+                            row.identity_id === null ? null : new Identity(row.identity_id, row.identity_name, row.authenticated),
+                            row.name,
+                            row.discriminator,
+                            row.avatar
+                        ));
+                    } else {
+                        if (requestIfUnavailable) {
+                            this.getUserByIdByForce(id).then(resolve, reject);
+                        } else
+                            reject("User was not found!");
+                    }
+                }
             });
         }, overrideCache);
     }
@@ -60,10 +80,9 @@ class Discord {
     /**
      * Gets a list of users which have/have had a specific name.
      * @param {string} name 
-     * @param {boolean} overrideCache 
      * @returns {Promise<AssumedDiscordUser[]>}
      */
-    getUserByName(name, overrideCache = false) {
+    getUserByName(name) {
         return new Promise((resolve, reject) => {
             con.query("select id from discord__username where name = ?;", [name], async (err, res) => {
                 if (err) {
@@ -156,6 +175,51 @@ class Discord {
                 }
             });
         });
+    }
+
+    /**
+     * Returns the DiscordGuild via an ID
+     * @param {number} id 
+     * @param {boolean} overrideCache
+     * @returns {Promise<DiscordGuild>}
+     */
+    getGuild(id, overrideCache) {
+        return this.guildCache.get(id, (resolve, reject) => {
+            con.query("select * from discord__guild where id = ?;", [id], async (err, res) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+                if (res.length === 1) {
+                    let row = res[0];
+                    con.query("select * from discord__setting where guild_id = ?;", [id], async (err, res) => {
+                        if (err) {
+                            reject(err);
+                            return;
+                        }
+
+                        let settings = [];
+
+                        res.forEach(setting => {
+                            settings = [
+                                ...settings,
+                                new DiscordGuildSetting(setting.setting, setting.value, setting.type),
+                            ]
+                        });
+
+                        resolve(new DiscordGuild(
+                            row.id,
+                            await global.api.getFullIdentity(row.represents_id),
+                            await this.getUserById(row.owner_id),
+                            row.name,
+                            settings
+                        ));
+                    });
+                } else {
+                    reject("No guild was found!");
+                }
+            });
+        }, overrideCache);
     }
 }
 

@@ -2,7 +2,7 @@ const fs = require('fs');
 const Discord = require('discord.js');
 
 // Create a new Discord client using discord.js
-const client = new Discord.Client({ intents: [Discord.Intents.FLAGS.GUILDS, Discord.Intents.FLAGS.GUILD_MEMBERS, Discord.Intents.FLAGS.GUILD_MESSAGES] });
+const client = new Discord.Client({ intents: [Discord.Intents.FLAGS.GUILDS, Discord.Intents.FLAGS.GUILD_MEMBERS, Discord.Intents.FLAGS.GUILD_MESSAGES, Discord.Intents.FLAGS.GUILD_BANS] });
 global.client.mbm = client;
 
 // Client scope command and listener caches
@@ -11,7 +11,6 @@ client.listeners = new Discord.Collection();
 
 // Load application config file
 const config = require("../config.json");
-const Module = require('module');
 
 /** 
  * @param {String} path - Relative path to the file to be loaded
@@ -42,10 +41,6 @@ client.listeners.forEach(listener => {
 client.login(config.mbm.token);
 
 // Register slash commands.
-require("./slashCommands")(client);
-
-setTimeout(() => {
-    // require("./interval/crossban")(client);
-}, 500);
+require("./slashCommands")();
 
 module.exports = client;
