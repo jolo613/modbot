@@ -6,7 +6,23 @@ const listener = {
     eventName: 'guildCreate',
     eventType: 'on',
     listener (guild) {
-        Discord.getGuild(guild.id).then(() => {}).catch(err => {
+        guild.members.fetch().then(members => console.log(`Fetched members for ${guild.name}: ${members.size} members`), console.error);
+
+        guild.channels.fetch().then(channels => {
+            channels.forEach(channel => {
+                if (channel.type === "GUILD_TEXT") {
+                    channel.messages.fetch().then(messages => console.log(`Fetched ${messages.size} messages from ${channel.name}`)); // By default will just fetch 50 messages.
+                }
+            });
+        }, console.error);
+
+        Discord.getGuild(guild.id).then(dGuild => {
+            guild.members.forEach(member => {
+                Discord.getUserById(member, false, true).then(dUser => {
+                    dGuild.addUser(dUser);
+                });
+            });
+        }).catch(err => {
             guild.commands.create(registerCommand.data).then(command => {
                 command.permissions.set({guild: guild.id, command: command.id, permissions: [{
                     id: guild.ownerId,
