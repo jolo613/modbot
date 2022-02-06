@@ -29,23 +29,28 @@ const listener = {
     eventName: 'guildMemberUpdate',
     eventType: 'on',
     listener (oldMember, newMember) {
-        Discord.getGuild(oldMember.guildId).then(async guild => {
-            const executor = getExecutor(oldMember);
+        Discord.getGuild(oldMember.guild.id).then(async guild => {
+            const executor = await getExecutor(oldMember);
             if (oldMember.nickname !== newMember.nickname) {
-                guild.getSetting("lde-user-update-nickname", "boolean").then(updateUsernameEnabled => {
-                    const embed = new MessageEmbed()
-                        .setTitle("Nickname Changed")
-                        .addField("User", newMember.toString(), true)
-                        .setColor(0x4c80d4)
-                        .setAuthor({name: newMember.username, iconURL: newMember.avatarURL()});
+                guild.getSetting("lde-enabled", "boolean").then(enabled => {
+                    guild.getSetting("lde-user-update-nickname", "boolean").then(updateUsernameEnabled => {
+                        if (enabled && updateUsernameEnabled) {
+                            guild.getSetting("lde-channel", "channel").then(async channel => {
+                                const embed = new MessageEmbed()
+                                    .setTitle("Nickname Changed")
+                                    .addField("User", newMember.toString(), true)
+                                    .setColor(0x4c80d4)
+                                    .setAuthor({name: newMember.user.username, iconURL: newMember.avatarURL()});
 
-                    if (executor) {
-                        embed.addField("Moderator", executor, true);
-                    }
-                    
-                    embed.addField("Old Nickname", "```\n" + oldMember.nickname.replace(/\\`/g, "`").replace(/`/g, "\\`") + "```", false)
-                    embed.addField("New Nickname", "```\n" + newMember.nickname.replace(/\\`/g, "`").replace(/`/g, "\\`") + "```", false)
-                    channel.send({content: ' ', embeds: [embed]});
+                                if (executor && executor.id !== newMember.id)
+                                    embed.addField("Moderator", executor.toString(), true);
+                                
+                                embed.addField("Old Nickname", "```\n" + (oldMember.nickname ? oldMember.nickname.replace(/\\`/g, "`").replace(/`/g, "\\`") : "[unset]") + "```", false)
+                                embed.addField("New Nickname", "```\n" + (newMember.nickname ? newMember.nickname.replace(/\\`/g, "`").replace(/`/g, "\\`") : "[unset]") + "```", false)
+                                channel.send({content: ' ', embeds: [embed]});
+                            }).catch(console.error);
+                        }
+                    }).catch(console.error);
                 }).catch(console.error);
             }
         }).catch(console.error);
