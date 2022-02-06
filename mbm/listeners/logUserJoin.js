@@ -1,5 +1,5 @@
 const {Discord} = require("../../api/index");
-const DiscordUser = require("../../api/discord/DiscordUser");
+const DiscordUser = require("../../api/Discord/DiscordUser");
 
 const listener = {
     name: 'logUserJoin',
