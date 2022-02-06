@@ -27,7 +27,7 @@ const listener = {
                 });
 
                 guild.getSetting("lde-enabled", "boolean").then(enabled => {
-                    guild.getSetting("lde-message-edit", "boolean", messageEditEnabled => {
+                    guild.getSetting("lde-message-edit", "boolean").then(messageEditEnabled => {
                         if (enabled && messageEditEnabled) {
                             guild.getSetting("lde-channel", "channel").then(channel => {
                                 channel.send({content: ' ', embeds: [new MessageEmbed()
