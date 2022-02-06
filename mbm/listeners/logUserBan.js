@@ -14,8 +14,8 @@ const getBanInfo = ban => {
             const auditEntry = fetchedLogs.entries.find(a =>
                 // Small filter function to make use of the little discord provides to narrow down the correct audit entry.
                 a.target.id === ban.user.id &&
-                // Ignore entries that are older than 1. seconds to reduce false positives.
-                Date.now() - a.createdTimestamp < 1500
+                // Ignore entries that are older than 5 seconds to reduce false positives.
+                Date.now() - a.createdTimestamp < 5000
             );
         
             // If entry exists, grab the user that deleted the message and display username + tag, if none, display 'Unknown'. 
