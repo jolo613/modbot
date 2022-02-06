@@ -41,6 +41,7 @@ const listener = {
 
                 Discord.getUserById(member.id, false, true).then(user => {
                     guild.addUserKick(user, kickInfo?.reason ? kickInfo.reason : null, kickedBy).then(() => {}, console.error);
+                    guild.removeUser(user).then(() => {}, console.error);
                 }).catch(console.error);
             }
 
@@ -60,7 +61,7 @@ const listener = {
                                         .setAuthor({name: author.username, iconURL: author.avatarURL()});
         
                                 if (kickInfo?.reason) {
-                                    embed.addField("Reason", "`" + kickInfo.reason.toString().replace(/\\`/g, "`").replace(/`/g, "\\`") + "`", true);
+                                    embed.addField("Reason", "```" + kickInfo.reason.toString().replace(/\\`/g, "`").replace(/`/g, "\\`") + "```", true);
                                 }
         
                                 if (kickInfo?.executor) {
