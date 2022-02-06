@@ -4,7 +4,7 @@ const registerCommand = require("../commands/register");
 const settingCommand = require("../commands/setting");
 
 const listener = {
-    name: 'loadOwnerCommands',
+    name: 'loadGuildCommands',
     eventName: 'ready',
     eventType: 'once',
     listener () {
