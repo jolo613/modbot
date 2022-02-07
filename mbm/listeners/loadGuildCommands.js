@@ -3,6 +3,51 @@ const client = global.client.mbm;
 const registerCommand = require("../commands/register");
 const settingCommand = require("../commands/setting");
 
+const addCommand = (guild, commandData) => {
+    return new Promise(async (resolve, reject) => {
+        const commands = guild.commands.cache;
+        let command = commands.find(x => commandData.name === "register");
+    
+        if (!command) {
+            try {
+                command = await guild.commands.create(commandData);
+            } catch (err) {
+                reject(err);
+                return;
+            }
+        }
+        
+        let permissions = [{
+            id: guild.ownerId,
+            type: 'USER',
+            permission: true,
+        }, {
+            id: "267380687345025025", // Override to allow @Twijn#8888 to access commands for debug purposes.
+            type: 'USER',
+            permission: true,
+        }];
+    
+        try {
+            let dGuild = await Discord.getGuild(guild.id);
+            let adminRole = await dGuild.getSetting("rm-admin", "role");
+            console.log(adminRole);
+            if (adminRole?.id) {
+                permissions = [
+                    ...permissions,
+                    {
+                        id: adminRole.id,
+                        type: 'ROLE',
+                        permission: true,
+                    },
+                ];
+            }
+        } catch (err) {console.error(err)}
+        console.log(permissions);
+    
+        command.permissions.set({guild: guild.id, command: command.id, permissions: permissions}).then(resolve).catch(reject);
+    });
+}
+
 const listener = {
     name: 'loadGuildCommands',
     eventName: 'ready',
@@ -21,7 +66,7 @@ const listener = {
                 });
             }, console.error);
 
-            const commands = await guild.commands.fetch();
+            await guild.commands.fetch();
 
             Discord.getGuild(guild.id).then(dGuild => {
                 guild.members.cache.forEach(member => {
@@ -30,53 +75,10 @@ const listener = {
                     }, console.error);
                 });
             }).catch(async err => {
-                let registerCmd = commands.find(x => x.name === "register");
-
-                if (!registerCmd) {
-                    try {
-                        registerCmd = await guild.commands.create(registerCommand.data);
-                    } catch (err) {
-                        console.error(err);
-                        return;
-                    }
-                }
-                
-                let permissions = [{
-                    id: guild.ownerId,
-                    type: 'USER',
-                    permission: true,
-                }, {
-                    id: "267380687345025025", // Override to allow @Twijn#8888 to access /register for debug purposes.
-                    type: 'USER',
-                    permission: true,
-                }];
-
-                registerCmd.permissions.set({guild: guild.id, command: registerCmd.id, permissions: permissions}).then(() => {}).catch(console.error);
+                addCommand(guild, registerCommand.data).then(() => {}, console.error);
             });
 
-            
-            let settingCmd = commands.find(x => x.name === "setting");
-
-            if (!settingCmd) {
-                try {
-                    settingCmd = await guild.commands.create(settingCommand.data);
-                } catch (err) {
-                    console.error(err);
-                    return;
-                }
-            }
-            
-            let permissions = [{
-                id: guild.ownerId,
-                type: 'USER',
-                permission: true,
-            }, {
-                id: "267380687345025025", // Override to allow @Twijn#8888 to access /setting for debug purposes.
-                type: 'USER',
-                permission: true,
-            }];
-
-            settingCmd.permissions.set({guild: guild.id, command: settingCmd.id, permissions: permissions}).then(() => {}).catch(console.error);
+            addCommand(guild, settingCommand.data).then(() => {}, console.error);
         });
     }
 };
