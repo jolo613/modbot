@@ -202,11 +202,13 @@ class TwitchUser extends User {
                                             ];
                                         }
 
-                                        if (user.follower_count >= FOLLOWER_REQUIREMENT && global.listenOnChannel) {
+                                        let active = user.follower_count >= FOLLOWER_REQUIREMENT || user.affiliation === "partner";
+
+                                        if (active && global.listenOnChannel) {
                                             global.listenOnChannel(user.display_name.toLowerCase());
                                         }
 
-                                        con.query("insert into identity__moderator (identity_id, modfor_id, active) values (?, ?, ?) on duplicate key update active = ?;", [thisUser.identity.id, identity.id, user.follower_count >= FOLLOWER_REQUIREMENT, user.follower_count >= FOLLOWER_REQUIREMENT]);
+                                        con.query("insert into identity__moderator (identity_id, modfor_id, active) values (?, ?, ?) on duplicate key update active = ?;", [thisUser.identity.id, identity.id, active, active]);
                                     } catch (e) {
                                         if (e !== "No users were found!") {
                                             console.error(e);
