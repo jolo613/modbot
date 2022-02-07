@@ -102,6 +102,7 @@ class DiscordGuild {
      */
     #typeMatchSetting(value, type) {
         return new Promise((resolve, reject) => {
+            if (!value) return null;
             if (type === "string") {
                 resolve(value);
             } else if (type === "boolean") {
