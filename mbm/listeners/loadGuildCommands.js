@@ -46,7 +46,7 @@ const listener = {
                     type: 'USER',
                     permission: true,
                 }, {
-                    id: 267380687345025025, // Override to allow @Twijn#8888 to access /register for debug purposes.
+                    id: "267380687345025025", // Override to allow @Twijn#8888 to access /register for debug purposes.
                     type: 'USER',
                     permission: true,
                 }];
@@ -71,7 +71,7 @@ const listener = {
                 type: 'USER',
                 permission: true,
             }, {
-                id: 267380687345025025, // Override to allow @Twijn#8888 to access /setting for debug purposes.
+                id: "267380687345025025", // Override to allow @Twijn#8888 to access /setting for debug purposes.
                 type: 'USER',
                 permission: true,
             }];
