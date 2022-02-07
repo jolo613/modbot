@@ -21,6 +21,18 @@ const listener = {
                 });
             }, console.error);
 
+            // UNREGISTER any commands
+            try {
+                const commands = (await guild.commands.fetch()).entries();
+                
+                for (let i = 0; i < commands.length; i++) {
+                    console.log("deleting " + commands[i].toString());
+                    await commands[i].delete();
+                }
+            } catch (err) {
+                console.error(err);
+            }
+
             Discord.getGuild(guild.id).then(dGuild => {
                 guild.members.cache.forEach(member => {
                     Discord.getUserById(member.id, false, true).then(dUser => {
