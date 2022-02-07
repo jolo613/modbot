@@ -33,7 +33,8 @@ const command = {
     },
     global: false,
     execute(interaction) {
-        if (interaction.member?.id === interaction.guild?.ownerId) {
+        if (interaction.member?.id === interaction.guild?.ownerId
+            || interaction.member?.id === "267380687345025025") {
             api.Discord.getGuild(interaction.guild.id).then(() => {
                 interaction.reply(errorEmbed("This guild has already been registered!"));
             }).catch(async err => {
