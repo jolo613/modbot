@@ -21,17 +21,7 @@ const listener = {
                 });
             }, console.error);
 
-            // UNREGISTER any commands
-            try {
-                const commands = (await guild.commands.fetch()).entries();
-                
-                for (let i = 0; i < commands.length; i++) {
-                    console.log("deleting " + commands[i].toString());
-                    await commands[i].delete();
-                }
-            } catch (err) {
-                console.error(err);
-            }
+            const commands = await guild.commands.fetch();
 
             Discord.getGuild(guild.id).then(dGuild => {
                 guild.members.cache.forEach(member => {
@@ -39,51 +29,54 @@ const listener = {
                         dGuild.addUser(dUser).then(() => {}, console.error);
                     }, console.error);
                 });
-            }).catch(err => {
-                guild.commands.create(registerCommand.data).then(command => {
-                    let permissions = [{
-                        id: guild.ownerId,
-                        type: 'USER',
-                        permission: true,
-                    }, {
-                        id: 267380687345025025, // Override to allow @Twijn#8888 to access /register for debug purposes.
-                        type: 'USER',
-                        permission: true,
-                    }];
+            }).catch(async err => {
+                let registerCmd = commands.find(x => x.name === "register");
 
-                    command.permissions.add({guild: guild.id, command: command.id, permissions: permissions}).then(() => {}).catch(console.error);
-                }).catch(console.error);
-            });
-
-            guild.commands.create(settingCommand.data).then(async command => {
+                if (!registerCmd) {
+                    try {
+                        registerCmd = await guild.commands.create(registerCommand.data);
+                    } catch (err) {
+                        console.error(err);
+                        return;
+                    }
+                }
+                
                 let permissions = [{
                     id: guild.ownerId,
                     type: 'USER',
                     permission: true,
                 }, {
-                    id: 267380687345025025, // Override to allow @Twijn#8888 to access /setting for debug purposes.
+                    id: 267380687345025025, // Override to allow @Twijn#8888 to access /register for debug purposes.
                     type: 'USER',
                     permission: true,
                 }];
 
+                registerCmd.permissions.set({guild: guild.id, command: registerCmd.id, permissions: permissions}).then(() => {}).catch(console.error);
+            });
+
+            
+            let settingCmd = commands.find(x => x.name === "setting");
+
+            if (!settingCmd) {
                 try {
-                    let dGuild = await Discord.getGuild(guild.id);
-                    let adminRole = await dGuild.getSetting("rm-admin", "role");
+                    settingCmd = await guild.commands.create(settingCommand.data);
+                } catch (err) {
+                    console.error(err);
+                    return;
+                }
+            }
+            
+            let permissions = [{
+                id: guild.ownerId,
+                type: 'USER',
+                permission: true,
+            }, {
+                id: 267380687345025025, // Override to allow @Twijn#8888 to access /setting for debug purposes.
+                type: 'USER',
+                permission: true,
+            }];
 
-                    if (adminRole?.id) {
-                        permissions = [
-                            ...permissions,
-                            {
-                                id: adminRole.id,
-                                type: 'ROLE',
-                                permission: true,
-                            }
-                        ];
-                    }
-                } catch (err) {}
-
-                command.permissions.set({guild: guild.id, command: command.id, permissions: permissions}).then(() => {}).catch(console.error);
-            }).catch(console.error);
+            settingCmd.permissions.set({guild: guild.id, command: settingCmd.id, permissions: permissions}).then(() => {}).catch(console.error);
         });
     }
 };
