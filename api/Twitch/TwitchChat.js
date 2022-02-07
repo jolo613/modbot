@@ -51,14 +51,8 @@ class TwitchChat {
                 limit = 1500;
             }
 
-            console.log(timeEnd);
-            console.log(timeStart);
-
             if (timeStart !== null) addToQuery("timesent <= ?", timeStart);
             if (timeEnd !== null) addToQuery("timesent >= ?", timeEnd);
-            
-            console.log(buildQuery);
-            console.log(queryParams);
             
             con.query("select * from twitch__chat where " + buildQuery + " order by timesent desc limit ?, ?;", [...queryParams, offset, limit], async(err, res) => {
                 if (err) {
