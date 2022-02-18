@@ -7,11 +7,7 @@ router.get("/", async (req, res) => {
     let result = await (await api.getFullIdentity(req.session.identity.id)).getActiveModeratorChannels();
     result = result.map(x => x.modForIdentity);
 
-    try {
-        res.json({success: true, data: result});
-    } catch (err) {
-        console.error(err);
-    }
+    res.json({success: true, data: result});
 });
  
 module.exports = router;
