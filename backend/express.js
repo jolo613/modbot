@@ -49,6 +49,7 @@ app.use('/', (req, res, next) => {
                     if (!identity.authenticated) {
                         res.status(403);
                         res.json({success: false, error: "Forbidden"});
+                        return;
                     }
                     req.session = {id: row.sid, created: row.screated, identity: identity};
                     next();
