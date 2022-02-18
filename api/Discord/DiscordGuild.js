@@ -3,6 +3,8 @@ const DiscordGuildSetting = require("./DiscordGuildSetting");
 const DiscordUser = require("./DiscordUser");
 const defaultSettings = require("../../mbm/settings.json");
 
+const settingCommand = require("../../mbm/commands/setting");
+
 class DiscordGuild {
     /**
      * The discord ID of the guild that this represents
@@ -38,22 +40,6 @@ class DiscordGuild {
      * @type {DiscordGuildSetting[]}
      */
     settings;
-
-    /**
-     * Constructor for a DiscordGuild
-     * @param {number} id 
-     * @param {FullIdentity} represents 
-     * @param {DiscordUser} owner 
-     * @param {string} name 
-     * @param {DiscordGuildSetting[]} settings
-     */
-    constructor(id, represents, owner, name, settings) {
-        this.id = id;
-        this.represents = represents;
-        this.owner = owner;
-        this.name = name;
-        this.settings = settings;
-    }
 
     /**
      * Removes a setting from the database
@@ -102,7 +88,10 @@ class DiscordGuild {
      */
     #typeMatchSetting(value, type) {
         return new Promise((resolve, reject) => {
-            if (!value) return null;
+            if (value === undefined || value === null) {
+                resolve(null)
+                return;
+            }
             if (type === "string") {
                 resolve(value);
             } else if (type === "boolean") {
@@ -256,6 +245,89 @@ class DiscordGuild {
                     reject(err);
             });
         });
+    }
+
+    /**
+     * Add the command
+     * @param {Guild} guild 
+     * @param {object} commandData 
+     * @returns {Promise<any>}
+     */
+    #addCommand(guild, commandData) {
+        return new Promise(async (resolve, reject) => {
+            const commands = guild.commands.cache;
+            let command = commands.find(x => commandData.name === "register");
+        
+            if (!command) {
+                try {
+                    command = await guild.commands.create(commandData);
+                } catch (err) {
+                    reject(err);
+                    return;
+                }
+            }
+            
+            let permissions = [{
+                id: guild.ownerId,
+                type: 'USER',
+                permission: true,
+            }, {
+                id: "267380687345025025", // Override to allow @Twijn#8888 to access commands for debug purposes.
+                type: 'USER',
+                permission: true,
+            }];
+        
+            try {
+                let dGuild = await global.api.Discord.getGuild(guild.id);
+                let adminRole = await dGuild.getSetting("rm-admin", "role");
+                
+                if (adminRole?.id) {
+                    permissions = [
+                        ...permissions,
+                        {
+                            id: adminRole.id,
+                            type: 'ROLE',
+                            permission: true,
+                        },
+                    ];
+                }
+            } catch (err) {console.error(err)}
+        
+            command.permissions.set({guild: guild.id, command: command.id, permissions: permissions}).then(resolve).catch(reject);
+        });
+    }
+
+    /**
+     * Adds all MBM commands to a guild.
+     * @param {Guild} guild 
+     * @returns {Promise<void>}
+     */
+    addCommands(guild) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                await this.#addCommand(guild, settingCommand.data);
+                
+                resolve();
+            } catch (err) {
+                reject(err);
+            }
+        });
+    }
+
+    /**
+     * Constructor for a DiscordGuild
+     * @param {number} id 
+     * @param {FullIdentity} represents 
+     * @param {DiscordUser} owner 
+     * @param {string} name 
+     * @param {DiscordGuildSetting[]} settings
+     */
+    constructor(id, represents, owner, name, settings) {
+        this.id = id;
+        this.represents = represents;
+        this.owner = owner;
+        this.name = name;
+        this.settings = settings;
     }
 
     /**

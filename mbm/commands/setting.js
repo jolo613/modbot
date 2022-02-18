@@ -17,6 +17,36 @@ let choices = settings.map(x => {
     };
 });
 
+choices = [
+    {
+        name: "View All Settings",
+        value: "view",
+    },
+    ...choices,
+];
+
+const view = async (guild, interaction, settingChanged = null) => {
+    let embed = new MessageEmbed()
+            .setTitle("Current Settings")
+            .setColor(0x555555);
+
+    let description = "";
+
+    for (let i = 0; i < settings.length; i++) {
+        let setting = settings[i];
+
+        let settingValue = await guild.getSetting(setting.value, setting.type);
+
+        if (setting.type === "boolean" || settings.type === "string") settingValue = `\`${settingValue}\``;
+
+        description += `**${setting.name} (${setting.type}):** ${settingValue ? settingValue : "null"}${settingChanged === setting.value ? " :pencil2:" : ''}\n`;
+    }
+
+    embed.setDescription(description);
+
+    interaction.reply({content: ' ', embeds: [embed], ephemeral: true}).then(console.log, console.error);
+}
+
 const command = {
     data: {
         name: 'setting'
@@ -66,12 +96,6 @@ const command = {
                 required: false,
             },
             {
-                type: 9,
-                name: "v-mentionable",
-                description: "Mentionable value",
-                required: false,
-            },
-            {
                 type: 10,
                 name: "v-number",
                 description: "Number value",
@@ -84,6 +108,11 @@ const command = {
     execute(interaction) {
         if (interaction.guildId) {
             api.Discord.getGuild(interaction.guildId).then(guild => {
+                if (interaction.options.getString("setting") === "view") {
+                    view(guild, interaction);
+                    return;
+                }
+
                 let setting = settings.find(x => x.value === interaction.options.getString("setting"));
                 
                 if (setting) {
@@ -98,8 +127,6 @@ const command = {
                         value = interaction.options.getChannel("v-channel")?.id;
                     } else if (setting.type === "role") {
                         value = interaction.options.getRole("v-role")?.id;
-                    } else if (setting.type === "mentionable") {
-                        value = interaction.options.getMentionable("v-mentionable")?.id;
                     } else if (setting.type === "number") {
                         value = interaction.options.getNumber("v-number");
                     }
@@ -111,7 +138,7 @@ const command = {
 
                     guild.setSetting(setting.value, value, setting.type);
                     guild.post().then(async() => {
-                        interaction.reply({content: "Set!", ephemeral: true});
+                        view(guild, interaction, setting.value);
                     }, err => {
                         interaction.reply(errorEmbed(err));
                     });

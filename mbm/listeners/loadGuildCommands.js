@@ -1,7 +1,6 @@
 const {Discord} = require("../../api/index");
 const client = global.client.mbm;
 const registerCommand = require("../commands/register");
-const settingCommand = require("../commands/setting");
 
 const addCommand = (guild, commandData) => {
     return new Promise(async (resolve, reject) => {
@@ -41,7 +40,7 @@ const addCommand = (guild, commandData) => {
                     },
                 ];
             }
-        } catch (err) {console.error(err)}
+        } catch (err) {}
     
         command.permissions.set({guild: guild.id, command: command.id, permissions: permissions}).then(resolve).catch(reject);
     });
@@ -72,12 +71,12 @@ const listener = {
                     Discord.getUserById(member.id, false, true).then(dUser => {
                         dGuild.addUser(dUser).then(() => {}, console.error);
                     }, console.error);
+
+                    dGuild.addCommands(guild);
                 });
             }).catch(async err => {
                 addCommand(guild, registerCommand.data).then(() => {}, console.error);
             });
-
-            addCommand(guild, settingCommand.data).then(() => {}, console.error);
         });
     }
 };
