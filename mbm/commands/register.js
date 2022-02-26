@@ -73,12 +73,13 @@ const command = {
                         interaction.guild.id,
                         identity,
                         ownerDiscord,
-                        interaction.guild.name,
-                        []
+                        interaction.guild.name
                     );
 
+                    await guild.getSettings();
+
                     guild.post().then(guild => {
-                        guild.addCommands(guild).then(() => {}, console.error);
+                        guild.addCommands(interaction.guild).then(() => {}, console.error);
                         interaction.reply({content: "Registered!", ephemeral: true})
                         interaction.command?.delete().then(() => {}, console.error);
                     }).catch(err => {
