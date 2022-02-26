@@ -1,5 +1,4 @@
 const {MessageEmbed} = require("discord.js");
-const api = require("../../api/index");
 
 const settings = require("../settings.json");
 
@@ -61,43 +60,43 @@ const command = {
             },
             {
                 type: 3,
-                name: "v-string",
+                name: "string",
                 description: "String value",
                 required: false,
             },
             {
                 type: 4,
-                name: "v-int",
+                name: "int",
                 description: "Integer value",
                 required: false,
             },
             {
                 type: 5,
-                name: "v-boolean",
+                name: "boolean",
                 description: "Boolean value",
                 required: false,
             },
             {
                 type: 6,
-                name: "v-user",
+                name: "user",
                 description: "User value",
                 required: false,
             },
             {
                 type: 7,
-                name: "v-channel",
+                name: "channel",
                 description: "Channel value",
                 required: false,
             },
             {
                 type: 8,
-                name: "v-role",
+                name: "role",
                 description: "Role value",
                 required: false,
             },
             {
                 type: 10,
-                name: "v-number",
+                name: "number",
                 description: "Number value",
                 required: false,
             },
@@ -107,7 +106,7 @@ const command = {
     global: false,
     execute(interaction) {
         if (interaction.guildId) {
-            api.Discord.getGuild(interaction.guildId).then(guild => {
+            global.api.Discord.getGuild(interaction.guildId).then(guild => {
                 if (interaction.options.getString("setting") === "view") {
                     view(guild, interaction);
                     return;
@@ -118,17 +117,17 @@ const command = {
                 if (setting) {
                     let value = null;
                     if (setting.type === "string") {
-                        value = interaction.options.getString("v-string");
+                        value = interaction.options.getString("string");
                     } else if (setting.type === "boolean") {
-                        value = interaction.options.getBoolean("v-boolean");
+                        value = interaction.options.getBoolean("boolean");
                     } else if (setting.type === "user") {
-                        value = interaction.options.getUser("v-user")?.id;
+                        value = interaction.options.getUser("user")?.id;
                     } else if (setting.type === "channel") {
-                        value = interaction.options.getChannel("v-channel")?.id;
+                        value = interaction.options.getChannel("channel")?.id;
                     } else if (setting.type === "role") {
-                        value = interaction.options.getRole("v-role")?.id;
+                        value = interaction.options.getRole("role")?.id;
                     } else if (setting.type === "number") {
-                        value = interaction.options.getNumber("v-number");
+                        value = interaction.options.getNumber("number");
                     }
 
                     if (value === undefined || value === null) {
@@ -139,6 +138,9 @@ const command = {
                     guild.setSetting(setting.value, value, setting.type);
                     guild.post().then(async() => {
                         view(guild, interaction, setting.value);
+
+                        if (setting.refreshCommands)
+                            guild.addCommands(interaction.guild);
                     }, err => {
                         interaction.reply(errorEmbed(err));
                     });
