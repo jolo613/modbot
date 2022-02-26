@@ -79,17 +79,37 @@ module.exports = () => {
                             if (err) console.error(err);
 
                             const embed = new MessageEmbed()
-                                .setTitle(`🔴 ${user.display_name} is now live!`)
+                                .setAuthor({name: `🔴 ${user.display_name} is now live!`})
+                                .setTitle(stream.title)
                                 .setColor(0x7d3bdc)
                                 .setURL("https://twitch.tv/" + user.display_name.toLowerCase())
-                                .setThumbnail(stream.getThumbnailUrl(256, 144))
-                                .addField("Title", stream.title, true)
+                                .setImage(stream.getThumbnailUrl(256, 144))
                                 .addField("Game", stream.gameName, true)
                                 .addField("Viewer Count", ""+stream.viewers, true)
                                 .setTimestamp(stream.startDate)
                                 .setFooter({text: `${user.display_name} : Live 🔴`, iconURL: user.profile_image_url});
                 
                             channel.send({content: ' ', embeds: [embed]});
+
+                            con.query("select id from discord__guild where represents_id = ?;", [identity.id], (err, res) => {
+                                if (!err) {
+                                    res.forEach(guildres => {
+                                        api.Discord.getGuild(guildres.id).then(guild => {
+                                            guild.getSetting("lv-channel", "channel").then(async channel => {
+                                                if (channel) {
+                                                    let mentionEveryone = false;
+
+                                                    try {
+                                                        mentionEveryone = await guild.getSetting("lv-everyone", "boolean");
+                                                    }catch (err) {console.error(err)}
+
+                                                    channel.send({content: mentionEveryone ? '@everyone' : ' ', embeds: [embed]});
+                                                }
+                                            }).catch(console.error);
+                                        }).catch(console.error);
+                                    });
+                                } else console.error(err);
+                            });
                         });
                     } else {
                         activeStreams = activeStreams.filter(x => x != identity.id);

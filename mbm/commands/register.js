@@ -1,6 +1,4 @@
 const {MessageEmbed} = require("discord.js");
-const config = require("../../config.json");
-const api = require("../../api/index");
 const FullIdentity = require("../../api/FullIdentity");
 const DiscordGuild = require("../../api/Discord/DiscordGuild");
 
@@ -35,14 +33,14 @@ const command = {
     execute(interaction) {
         if (interaction.member?.id === interaction.guild?.ownerId
             || interaction.member?.id === "267380687345025025") {
-            api.Discord.getGuild(interaction.guild.id).then(() => {
+            global.api.Discord.getGuild(interaction.guild.id).then(() => {
                 interaction.reply(errorEmbed("This guild has already been registered!"));
             }).catch(async err => {
                 try {
-                    let ownerDiscord = await api.Discord.getUserById(interaction.guild.ownerId, false, true);
+                    let ownerDiscord = await global.api.Discord.getUserById(interaction.guild.ownerId, false, true);
                     
-                    let representsDiscord = await api.Discord.getUserById(interaction.options.getUser("represents-discord").id);
-                    let representsTwitch = await api.Twitch.getUserByName(interaction.options.getString("represents-twitch"), true);
+                    let representsDiscord = await global.api.Discord.getUserById(interaction.options.getUser("represents-discord").id);
+                    let representsTwitch = await global.api.Twitch.getUserByName(interaction.options.getString("represents-twitch"), true);
                     if (representsTwitch.length > 0) {
                         representsTwitch = representsTwitch[0];
                     } else {
@@ -62,7 +60,7 @@ const command = {
                     }
 
                     if (identity?.id) {
-                        identity = await api.getFullIdentity(identity.id);
+                        identity = await global.api.getFullIdentity(identity.id);
                     } else {
                         identity = new FullIdentity(null, representsTwitch.display_name, false, [representsTwitch], [representsDiscord])
                         identity = await identity.post();
@@ -75,11 +73,13 @@ const command = {
                         interaction.guild.id,
                         identity,
                         ownerDiscord,
-                        interaction.guild.name,
-                        []
+                        interaction.guild.name
                     );
 
+                    await guild.getSettings();
+
                     guild.post().then(guild => {
+                        guild.addCommands(interaction.guild).then(() => {}, console.error);
                         interaction.reply({content: "Registered!", ephemeral: true})
                         interaction.command?.delete().then(() => {}, console.error);
                     }).catch(err => {

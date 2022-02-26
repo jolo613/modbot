@@ -2,6 +2,9 @@ const con = require("../../database");
 
 const User = require("../User");
 const Identity = require("../Identity");
+const DiscordGuild = require("./DiscordGuild");
+
+const {MessageEmbed} = require("discord.js");
 
 const DISCORD_CDN = "https://cdn.discordapp.com/";
 
@@ -76,6 +79,67 @@ class DiscordUser extends User {
         } else {
             return "https://tms.to/d/" + this.id;
         }
+    }
+
+    /**
+     * Returns Guilds the user is a member of.
+     * @returns {Promise<DiscordGuild[]>}
+     */
+    getGuilds() {
+        return new Promise((resolve, reject) => {
+            con.query("select dg.* from discord__guild_user as du join discord__guild as dg on dg.id = du.guild_id where du.user_id = ?;", [this.id], async (err, res) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+
+                let guilds = [];
+                for (let i = 0; i < res.length; i++) {
+                    let guild = new DiscordGuild(
+                            res[i].id,
+                            await global.api.getFullIdentity(res[i].represents_id),
+                            await global.api.Discord.getUserById(res[i].owner_id),
+                            res[i].name
+                        );
+                    await guild.getSettings();
+                    
+                    guilds = [
+                        ...guilds,
+                        guild
+                    ];
+                }
+                resolve(guilds);
+            });
+        });
+    }
+
+    /**
+     * Generated a Discord Embed for the user.
+     * 
+     * @returns {Promise<MessageEmbed>}
+     */
+    discordEmbed() {
+        return new Promise(async (resolve, reject) => {
+            const embed = new MessageEmbed()
+                    .setAuthor({name: this.name + "#" + this.discriminator, iconURL: this.avatar_url, url: this.getShortlink()})
+                    .setThumbnail(this.avatar_url)
+                    .setColor(0x772ce8)
+                    .setDescription(`\`\`\`${this.id}\`\`\`<@${this.id}>`)
+                    .setFooter({text: "TMS Discord User #" + this.id, iconURL: "https://twitchmodsquad.com/assets/images/logo.webp"});
+
+            const mutualGuilds = await this.getGuilds();
+            
+            if (mutualGuilds.length > 0) {
+                let guilds = "";
+                mutualGuilds.forEach(guild => {
+                    if (guilds !== "") guild += "\n";
+                    guilds += guild.name;
+                });
+                embed.addField("Guilds", "```"+guilds+"```");
+            }
+
+            resolve(embed);
+        });
     }
 
     /**

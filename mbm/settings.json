@@ -57,12 +57,14 @@
         "name":"[RM] Role Management: Administrator Role",
         "value":"rm-admin",
         "type":"role",
+        "refreshCommands":true,
         "default":null
     },
     {
         "name":"[RM] Role Management: Moderator Role",
         "value":"rm-mod",
         "type":"role",
+        "refreshCommands":true,
         "default":null
     },
     {
@@ -70,5 +72,17 @@
         "value":"rm-helper",
         "type":"role",
         "default":null
+    },
+    {
+        "name":"[LV] Live Announcement: Channel",
+        "value":"lv-channel",
+        "type":"channel",
+        "default":null
+    },
+    {
+        "name":"[LV] Live Announcement: Mention @everyone",
+        "value":"lv-everyone",
+        "type":"boolean",
+        "default":true
     }
 ]
