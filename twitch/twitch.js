@@ -21,7 +21,7 @@ let clients = [];
 
 let modSquadGuild = null;
 
-let disallowed_channels = ["ludwig", "tarzaned"];
+let disallowed_channels = ["ludwig", "tarzaned", "flexingseal"];
 
 let bannedList = [];
 let timeoutList = [];
