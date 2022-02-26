@@ -2,6 +2,8 @@ const con = require("../../database");
 
 require("../index");
 
+const {MessageEmbed} = require("discord.js");
+
 const User = require("../User");
 const Identity = require("../Identity");
 const FullIdentity = require("../FullIdentity");
@@ -46,6 +48,11 @@ modClient.connect();
 
 const sleep = ms => {
     return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function comma(x) {
+    if (!x) return "";
+    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
 /**
@@ -420,6 +427,48 @@ class TwitchUser extends User {
         } else {
             return "https://tms.to/t/" + this.id;
         }
+    }
+
+    /**
+     * Generated a Discord Embed for the user.
+     * 
+     * @returns {Promise<MessageEmbed>}
+     */
+    discordEmbed() {
+        return new Promise(async (resolve, reject) => {
+            const embed = new MessageEmbed()
+                    .setAuthor({name: this.display_name, iconURL: this.profile_image_url, url: this.getShortlink()})
+                    .setColor(0x772ce8)
+                    .setThumbnail(this.profile_image_url)
+                    .setDescription(`\`\`\`${this.id}\`\`\`**Name: **${this.display_name}\n**Followers: **${comma(this.follower_count)}\n**Views: **${comma(this.view_count)}\n[Profile](https://twitch.tv/${this.display_name.toLowerCase()})`)
+                    .setFooter({text: "TMS Twitch User #" + this.id, iconURL: "https://twitchmodsquad.com/assets/images/logo.webp"});
+
+            if (this.description && this.description !== "")
+                embed.addField("Description", "```\n" + this.description + "```", false);
+
+            const streamers = await this.getStreamers();
+            const mods = await this.getMods();
+
+            if (streamers.length > 0) {
+                let streamerStr = "";
+                streamers.forEach(streamer => {
+                    if (streamerStr !== "") streamerStr += "\n";
+                    streamerStr += `**${streamer.display_name}** : [Profile](https://twitch.tv/${streamer.display_name.toLowerCase()})`;
+                });
+                embed.addField("Streamers", streamerStr, true);
+            }
+
+            if (mods.length > 0) {
+                let modsStr = "";
+                mods.forEach(mod => {
+                    if (modsStr !== "") modsStr += "\n";
+                    modsStr += `**${mod.display_name}** : [Profile](https://twitch.tv/${mod.display_name.toLowerCase()})`;
+                });
+                embed.addField("Moderators", modsStr, true);
+            }
+
+            resolve(embed);
+        });
     }
 
     /**

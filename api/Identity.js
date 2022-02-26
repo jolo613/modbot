@@ -1,5 +1,7 @@
 const con = require("../database");
 
+const {MessageEmbed} = require("discord.js");
+
 /**
  * Identities a specific "identity," which can consist of Twitch users and/or Discord users.
  */
@@ -33,6 +35,66 @@ class Identity {
         this.id = id;
         this.name = name;
         this.authenticated = authenticated;
+    }
+
+    /**
+     * Generated a Discord Embed for the user.
+     * 
+     * @returns {Promise<MessageEmbed[]>}
+     */
+    discordEmbed() {
+        return new Promise(async (resolve, reject) => {
+            const FullIdentity = require("./FullIdentity");
+            const moderatorIn = this instanceof FullIdentity ? await this.getActiveModeratorChannels() : [];
+
+            let embeds = [];
+
+            const identityEmbed = new MessageEmbed()
+                    .setAuthor({name: this.name, iconURL: this instanceof FullIdentity ? this.avatar_url : undefined, url: this.getShortlink()})
+                    .setFooter({text: "TMS Identity #" + this.id, iconURL: "https://twitchmodsquad.com/assets/images/logo.webp"})
+                    .setColor(0x772ce8);
+
+            if (this instanceof FullIdentity) {
+                identityEmbed.setThumbnail(this.avatar_url);
+            }
+
+            embeds = [identityEmbed];
+
+            if (this instanceof FullIdentity) {
+                let moderatorInStr = "";
+                moderatorIn.forEach(modLink => {
+                    if (moderatorInStr !== "") moderatorInStr += "\n";
+
+                    moderatorInStr += "**"+modLink.modForIdentity.name+"**";
+
+                    if (modLink.modForIdentity.twitchAccounts.length > 0)
+                        moderatorInStr += " - [Profile](https://twitch.tv/" + modLink.modForIdentity.twitchAccounts[0].display_name.toLowerCase() + ")";
+
+                    if (modLink.modForIdentity.discordAccounts.length > 0)
+                        moderatorInStr += ` - <@${modLink.modForIdentity.discordAccounts[0].id}>`;
+                });
+
+                if (moderatorInStr !== "") {
+                    identityEmbed.addField("Moderates For", moderatorInStr, false)
+                }
+
+                for (let di = 0; di < this.discordAccounts.length; di ++) {
+                    embeds = [
+                        ...embeds,
+                        await this.discordAccounts[di].discordEmbed(),
+                    ]
+                }
+
+                for (let ti = 0; ti < this.twitchAccounts.length; ti ++) {
+                    embeds = [
+                        ...embeds,
+                        await this.twitchAccounts[ti].discordEmbed(),
+                    ]
+                }
+            }
+
+            resolve(embeds);
+        });
     }
 
     /**
