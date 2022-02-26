@@ -48,6 +48,10 @@ class DiscordGuild {
      */
     removeSetting(setting) {
         return new Promise((resolve, reject) => {
+            if (!this.settings) {
+                reject("Settings was not retrieved. Call getSettings before using removeSetting");
+                return;
+            }
             con.query("delete from discord__setting where guild_id = ? and setting = ?;", [
                 this.id,
                 setting
@@ -124,6 +128,10 @@ class DiscordGuild {
      */
     getSetting(setting, expectedType) {
         return new Promise((resolve, reject) => {
+            if (!this.settings) {
+                reject("Settings was not retrieved. Call getSettings before using getSetting");
+                return;
+            }
             let guildSetting = this.settings.find(x => x.setting === setting);
 
             if (guildSetting) {
@@ -147,6 +155,34 @@ class DiscordGuild {
                     reject("Setting was not found");
                 }
             }
+        });
+    }
+
+    /**
+     * Grabs settings from the database.
+     * @returns {Promise<DiscordGuildSetting[]}
+     */
+    getSettings() {
+        return new Promise((resolve, reject) => {
+            con.query("select * from discord__setting where guild_id = ?;", [this.id], (err, res) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+
+                let settings = [];
+
+                res.forEach(setting => {
+                    settings = [
+                        ...settings,
+                        new DiscordGuildSetting(setting.setting, setting.value, setting.type),
+                    ]
+                });
+
+                this.settings = settings;
+
+                resolve(settings);
+            });
         });
     }
 
@@ -256,7 +292,7 @@ class DiscordGuild {
     #addCommand(guild, commandData) {
         return new Promise(async (resolve, reject) => {
             const commands = guild.commands.cache;
-            let command = commands.find(x => commandData.name === "register");
+            let command = commands.find(x => commandData.name === x.name);
         
             if (!command) {
                 try {
@@ -320,14 +356,12 @@ class DiscordGuild {
      * @param {FullIdentity} represents 
      * @param {DiscordUser} owner 
      * @param {string} name 
-     * @param {DiscordGuildSetting[]} settings
      */
-    constructor(id, represents, owner, name, settings) {
+    constructor(id, represents, owner, name) {
         this.id = id;
         this.represents = represents;
         this.owner = owner;
         this.name = name;
-        this.settings = settings;
     }
 
     /**
