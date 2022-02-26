@@ -5,7 +5,7 @@ const registerCommand = require("../commands/register");
 const addCommand = (guild, commandData) => {
     return new Promise(async (resolve, reject) => {
         const commands = guild.commands.cache;
-        let command = commands.find(x => commandData.name === "register");
+        let command = commands.find(x => commandData.name === x.name);
     
         if (!command) {
             try {
