@@ -22,8 +22,10 @@ const listener = {
                 member.user.discriminator,
                 member.user.avatar
             );
-            discordUser.post().catch(console.error);
-            if (guild) guild.addUser(user).then(() => {}, console.error);
+            discordUser.post().then(user => {
+                if (guild) guild.addUser(user).then(() => {}, console.error)
+            },
+            console.error);
         })
     }
 };
