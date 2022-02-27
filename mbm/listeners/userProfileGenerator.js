@@ -3,9 +3,9 @@ const api = require("../../api/index");
 
 const config = require("../../config.json");
 
-const identityRegex = /(?<=i:)\d+/gi;
-const discordRegex = /(?<=d:)\d+/gi;
-const twitchRegex = /(?<=t:)\w+/gi;
+const identityRegex = /(?<=-i:)\d+/gi;
+const discordRegex = /(?<=-d:)\d+/gi;
+const twitchRegex = /(?<=-t:)\w+/gi;
 
 const notFoundEmbed = query => {
     return new MessageEmbed()
@@ -64,11 +64,11 @@ const listener = {
         if (message.guild.id !== config.modsquad_discord) return;
 
 
-        if (message.content.toLowerCase().indexOf("i:") !== -1) {
+        if (message.content.toLowerCase().indexOf("-i:") !== -1) {
             process(message, identityRegex, "identity");
-        } else if (message.content.toLowerCase().indexOf("d:") !== -1) {
+        } else if (message.content.toLowerCase().indexOf("-d:") !== -1) {
             process(message, discordRegex, "discord");
-        } else if (message.content.toLowerCase().indexOf("t:") !== -1) {
+        } else if (message.content.toLowerCase().indexOf("-t:") !== -1) {
             process(message, twitchRegex, "twitch");
         }
     }

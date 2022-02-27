@@ -1,5 +1,7 @@
 const con = require("../database");
 
+const {MessageEmbed} = require("discord.js");
+
 const Identity = require("./Identity");
 
 const TwitchUser = require("./Twitch/TwitchUser");
@@ -84,6 +86,62 @@ class FullIdentity extends Identity {
                     reject(err);
                 }
             });
+        });
+    }
+
+    /**
+     * Generated a Discord Embed for the user.
+     * 
+     * @returns {Promise<MessageEmbed[]>}
+     */
+    discordEmbed() {
+        return new Promise(async (resolve, reject) => {
+            const moderatorIn = await this.getActiveModeratorChannels();
+
+            let embeds = [];
+
+            const identityEmbed = new MessageEmbed()
+                    .setAuthor({name: this.name, iconURL: this.avatar_url, url: this.getShortlink()})
+                    .setDescription(this.name)
+                    .setFooter({text: "TMS Identity #" + this.id, iconURL: "https://twitchmodsquad.com/assets/images/logo.webp"})
+                    .setThumbnail(this.avatar_url)
+                    .setColor(0x772ce8);
+
+            embeds = [identityEmbed];
+
+            let moderatorInStr = "";
+            moderatorIn.forEach(modLink => {
+                if (moderatorInStr !== "") moderatorInStr += "\n";
+
+                moderatorInStr += "**"+modLink.modForIdentity.name+"**";
+
+                if (modLink.modForIdentity.twitchAccounts.length > 0)
+                    moderatorInStr += " - [Profile](https://twitch.tv/" + modLink.modForIdentity.twitchAccounts[0].display_name.toLowerCase() + ")";
+
+                if (modLink.modForIdentity.discordAccounts.length > 0)
+                    moderatorInStr += ` - <@${modLink.modForIdentity.discordAccounts[0].id}>`;
+            });
+
+            if (moderatorInStr !== "") {
+                identityEmbed.addField("Moderates For", moderatorInStr, false);
+            }
+
+            for (let di = 0; di < this.discordAccounts.length; di ++) {
+                embeds = [
+                    ...embeds,
+                    await this.discordAccounts[di].discordEmbed(),
+                ]
+            }
+
+            for (let ti = 0; ti < this.twitchAccounts.length; ti ++) {
+                embeds = [
+                    ...embeds,
+                    await this.twitchAccounts[ti].discordEmbed(),
+                ]
+            }
+            console.log(embeds);
+
+            resolve(embeds);
         });
     }
 

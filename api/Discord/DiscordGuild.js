@@ -4,6 +4,7 @@ const DiscordUser = require("./DiscordUser");
 const defaultSettings = require("../../mbm/settings.json");
 
 const settingCommand = require("../../mbm/commands/setting");
+const userCommand = require("../../mbm/commands/user");
 
 class DiscordGuild {
     /**
@@ -287,13 +288,14 @@ class DiscordGuild {
      * Add the command
      * @param {Guild} guild 
      * @param {object} commandData 
+     * @param {boolean} modRole 
      * @returns {Promise<any>}
      */
-    #addCommand(guild, commandData) {
+    #addCommand(guild, commandData, modRole = false) {
         return new Promise(async (resolve, reject) => {
             const commands = guild.commands.cache;
             let command = commands.find(x => commandData.name === x.name);
-        
+            
             if (!command) {
                 try {
                     command = await guild.commands.create(commandData);
@@ -327,8 +329,23 @@ class DiscordGuild {
                         },
                     ];
                 }
+
+                if (modRole) {
+                    let modRole = await dGuild.getSetting("rm-mod", "role");
+                    
+                    if (modRole?.id) {
+                        permissions = [
+                            ...permissions,
+                            {
+                                id: modRole.id,
+                                type: 'ROLE',
+                                permission: true,
+                            }
+                        ]
+                    }
+                }
             } catch (err) {console.error(err)}
-        
+            
             command.permissions.set({guild: guild.id, command: command.id, permissions: permissions}).then(resolve).catch(reject);
         });
     }
@@ -342,6 +359,7 @@ class DiscordGuild {
         return new Promise(async (resolve, reject) => {
             try {
                 await this.#addCommand(guild, settingCommand.data);
+                await this.#addCommand(guild, userCommand.data);
                 
                 resolve();
             } catch (err) {
