@@ -7,6 +7,7 @@ const contactUs = require("./contact-us");
 const discord = require("./discord");
 const twitch = require("./twitch");
 const chat = require("./chat");
+const shortlink = require("./shortlink");
  
 module.exports = {
     identity,
@@ -18,4 +19,5 @@ module.exports = {
     discord,
     twitch,
     chat,
+    shortlink,
 };

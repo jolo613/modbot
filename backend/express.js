@@ -71,6 +71,7 @@ app.use('/search', routes.search);
 app.use('/twitch', routes.twitch);
 app.use('/discord', routes.discord);
 app.use('/chat', routes.chat);
+app.use('/shortlink', routes.shortlink)
 
 app.get('/', (req, res) => {
     res.status(404);
