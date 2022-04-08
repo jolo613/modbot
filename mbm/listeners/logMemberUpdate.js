@@ -29,6 +29,7 @@ const listener = {
     eventName: 'guildMemberUpdate',
     eventType: 'on',
     listener (oldMember, newMember) {
+        console.log("update");
         Discord.getGuild(oldMember.guild.id).then(async guild => {
             const executor = await getExecutor(oldMember);
             if (oldMember.nickname !== newMember.nickname) {
@@ -47,6 +48,65 @@ const listener = {
                                 
                                 embed.addField("Old Nickname", "```\n" + (oldMember.nickname ? oldMember.nickname.replace(/\\`/g, "`").replace(/`/g, "\\`") : "[unset]") + "```", false)
                                 embed.addField("New Nickname", "```\n" + (newMember.nickname ? newMember.nickname.replace(/\\`/g, "`").replace(/`/g, "\\`") : "[unset]") + "```", false)
+                                channel.send({content: ' ', embeds: [embed]});
+                            }).catch(console.error);
+                        }
+                    }).catch(console.error);
+                }).catch(console.error);
+            } 
+            if (!oldMember.roles.cache.equals(newMember.roles.cache)) {
+                console.log("role diff");
+                guild.getSetting("lde-enabled", "boolean").then(enabled => {
+                    guild.getSetting("lde-user-update-roles", "boolean").then(userUpdateRoles => {
+                        if (enabled && userUpdateRoles) {
+                            guild.getSetting("lde-channel", "channel").then(async channel => {
+                                const embed = new MessageEmbed()
+                                    .setTitle("Roles Changed")
+                                    .addField("User", newMember.toString(), true)
+                                    .setColor(0x4c80d4)
+                                    .setAuthor({name: newMember.user.username, iconURL: newMember.avatarURL()});
+
+                                if (executor && executor.id !== newMember.id)
+                                    embed.addField("Moderator", executor.toString(), true);
+
+                                let diff = "";
+                                
+                                const addDiff = text => {
+                                    if (diff !== "") diff += "\n";
+
+                                    diff += text;
+                                }
+
+                                newMember.roles.cache.each(role => {
+                                    if (role.name !== "@everyone" && !oldMember.roles.cache.has(role.id))
+                                        addDiff("**+** " + role.toString());
+                                });
+
+                                oldMember.roles.cache.each(role => {
+                                    if (role.name !== "@everyone" && !newMember.roles.cache.has(role.id))
+                                        addDiff("**-** " + role.toString());
+                                });
+
+                                embed.addField("Role Changes", diff, false);
+                                
+                                let oldRoles = "";
+                                let newRoles = "";
+
+                                oldMember.roles.cache.each(role => {
+                                    if (role.name !== "@everyone")
+                                        oldRoles += role.toString() + " ";
+                                })
+                                newMember.roles.cache.each(role => {
+                                    if (role.name !== "@everyone")
+                                        newRoles += role.toString() + " ";
+                                })
+
+                                if (oldRoles === "") oldRoles = "None!";
+                                if (newRoles === "") newRoles = "None!";
+
+                                embed.addField("Initial Roles", oldRoles, true);
+                                embed.addField("New Roles", newRoles, true);
+
                                 channel.send({content: ' ', embeds: [embed]});
                             }).catch(console.error);
                         }

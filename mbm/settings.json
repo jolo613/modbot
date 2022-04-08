@@ -48,6 +48,12 @@
         "default":true
     },
     {
+        "name":"[LDE] Local Discord Events :: User Update: Roles",
+        "value":"lde-user-update-roles",
+        "type":"boolean",
+        "default":true
+    },
+    {
         "name":"[LDE] Local Discord Events Channel",
         "value":"lde-channel",
         "type":"channel",
