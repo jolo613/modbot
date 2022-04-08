@@ -15,6 +15,7 @@ const router = Router();
 
 const PANEL_URL = "https://panel.twitchmodsquad.com";
 
+const STREAMER_TWITCH_URL = "https://id.twitch.tv/oauth2/authorize?response_type=code&client_id=qsedbwr82672tfg7fvobxlf01ljoov&redirect_uri=" + encodeURIComponent(config.api_domain) + "auth%2Fstreamer&scope=moderation%3Aread";
 const TWITCH_URL = "https://id.twitch.tv/oauth2/authorize?response_type=code&client_id=qsedbwr82672tfg7fvobxlf01ljoov&redirect_uri=" + encodeURIComponent(config.api_domain) + "auth%2Ftwitch&scope=user%3Aread%3Aemail%20moderator%3Amanage%3Abanned_users";
 const TWITCH_REDIRECT = config.api_domain + "auth/twitch";
 const DISCORD_URL = "https://discord.com/api/oauth2/authorize?client_id=" + config.discord_auth.client_id + "&redirect_uri=" + encodeURIComponent(config.api_domain) + "auth%2Fdiscord&response_type=code&scope=guilds.join%20identify";
@@ -87,6 +88,32 @@ const twitch = {
     },
 }
 
+router.get("/streamer", async (req, res) => {
+    const { query } = req;
+    const { code } = query;
+
+    if (code) {
+        const oauthData = await twitch.getToken(code);
+
+        if (oauthData.hasOwnProperty("status") && oauthData.status === 400) {
+            res.redirect(STREAMER_TWITCH_URL);
+        }
+
+        const result = await twitch.getUser(oauthData.token_type, oauthData.access_token);
+
+        if (result.data?.hasOwnProperty(0)) {
+            const user = result.data[0];
+
+            con.query("update twitch__user set streamer_refresh_token = ? where id = ?;", [oauthData.refresh_token, user.id], err => {
+                if (err) console.error(err);
+            });
+
+            res.redirect(PANEL_URL + "/");
+        }
+    } else
+        res.redirect(STREAMER_TWITCH_URL);
+});
+
 router.get("/invite/:invite", (req, res) => {
     if (req.params.invite) {
         res.cookie("invite", req.params.invite, {
@@ -135,6 +162,7 @@ router.get("/twitch", async (req, res) => {
 
         if (result.data?.hasOwnProperty(0)) {
             const user = result.data[0];
+            
             api.Twitch.getUserById(user.id, true, true).then(async twitchUser => {
                 let session;
 
