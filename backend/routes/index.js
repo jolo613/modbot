@@ -8,7 +8,8 @@ const discord = require("./discord");
 const twitch = require("./twitch");
 const chat = require("./chat");
 const shortlink = require("./shortlink");
- 
+const archive = require("./archive");
+
 module.exports = {
     identity,
     streamers,
@@ -20,4 +21,5 @@ module.exports = {
     twitch,
     chat,
     shortlink,
+    archive,
 };

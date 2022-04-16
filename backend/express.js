@@ -72,6 +72,7 @@ app.use('/twitch', routes.twitch);
 app.use('/discord', routes.discord);
 app.use('/chat', routes.chat);
 app.use('/shortlink', routes.shortlink)
+app.use('/archive', routes.archive);
 
 app.get('/', (req, res) => {
     res.status(404);
