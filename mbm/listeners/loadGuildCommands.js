@@ -71,9 +71,8 @@ const listener = {
                     Discord.getUserById(member.id, false, true).then(dUser => {
                         dGuild.addUser(dUser).then(() => {}, console.error);
                     }, console.error);
-
-                    dGuild.addCommands(guild);
                 });
+                dGuild.addCommands(guild);
             }).catch(async err => {
                 addCommand(guild, registerCommand.data).then(() => {}, console.error);
             });

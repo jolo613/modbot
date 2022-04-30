@@ -139,7 +139,6 @@ class FullIdentity extends Identity {
                     await this.twitchAccounts[ti].discordEmbed(),
                 ]
             }
-            console.log(embeds);
 
             resolve(embeds);
         });

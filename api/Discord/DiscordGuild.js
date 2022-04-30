@@ -304,49 +304,6 @@ class DiscordGuild {
                     return;
                 }
             }
-            
-            let permissions = [{
-                id: guild.ownerId,
-                type: 'USER',
-                permission: true,
-            }, {
-                id: "267380687345025025", // Override to allow @Twijn#8888 to access commands for debug purposes.
-                type: 'USER',
-                permission: true,
-            }];
-        
-            try {
-                let dGuild = await global.api.Discord.getGuild(guild.id);
-                let adminRole = await dGuild.getSetting("rm-admin", "role");
-                
-                if (adminRole?.id) {
-                    permissions = [
-                        ...permissions,
-                        {
-                            id: adminRole.id,
-                            type: 'ROLE',
-                            permission: true,
-                        },
-                    ];
-                }
-
-                if (modRole) {
-                    let modRole = await dGuild.getSetting("rm-mod", "role");
-                    
-                    if (modRole?.id) {
-                        permissions = [
-                            ...permissions,
-                            {
-                                id: modRole.id,
-                                type: 'ROLE',
-                                permission: true,
-                            }
-                        ]
-                    }
-                }
-            } catch (err) {console.error(err)}
-            
-            command.permissions.set({guild: guild.id, command: command.id, permissions: permissions}).then(resolve).catch(reject);
         });
     }
 

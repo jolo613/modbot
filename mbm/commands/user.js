@@ -38,71 +38,62 @@ const command = {
         if (interaction.guildId) {
             global.api.Discord.getGuild(interaction.guildId).then(async guild => {
                 try {
-                    const adminRole = await guild.getSetting("rm-admin", "role");
-                    const modRole = await guild.getSetting("rm-mod", "role");
+                    let embeds = [];
 
-                    if (interaction.member.roles.cache.find(x => x.id === adminRole.id) ||
-                            interaction.member.roles.cache.find(x => x.id === modRole.id) ||
-                            interaction.member.id == "267380687345025025" ||
-                            interaction.member.id == interaction.guildId) {
-                        let embeds = [];
-
-                        const loadIdentity = async id => {
-                            try {
-                                let identity = await global.api.getFullIdentity(id);
-                                if (identity) {
-                                    embeds = [
-                                        ...embeds,
-                                        ...await identity.discordEmbed()
-                                    ];
-                                }
-                            } catch (err) {}
-                        }
-
-                        if (interaction.options.getString("twitch")) {
-                            try {
-                                let users = await global.api.Twitch.getUserByName(interaction.options.getString("twitch"));
-                                for (let i = 0; i < users.length; i++) {
-                                    if (users[i].identity?.id) {
-                                        await loadIdentity(users[i].identity.id);
-                                    } else {
-                                        embeds = [
-                                            ...embeds,
-                                            await users[i].discordEmbed()
-                                        ];
-                                    }
-                                }
-                            } catch (err) {}
-                        }
-                        if (interaction.options.getUser("discord")) {
-                            try {
-                                let user = await global.api.Discord.getUserById(interaction.options.getUser("discord").id);
-
-                                if (user.identity?.id) {
-                                    await loadIdentity(user.identity.id);
-                                } else if (user) {
-                                    embeds = [
-                                        ...embeds,
-                                        await user.discordEmbed()
-                                    ];
-                                }
-                            } catch (err) {}
-                        }
-                        if (interaction.options.getInteger("identity")) {
-                            await loadIdentity(interaction.options.getInteger("identity"));
-                        }
-
-                        if (embeds.length === 0) {
-                            embeds = [
-                                errorEmbed("No users were found with this query!"),
-                            ];
-                        }
-    
-                        interaction.reply({content: ' ', embeds: embeds, ephemeral: true});
-                    } else {
-                        interaction.reply(errorEmbed("You don't have permission for this command"));
+                    const loadIdentity = async id => {
+                        try {
+                            let identity = await global.api.getFullIdentity(id);
+                            if (identity) {
+                                embeds = [
+                                    ...embeds,
+                                    ...await identity.discordEmbed()
+                                ];
+                            }
+                        } catch (err) {}
                     }
+
+                    if (interaction.options.getString("twitch")) {
+                        try {
+                            let users = await global.api.Twitch.getUserByName(interaction.options.getString("twitch"));
+                            for (let i = 0; i < users.length; i++) {
+                                if (users[i].identity?.id) {
+                                    await loadIdentity(users[i].identity.id);
+                                } else {
+                                    embeds = [
+                                        ...embeds,
+                                        await users[i].discordEmbed()
+                                    ];
+                                }
+                            }
+                        } catch (err) {}
+                    }
+                    if (interaction.options.getUser("discord")) {
+                        try {
+                            let user = await global.api.Discord.getUserById(interaction.options.getUser("discord").id);
+
+                            if (user.identity?.id) {
+                                await loadIdentity(user.identity.id);
+                            } else if (user) {
+                                embeds = [
+                                    ...embeds,
+                                    await user.discordEmbed()
+                                ];
+                            }
+                        } catch (err) {}
+                    }
+                    if (interaction.options.getInteger("identity")) {
+                        await loadIdentity(interaction.options.getInteger("identity"));
+                    }
+
+                    if (embeds.length === 0) {
+                        embeds = [
+                            errorEmbed("No users were found with this query!"),
+                        ];
+                    }
+
+                    interaction.reply({content: ' ', embeds: embeds, ephemeral: true});
                 } catch (err) {
+                    console.error(err);
                     interaction.reply(errorEmbed(err.toString()));
                 }
             }).catch(err => {console.error(err);interaction.reply(errorEmbed("" + err));});
