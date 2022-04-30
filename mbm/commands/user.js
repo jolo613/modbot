@@ -103,6 +103,7 @@ const command = {
                         interaction.reply(errorEmbed("You don't have permission for this command"));
                     }
                 } catch (err) {
+                    console.error(err);
                     interaction.reply(errorEmbed(err.toString()));
                 }
             }).catch(err => {console.error(err);interaction.reply(errorEmbed("" + err));});
