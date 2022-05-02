@@ -17,6 +17,7 @@ const command = {
                 name: "twitch",
                 description: "Search by Twitch username",
                 required: false,
+                autocomplete: true,
             },
             {
                 type: 6,
