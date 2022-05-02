@@ -1,5 +1,5 @@
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
-const {MessageEmbed, MessageActionRow, MessageButton, Message} = require("discord.js");
+const {MessageEmbed, MessageActionRow, MessageButton, MessageSelectMenu, Message} = require("discord.js");
 const { type } = require("express/lib/response");
 const api = require("../../api/index");
 const con = require("../../database");
@@ -13,10 +13,10 @@ try {
 fs.mkdirSync(DIRECTORY);
 } catch (e) {}
 
-const downloadFile = (archiveId, contentType, result) => {
+const downloadFile = (archiveId, contentType, result, remote_path = null) => {
     let name = api.stringGenerator(32) + (mime.extension(contentType) ? "." + mime.extension(contentType) : "");
+    con.query("insert into archive__create_files (archive_id, content_type, local_path, remote_path) values (?, ?, ?, ?);", [archiveId, contentType, name, remote_path]);
     result.body.pipe(fs.createWriteStream(DIRECTORY + name));
-    con.query("insert into archive__create_files (archive_id, content_type, local_path) values (?, ?);", [archiveId, contentType, name]);
 }
 
 const DOWNLOADABLE_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif"];
@@ -315,7 +315,7 @@ const listener = {
 
                         let type = result.headers.get("Content-Type").toLowerCase();
 
-                        downloadFile(message.channel.id, type, result);
+                        downloadFile(message.channel.id, type, result, attachment.name);
                     });
                 } else {
                     try {
@@ -328,18 +328,52 @@ const listener = {
                         let type = result.headers.get("Content-Type").toLowerCase();
 
                         if (DOWNLOADABLE_TYPES.includes(type)) {
-                            downloadFile(message.channel.id, type, result);
+                            downloadFile(message.channel.id, type, result, message.content);
                         } else {
                             con.query("insert into archive__create_files (archive_id, remote_path, content_type) values (?, ?, ?);", [message.channel.id, message.content, type], (err) => {
                                 if (err) {
                                     listener.delayMessage(message.channel, "send", "Insertion failed: " + err, 5000);
                                 }
+
+                                listener.parse(message.channel);
                             });
                         }
                     } catch (err) {
                         listener.delayMessage(message.channel, "send", "Message should either contain an attachment or a URL message content", 5000);
                     }
                 }
+            },
+            disablePrev: (archiveEntry, twitchUsers, discordUsers) => {
+                return false;
+            },
+            disableNext: (archiveEntry, twitchUsers, discordUsers) => {
+                return false;
+            },
+        },
+        {
+            prompt: "Confirm the information below!",
+            startStep: (embed, archiveEntry, twitchUsers, discordUsers) => {
+                embed.setDescription("Confirm the information above!");
+                return {error: false, embed: embed};
+            },
+            captureChat: async (message) => {
+                // nothing to do here...
+            },
+            disablePrev: (archiveEntry, twitchUsers, discordUsers) => {
+                return false;
+            },
+            disableNext: (archiveEntry, twitchUsers, discordUsers) => {
+                return false;
+            },
+        },
+        {
+            prompt: "",
+            startStep: (embed, archiveEntry, twitchUsers, discordUsers) => {
+                
+                return {error: false, embed: embed};
+            },
+            captureChat: async (message) => {
+                // nothing to do here...
             },
             disablePrev: (archiveEntry, twitchUsers, discordUsers) => {
                 return false;
@@ -404,10 +438,12 @@ const listener = {
             }
         }
 
-        return {archiveEntry: archiveEntry, starterMessage: starterMessage, twitchUsers: twitchUsers, discordUsers: discordUsers}
+        const files = await con.pquery("select * from archive__create_files where archive_id = ?;", [thread.id]);
+
+        return {archiveEntry: archiveEntry, starterMessage: starterMessage, twitchUsers: twitchUsers, discordUsers: discordUsers, files: files}
     },
     async parse (thread) {
-        const {archiveEntry, starterMessage, twitchUsers, discordUsers} = await listener.getThreadData(thread);
+        const {archiveEntry, starterMessage, twitchUsers, discordUsers, files} = await listener.getThreadData(thread);
 
         if (!archiveEntry || !starterMessage) {
             listener.delayMessage(thread, "send", "This thread is broken. I'm lost. Call Dev, we need help!", 10000);
@@ -420,7 +456,7 @@ const listener = {
 
         let stepData = listener.steps[archiveEntry.step - 1];
             
-        embed.setDescription(`Step ${archiveEntry.step}/x:\n\n` + stepData.prompt);
+        embed.setDescription(`Step ${archiveEntry.step}/6:\n\n` + stepData.prompt);
 
 
         if (twitchUsers.length > 0) {
@@ -447,6 +483,14 @@ const listener = {
             embed.addField("Description", "```" + archiveEntry.description + "```", false);
         }
 
+        if (files.length > 0 && archiveEntry.step > 5) {
+            let fileStr = "";
+            files.forEach(file => {
+                fileStr += "\n" + ((file.name ? file.name : "Unnamed") + ": " + (file.local_path ? file.local_path : file.remote_path));
+            });
+            embed.addField("Files", "```" + fileStr + "```", false);
+        }
+
         const prevStep = new MessageButton()
             .setLabel("Previous Step")
             .setCustomId("sbs-prev")
@@ -457,6 +501,7 @@ const listener = {
             .setCustomId("sbs-next")
             .setStyle("PRIMARY");
 
+        if (archiveEntry.step === 6) nextStep.setLabel("Submit").setStyle("SUCCESS");
 
         if (stepData.disablePrev(archiveEntry, twitchUsers, discordUsers)) prevStep.setDisabled(true);
         if (stepData.disableNext(archiveEntry, twitchUsers, discordUsers)) nextStep.setDisabled(true);
@@ -464,7 +509,28 @@ const listener = {
         const row = new MessageActionRow()
                 .addComponents(prevStep, nextStep);
 
-        starterMessage.edit({content: ' ', embeds: [embed], components: [row]});
+        let components = [row];
+
+        if (files.length > 0) {
+            const fileSelectMenu = new MessageSelectMenu()
+                .setCustomId("file-name")
+                .setMinValues(1)
+                .setMaxValues(1)
+                .setPlaceholder("Select a file to rename it!");
+
+            files.forEach(file => {
+                fileSelectMenu.addOptions({
+                    label: (file.name ? file.name : (file.local_path ? file.local_path : (file.remote_path ? file.remote_path : file.id))),
+                    value: "" + file.id,
+                    description: (file.remote_path ? file.remote_path : file.local_path),
+                })
+            });
+
+            const fileEdit = new MessageActionRow().addComponents(fileSelectMenu);
+            components = [fileEdit, ...components];
+        }
+
+        starterMessage.edit({content: ' ', embeds: [embed], components: components});
     },
     listener (message) {
         if (message.channel.isThread() && !message.author.bot) {
