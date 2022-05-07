@@ -68,7 +68,11 @@ router.get('/:file', (req, res) => {
                         let numberOfPrintsY = Math.max(1, Math.floor(h / th));
 
                         for (let i = 0; i < numberOfPrintsY; i++) {
-                            textImage.print(font, 0, th * i, text.repeat(numberOfPrintsX));
+                            if (i % 2 === 1) {
+                                textImage.print(font, 0, th * i, text.repeat(numberOfPrintsX));
+                            } else {
+                                textImage.print(font, tw / -2, th * i, text.repeat(numberOfPrintsX + 1));
+                            }
                         }
 
                         textImage.color([{ apply: 'xor', params: [TEXT_COLOR] }])
