@@ -16,27 +16,32 @@ const command = {
                 type: 3,
                 name: "streamer1",
                 description: "Streamer's Twitch name to mention",
+                autocomplete: true,
                 required: true,
             },
             {
                 type: 3,
                 name: "streamer2",
                 description: "Streamer's Twitch name to mention",
+                autocomplete: true,
             },
             {
                 type: 3,
                 name: "streamer3",
                 description: "Streamer's Twitch name to mention",
+                autocomplete: true,
             },
             {
                 type: 3,
                 name: "streamer4",
                 description: "Streamer's Twitch name to mention",
+                autocomplete: true,
             },
             {
                 type: 3,
                 name: "streamer5",
                 description: "Streamer's Twitch name to mention",
+                autocomplete: true,
             },
         ]
     },
