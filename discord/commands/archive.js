@@ -1,10 +1,12 @@
 const {MessageEmbed, MessageButton, MessageActionRow} = require("discord.js");
+const {Modal, TextInputComponent, showModal} = require("discord-modals");
 const api = require("../../api/index");
 const con = require("../../database");
 
 const config = require("../../config.json");
 
 const command = {
+    cache: {},
     data: {
         name: 'archive'
         , description: 'Create or edit Archive submissions!'
@@ -13,6 +15,103 @@ const command = {
                 type: 1,
                 name: "create",
                 description: "Create a new Archive submission",
+                options: [
+                    {
+                        type: 3,
+                        name: "twitch-name-1",
+                        description: "Add a Twitch username to this archive submission",
+                        required: false,
+                        autocomplete: true,
+                    },
+                    {
+                        type: 3,
+                        name: "twitch-name-2",
+                        description: "Add a Twitch username to this archive submission",
+                        required: false,
+                        autocomplete: true,
+                    },
+                    {
+                        type: 3,
+                        name: "twitch-name-3",
+                        description: "Add a Twitch username to this archive submission",
+                        required: false,
+                        autocomplete: true,
+                    },
+                    {
+                        type: 3,
+                        name: "twitch-name-4",
+                        description: "Add a Twitch username to this archive submission",
+                        required: false,
+                        autocomplete: true,
+                    },
+                    {
+                        type: 3,
+                        name: "twitch-name-5",
+                        description: "Add a Twitch username to this archive submission",
+                        required: false,
+                        autocomplete: true,
+                    },
+                    {
+                        type: 3,
+                        name: "discord-id-1",
+                        description: "Add a Discord ID to this archive submission",
+                        required: false,
+                    },
+                    {
+                        type: 3,
+                        name: "discord-id-2",
+                        description: "Add a Discord ID to this archive submission",
+                        required: false,
+                    },
+                    {
+                        type: 3,
+                        name: "discord-id-3",
+                        description: "Add a Discord ID to this archive submission",
+                        required: false,
+                    },
+                    {
+                        type: 3,
+                        name: "discord-id-4",
+                        description: "Add a Discord ID to this archive submission",
+                        required: false,
+                    },
+                    {
+                        type: 3,
+                        name: "discord-id-5",
+                        description: "Add a Discord ID to this archive submission",
+                        required: false,
+                    },
+                    {
+                        type: 4,
+                        name: "identity-id-1",
+                        description: "Add an Identity ID to this archive submission",
+                        required: false,
+                    },
+                    {
+                        type: 4,
+                        name: "identity-id-2",
+                        description: "Add an Identity ID to this archive submission",
+                        required: false,
+                    },
+                    {
+                        type: 4,
+                        name: "identity-id-3",
+                        description: "Add an Identity ID to this archive submission",
+                        required: false,
+                    },
+                    {
+                        type: 4,
+                        name: "identity-id-4",
+                        description: "Add an Identity ID to this archive submission",
+                        required: false,
+                    },
+                    {
+                        type: 4,
+                        name: "identity-id-5",
+                        description: "Add an Identity ID to this archive submission",
+                        required: false,
+                    },
+                ],
             },
             {
                 type: 1,
@@ -32,68 +131,54 @@ const command = {
         if (subcommand === "create") {
             api.Discord.getUserById(interaction.member.id).then(user => {
                 if (user.identity?.id) {
-                    con.query("select * from archive__create where owner_id = ?;", user.identity.id, (err, res) => {
-                        if (err) {
-                            interaction.error(err);
-                            return;
-                        }
+                    let twitch = [];
+                    let discord = [];
+                    let identity = [];
 
-                        if (res.length > 0) {
-                            interaction.error("You already have a serious ban archive submission open!");
-                        }
+                    for (let i = 1; i < 6; i++) {
+                        let twitchUser = interaction.options.getString("twitch-name-" + i);
+                        if (twitchUser) twitch = [...twitch, twitchUser];
 
-                        interaction.channel.threads.create({
-                            type: config.developer ? 'GUILD_PUBLIC_THREAD' : 'GUILD_PRIVATE_THREAD',
-                            name: 'sbs-' + user.name.toLowerCase(),
-                            autoArchiveDuration: 60,
-                            reason: 'Command prompts for Serious Ban Reports. Generated by ' + user.id,
-                        }).then(thread => {
-                            thread.members.add(interaction.member).then(() => {
-                                interaction.success("We've created a thread to start the archive submission process!");
+                        let discordUser = interaction.options.getString("discord-id-" + i);
+                        if (discordUser) discord = [...discord, discordUser];
 
-                                const embed = new MessageEmbed()
-                                    .setTitle("We'll walk you through the process!")
-                                    .setDescription("Please type the user's Twitch name or Twitch ID.")
-                                    .setFooter({text: "Utilize new lines to search for multiple users"})
-                                    .setColor(0xa970ff);
-                                    
+                        let identityId = interaction.options.getString("identity-id-" + i);
+                        if (identityId) identity = [...identity, identityId];
+                    }
 
-                                const prevStep = new MessageButton()
-                                    .setLabel("Previous Step")
-                                    .setCustomId("sbs-prev")
-                                    .setStyle("SECONDARY")
-                                    .setDisabled(true);
+                    command.cache[user.identity.id] = {
+                        twitch: twitch,
+                        discord: discord,
+                        identity: identity,
+                        channel: interaction.channel,
+                    };
 
-                                const nextStep = new MessageButton()
-                                    .setLabel("Next Step")
-                                    .setCustomId("sbs-next")
-                                    .setStyle("PRIMARY");
+                    let modal = new Modal()
+                        .setCustomId("archive-create")
+                        .setTitle("Create an Archive Entry")
+                        .addComponents(
+                            new TextInputComponent()
+                                .setCustomId("offense")
+                                .setLabel("Offense")
+                                .setStyle("SHORT")
+                                .setMinLength(3)
+                                .setMaxLength(256)
+                                .setPlaceholder("Write something like 'Harrassment' or 'Unsolicted Pictures' (Note: Don't put links here!)")
+                                .setRequired(true),
+                            new TextInputComponent()
+                                .setCustomId("description")
+                                .setLabel("Description")
+                                .setStyle("LONG")
+                                .setMinLength(32)
+                                .setMaxLength(1024)
+                                .setPlaceholder("Go into more detail!")
+                                .setRequired(true)
+                        );
 
-                                const row = new MessageActionRow()
-                                    .addComponents(prevStep, nextStep);
-
-                                thread.send({content: ' ', embeds: [embed], components: [row]}).then(message => {
-                                    con.query("insert into archive__create (channel_id, owner_id, thread_id, message_id) values (?, ?, ?, ?);", [interaction.channel.id, user.id, thread.id, message.id], err => {
-                                        if (err) {
-                                            console.error(err);
-                                            thread.delete("Unknown SQL error");
-                                            return;
-                                        }
-                                    });
-                                }, err => {
-                                    console.error(err);
-                                    thread.delete("Failed to send starting message.");
-                                });
-                            }, err => {
-                                console.error(err);
-                                thread.delete("Failed to add member to thread.");
-                                interaction.error("Failed to add member to thread.");
-                            });
-                        }, err => {
-                            console.error(err);
-                            interaction.error("Unable to create a thread in this channel.");
-                        });
-                    });
+                    showModal(modal, {
+                        client: global.client.discord,
+                        interaction: interaction,
+                    })
                 } else {
                     interaction.error({content: "Your account isn't properly linked to TMS. Contact <@267380687345025025>", ephemeral: true});
                 }
