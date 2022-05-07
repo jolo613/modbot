@@ -52,6 +52,12 @@ const command = {
                 max_value: 500000,
                 required: false,
             },
+            {
+                type: 5,
+                name: "ephemeral",
+                description: "'True' if you only want the dump to be viewable by you. Default: True",
+                required: false,
+            },
         ]
         , default_permission: false
     },
@@ -62,6 +68,10 @@ const command = {
         let start = interaction.options.getNumber("start", false);
         let end = interaction.options.getNumber("end", false);
         let limit = interaction.options.getInteger("limit", false);
+
+        let ephemeral = interaction.options.getBoolean("ephemeral", true);
+
+        if (ephemeral === undefined || ephemeral === null) ephemeral = true;
 
         try {
             if (streamer) {
@@ -125,7 +135,7 @@ const command = {
             limit
         ];
 
-        await interaction.deferReply({ephemeral: true});
+        await interaction.deferReply({ephemeral: ephemeral});
 
         con.query(`select * from twitch__chat ${queryWhere === "" ? "" : "where "}${queryWhere} order by timesent desc${limit ? " limit ?" : ""};`, queryObjs, async (err, res) => {
             if (err) {
@@ -148,7 +158,7 @@ const command = {
             
             const attachment = new MessageAttachment(Buffer.from(str, 'utf-8'), "dump-" + Date.now() + ".txt", {description: "Stuff!", content_type: "text/plain"});
             
-            interaction.editReply({content: ' ', ephemeral: true, files: [attachment]});
+            interaction.editReply({content: ' ', ephemeral: ephemeral, files: [attachment]});
         });
     }
 };
