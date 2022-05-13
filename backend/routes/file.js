@@ -26,7 +26,7 @@ const OUTPUT_FILE = FILES_DIRECTORY + "output.jpg";
  
 router.get('/:file', (req, res) => {
     if (req.params.file.match(NAME_REGEX)) {
-        con.query("select * from archive__create_files where local_path = ?;", [req.params.file], (err, result) => {
+        con.query("select * from archive__files where local_path is not null and name = ?;", [req.params.file], (err, result) => {
             if (err || result.length === 0) {
                 console.log(err);
                 res.status(404);
