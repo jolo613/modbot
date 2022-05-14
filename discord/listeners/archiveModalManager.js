@@ -1,4 +1,4 @@
-const { MessageEmbed, Message, CommandInteractionOptionResolver } = require("discord.js");
+const { MessageEmbed, MessageActionRow, MessageButton } = require("discord.js");
 const api = require("../../api/index");
 const {cache} = require("../commands/archive");
 
@@ -84,11 +84,19 @@ const listener = {
                                     .setDescription("Utilize Discord's upload file feature or type links to upload files to this archive submission.")
                                     .setColor(0xa970ff);
 
-                                thread.send({content: ' ', embeds: [overview, embed]}).then(message => {
+                                const submit = new MessageButton()
+                                    .setCustomId("submit-archive")
+                                    .setLabel("Submit")
+                                    .setStyle("SUCCESS");
+
+                                const row = new MessageActionRow()
+                                    .addComponents(submit);
+
+                                thread.send({content: ' ', embeds: [overview, embed], components: [row]}).then(message => {
                                     const continueEmbed = new MessageEmbed()
                                         .setTitle("Add files, images, and URLs!")
                                         .setDescription("We've created a new thread to add documents!\n\nVisit it [here](" + message.url + ").")
-                                        .setFooter({text: "Information message. This embed will expire in 10 seconds.", iconURL: "https://twitchmodsquad.com/assets/images/logo.webp"});
+                                        .setFooter({text: "Information message. This embed will expire in 20 seconds.", iconURL: "https://twitchmodsquad.com/assets/images/logo.webp"});
                                     modal.reply({content: ' ', embeds: [continueEmbed]}).then(() => {
                                         setTimeout(() => {
                                             try {
@@ -96,7 +104,7 @@ const listener = {
                                             } catch (err) {
                                                 console.error(err);
                                             }
-                                        }, 10000);
+                                        }, 20000);
                                     });
                                 }, err => {
                                     console.error(err);
