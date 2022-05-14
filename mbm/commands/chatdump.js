@@ -69,7 +69,7 @@ const command = {
         let end = interaction.options.getNumber("end", false);
         let limit = interaction.options.getInteger("limit", false);
 
-        let ephemeral = interaction.options.getBoolean("ephemeral", true);
+        let ephemeral = interaction.options.getBoolean("ephemeral", false);
 
         if (ephemeral === undefined || ephemeral === null) ephemeral = true;
 
