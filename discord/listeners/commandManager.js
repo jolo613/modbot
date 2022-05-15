@@ -1,6 +1,8 @@
 const {MessageEmbed} = require("discord.js");
 const client = global.client.discord;
 
+const config = require("../../config.json");
+
 const listener = {
     name: 'commandManager',
     eventName: 'interactionCreate',
@@ -32,6 +34,14 @@ const listener = {
 
         interaction.success = success;
         interaction.error = error;
+
+        if (interaction.member.roles.cache.has(config.roles.administrator)) {
+            interaction.level = 2;
+        } else if (interaction.member.roles.cache.has(config.roles.moderator)) {
+            interaction.level = 1;
+        } else {
+            interaction.level = 0;
+        }
 
         try {
             cmd.execute(interaction);
