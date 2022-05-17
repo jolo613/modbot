@@ -37,7 +37,7 @@ class API {
     /**
      * Returns the FullIdentity for an ID
      * @param {number} id 
-     * @returns {FullIdentity}
+     * @returns {Promise<FullIdentity>}
      */
     getFullIdentity(id) {
         return new Promise((resolve, reject) => {
