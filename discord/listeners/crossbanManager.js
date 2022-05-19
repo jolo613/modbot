@@ -122,9 +122,9 @@ const listener = {
                 }
             }).catch(handleError);
         } else if (interaction.isButton() &&
-                storedCrossBanChannels[interaction.member.id] &&
                 (interaction.component.customId.startsWith("cbauth-") ||
-                interaction.component.customId.startsWith("cbperm-"))) {
+                interaction.component.customId.startsWith("cbperm-")) &&
+                storedCrossBanChannels.hasOwnProperty(interaction.member.id)) {
             await interaction.deferReply({ ephemeral: true });
 
             let crossBanChannels = storedCrossBanChannels[interaction.member.id];
