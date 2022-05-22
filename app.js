@@ -1,5 +1,7 @@
 global.client = {};
 
+global.app_dir = __dirname;
+
 // Load Discord Module
 require("./discord/discord");
 

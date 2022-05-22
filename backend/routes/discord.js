@@ -8,7 +8,7 @@ router.get("/", (req, res) => {
 });
  
 router.get('/:discordId', (req, res) => {
-    api.Discord.getUserById(req.params.discordId).then(discordUser => {
+    api.Discord.getUserById(req.params.discordId, false, true).then(discordUser => {
         res.json({success: true, data: discordUser});
     }).catch(err => {
         if (err === "User not found!") {

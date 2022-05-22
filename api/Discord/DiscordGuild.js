@@ -5,6 +5,9 @@ const defaultSettings = require("../../mbm/settings.json");
 
 const settingCommand = require("../../mbm/commands/setting");
 const userCommand = require("../../mbm/commands/user");
+const chatdumpCommand = require("../../mbm/commands/chatdump");
+
+const config = require("../../config.json");
 
 class DiscordGuild {
     /**
@@ -295,6 +298,11 @@ class DiscordGuild {
         return new Promise(async (resolve, reject) => {
             const commands = guild.commands.cache;
             let command = commands.find(x => commandData.name === x.name);
+
+            if (config.force_command_push) {
+                await command.delete();
+                command = null;
+            }
             
             if (!command) {
                 try {
@@ -304,6 +312,7 @@ class DiscordGuild {
                     return;
                 }
             }
+            resolve();
         });
     }
 
@@ -317,6 +326,7 @@ class DiscordGuild {
             try {
                 await this.#addCommand(guild, settingCommand.data);
                 await this.#addCommand(guild, userCommand.data);
+                await this.#addCommand(guild, chatdumpCommand.data);
                 
                 resolve();
             } catch (err) {

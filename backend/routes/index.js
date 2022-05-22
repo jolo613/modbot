@@ -1,23 +1,27 @@
-const identity = require("./identity");
-const streamers = require("./streamers");
-const status = require("./status");
+const archive = require("./archive");
 const auth = require("./auth");
-const search = require("./search");
+const chat = require("./chat");
 const contactUs = require("./contact-us");
 const discord = require("./discord");
-const twitch = require("./twitch");
-const chat = require("./chat");
+const file = require("./file");
+const identity = require("./identity");
+const search = require("./search");
 const shortlink = require("./shortlink");
- 
+const status = require("./status");
+const streamers = require("./streamers");
+const twitch = require("./twitch");
+
 module.exports = {
-    identity,
-    streamers,
-    status,
+    archive,
     auth,
-    search,
+    chat,
     contactUs,
     discord,
-    twitch,
-    chat,
+    file,
+    identity,
+    search,
     shortlink,
+    status,
+    streamers,
+    twitch,
 };

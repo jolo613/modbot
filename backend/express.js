@@ -64,14 +64,16 @@ app.use('/', (req, res, next) => {
     });
 });
 
-app.use('/identity', routes.identity);
-app.use('/streamers', routes.streamers);
-app.use('/status', routes.status);
-app.use('/search', routes.search);
-app.use('/twitch', routes.twitch);
-app.use('/discord', routes.discord);
+app.use('/archive', routes.archive);
 app.use('/chat', routes.chat);
+app.use('/discord', routes.discord);
+app.use('/file', routes.file);
+app.use('/identity', routes.identity);
+app.use('/search', routes.search);
 app.use('/shortlink', routes.shortlink)
+app.use('/status', routes.status);
+app.use('/streamers', routes.streamers);
+app.use('/twitch', routes.twitch);
 
 app.get('/', (req, res) => {
     res.status(404);
