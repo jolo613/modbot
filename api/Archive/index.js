@@ -26,11 +26,11 @@ class Archive {
                         userRes.forEach(user => {
                             users = [
                                 ...users,
-                                new EntryUser(user.type, user.user == 1, user.value),
+                                new EntryUser(user.id, user.type, user.user == 1, user.value),
                             ]
                         });
 
-                        con.query("select * from archive__files where archive_id = ? order by name asc;", [id], async (err, fileRes) => {
+                        con.query("select * from archive__files where archive_id = ? order by label asc, name asc;", [id], async (err, fileRes) => {
                             if (err) {reject(err);return;}
         
                             let files = [];
@@ -38,7 +38,7 @@ class Archive {
                             fileRes.forEach(file => {
                                 files = [
                                     ...files,
-                                    new EntryFile(file.local_path, file.remote_path, file.name, file.label, file.content_type),
+                                    new EntryFile(file.id, file.local_path, file.remote_path, file.name, file.label, file.content_type),
                                 ];
                             });
 

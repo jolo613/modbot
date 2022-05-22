@@ -65,6 +65,8 @@ const listener = {
             interaction[method]({content: ' ', embeds: [new Discord.MessageEmbed().setTitle("Uh oh!").setDescription(err).setColor(0x9e392f)], ephemeral: true})
         }
 
+        if (interaction.isButton() && !interaction.component?.customId) return;
+
         if (interaction.isButton() && interaction.component.customId.startsWith("cb-")) {
             let twitchId = interaction.component.customId.substring(3);
 

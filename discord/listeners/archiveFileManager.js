@@ -10,12 +10,16 @@ const { MessageEmbed, MessageActionRow, MessageButton } = require('discord.js');
 
 const DIRECTORY = "./files/";
 const TEMP_DIRECTORY = DIRECTORY + "temp/";
+const DELETED_DIRECTORY = DIRECTORY + "deleted/";
 
 try {
     fs.mkdirSync(DIRECTORY);
 } catch (e) {}
 try {
     fs.mkdirSync(TEMP_DIRECTORY, true);
+} catch (e) {}
+try {
+    fs.mkdirSync(DELETED_DIRECTORY, true);
 } catch (e) {}
 
 try {
@@ -91,6 +95,8 @@ const listener = {
     eventType: 'on',
     DIRECTORY: DIRECTORY,
     TEMP_DIRECTORY: TEMP_DIRECTORY,
+    DELETED_DIRECTORY: DELETED_DIRECTORY,
+    DOWNLOADABLE_TYPES: DOWNLOADABLE_TYPES,
     parseFileMessage: parseFileMessage,
     listener (message) {
         if (message.channel.isThread()) {

@@ -1,5 +1,11 @@
 class EntryFile {
     /**
+     * The internal ID for this file
+     * @type {number}
+     */
+    id;
+
+    /**
      * The local path on the file, if a locally-stored file.
      * @type {string}
      */
@@ -29,7 +35,8 @@ class EntryFile {
      */
     content_type;
 
-    constructor(local_path, remote_path, name, label, content_type) {
+    constructor(id, local_path, remote_path, name, label, content_type) {
+        this.id = id;
         this.local_path = local_path;
         this.remote_path = remote_path;
         this.name = name;

@@ -22,6 +22,10 @@ const listener = {
 
                             con.query("insert into archive (id, owner_id, offense, description, time_submitted) values (?, ?, ?, ?, ?);", [id, user.identity.id, entry.offense, entry.description, new Date().getTime()], async err => {
                                 if (!err) {
+                                    con.query("insert into archive__logs (archive_id, action, initiated_by) values (?, 'create', ?);", [id, user.identity.id], err => {
+                                        if (err) console.error(err);
+                                    });
+
                                     for (let t = 0; t < entry.twitch.length; t++) {
                                         let name = entry.twitch[t];
                                         try {

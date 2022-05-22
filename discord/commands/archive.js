@@ -5,6 +5,15 @@ const con = require("../../database");
 
 const config = require("../../config.json");
 
+let moveChoices = config.channels.archive_sort_targets.map(x => {
+    return {
+        name: x.label,
+        value: x.value,
+    };
+});
+
+const vd = () => {};
+
 const command = {
     cache: {},
     temporaryMessage (obj, method, message, timeout = 5000, description = null) {
@@ -16,11 +25,13 @@ const command = {
 
         obj[method]({content: ' ', embeds: [embed]}).then(messObj => {
             setTimeout(() => {
-                if (method === "reply") {
-                    obj.deleteReply();
-                } else {
-                    messObj.delete();
-                }
+                try {
+                    if (method === "reply") {
+                        obj.deleteReply().then(vd, vd);
+                    } else {
+                        messObj.delete().then(vd, vd);
+                    }
+                } catch (e) {}
             }, timeout);
         }, console.error);
     },
@@ -147,11 +158,66 @@ const command = {
                 type: 1,
                 name: "edit",
                 description: "Edit an Archive submission",
+                options: [
+                    {
+                        type: 3,
+                        name: "id",
+                        description: "ID of the archive entry. 8 character string",
+                        required: true,
+                    }
+                ],
             },
             {
                 type: 1,
                 name: "delete",
-                description: "Delete an Archive submission",
+                description: "Delete an Archive submission. Must be your submission",
+                options: [
+                    {
+                        type: 3,
+                        name: "id",
+                        description: "ID of the archive entry. 8 character string",
+                        required: true,
+                    }
+                ],
+            },
+            {
+                type: 1,
+                name: "setowner",
+                description: "Sets the owner of an Archive submission. Administrator only",
+                options: [
+                    {
+                        type: 3,
+                        name: "id",
+                        description: "ID of the archive entry. 8 character string",
+                        required: true,
+                    },
+                    {
+                        type: 6,
+                        name: "owner",
+                        description: "The new owner for this Archive entry",
+                        required: true,
+                    },
+                ],
+            },
+            {
+                type: 1,
+                name: "move",
+                description: "Move an Archive submission. Administrator only",
+                options: [
+                    {
+                        type: 3,
+                        name: "id",
+                        description: "ID of the archive entry. 8 character string",
+                        required: true,
+                    },
+                    {
+                        type: 3,
+                        name: "channel",
+                        description: "Channel to move the archive entry to",
+                        required: true,
+                        choices: moveChoices,
+                    }
+                ],
             },
         ]
     },
@@ -200,7 +266,7 @@ const command = {
                                 .setLabel("Description")
                                 .setStyle("LONG")
                                 .setMinLength(32)
-                                .setMaxLength(1024)
+                                .setMaxLength(2048)
                                 .setPlaceholder("Go into more detail!")
                                 .setRequired(true)
                         );
@@ -216,9 +282,89 @@ const command = {
                 interaction.error(error);
             });
         } else if (subcommand === "edit") {
-            interaction.error("Not yet implemented!");
+            api.Discord.getUserById(interaction.member.id).then(user => {
+                api.Archive.getEntryById(interaction.options.getString("id", true)).then(entry => {
+                    if (interaction.level === 2 || entry.owner.id === user.identity?.id) {
+                        entry.openEdit(interaction.member).then(message => {
+                            interaction.success("Edit menu is opened! [View it here](" + message.url + ")")
+                        }, err => {
+                            interaction.error("Error: " + err);
+                        });
+                    } else {
+                        interaction.error("**You don't have permission!**\nYou must be an administrator to use this command.");
+                    }
+                }, error => {
+                    interaction.error(error);
+                });
+            }, error => {
+                interaction.error(error);
+            });
+        } else if (subcommand === "setowner") {
+            if (interaction.level === 2) {
+                let newOwner = interaction.options.getUser("owner", true);
+                api.Discord.getUserById(interaction.member.id).then(curUser => {
+                    api.Archive.getEntryById(interaction.options.getString("id", true)).then(entry => {
+                        api.Discord.getUserById(newOwner.id).then(user => {
+                            if (user.identity?.id) {
+                                entry.setOwner(user.identity, curUser.identity);
+                                interaction.success(`New owner has been set!\nNew owner: \`#${user.identity.id} ${user.identity.name}\` <@${user.id}>`);
+                            } else {
+                                interaction.error("Target user is not properly authenticated to TMS.");
+                            }
+                        }, error => {
+                            interaction.error("Target user is not properly linked to TMS.");
+                        })
+                    }, error => {
+                        interaction.error("Error: " + error);
+                    });
+                }, error => {
+                    interaction.error("You are not properly linked to TMS.");
+                });
+            } else {
+                interaction.error("**You don't have permission!**\nYou must be an administrator to use this command.");
+            }
+        } else if (subcommand === "move") {
+            if (interaction.level === 2) {
+                api.Discord.getUserById(interaction.member.id).then(user => {
+                    if (user.identity?.id) {
+                        api.Archive.getEntryById(interaction.options.getString("id", true)).then(entry => {
+                            api.getFullIdentity(user.identity.id).then(identity => {
+                                global.client.discord.channels.fetch(interaction.options.getString("channel", true)).then(channel => {
+                                    entry.move(channel, identity);
+                                    interaction.success("Entry was successfully moved!");
+                                }, error => {
+                                    interaction.error("Unable to get target channel");
+                                });
+                            }, error => {
+                                interaction.error(error);
+                            })
+                        }, error => {
+                            interaction.error(error);
+                        });
+                    } else {
+                        interaction.error("You're not properly linked to TMS. That's a you problem");
+                    }
+                }, error => {
+                    interaction.error(error);
+                });
+            } else {
+                interaction.error("**You don't have permission!**\nYou must be an administrator to use this command.");
+            }
         } else if (subcommand === "delete") {
-            interaction.error("Not yet implemented!");
+            api.Discord.getUserById(interaction.member.id).then(user => {
+                api.Archive.getEntryById(interaction.options.getString("id", true)).then(entry => {
+                    if (interaction.level === 2 || entry.owner.id === user.identity?.id) {
+                        entry.delete(user.identity);
+                        interaction.success("Archive entry was successfully deleted!");
+                    } else {
+                        interaction.error("**You don't have permission!**\nYou must be an administrator to use this command.");
+                    }
+                }, error => {
+                    interaction.error(error);
+                });
+            }, error => {
+                interaction.error(error);
+            });
         } else if (subcommand === "search") {
             let query = interaction.options.getString("query", true);
 
@@ -260,6 +406,7 @@ const command = {
             for (let i = 0; i < entries.length; i++) {
                 try {
                     let entry = await api.Archive.getEntryById(entries[i]);
+                    console.log(entry);
                     embeds = [
                         ...embeds,
                         await entry.discordEmbed(),
@@ -273,12 +420,24 @@ const command = {
                 embeds = [
                     new MessageEmbed()
                         .setTitle("No records found!")
-                        .setDescription("This users record is squeaky clean!\n\nFor more detailed user information, try searching for this user with the /user command.")
+                        .setDescription("No archive entries were found with the query: `" + query + "`")
+                        .setFooter({text: "For more detailed user information, try searching for this user with the /user command.", iconURL: "https://twitchmodsquad.com/assets/images/logo.webp"})
                         .setColor(0x36b55c)
                 ]
             }
 
-            interaction.reply({content: ' ', embeds: embeds, ephemeral: true});
+            if (interaction.channel.id === config.channels.archive_name_checker) {
+                interaction.reply({content: ' ', embeds: embeds}).then(async() => {
+                    if (entries.length === 1) {
+                        const message = await interaction.fetchReply();
+                        con.query("insert into archive__messages (id, guild_id, channel_id, archive_id, reason) values (?, ?, ?, ?, 'query');", [message.id, message.guild.id, message.channel.id, entries[0]], err => {
+                            if (err) console.error(err);
+                        });
+                    }
+                });
+            } else {
+                interaction.reply({content: ' ', embeds: embeds, ephemeral: true});
+            }
         }
     }
 };
