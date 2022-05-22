@@ -145,7 +145,7 @@ class Entry {
             
             const embed = new MessageEmbed()
                 .setColor(0x772ce8)
-                .setTitle("Serious Ban Entry")
+                .setTitle("Ban Entry")
                 .addField("Offense", "```" + this.offense + "```")
                 .addField("Description", "```" + this.description + "```")
                 .setDescription("**Submitted by " + (this.owner?.name ? this.owner.name : "Unresolvable") + "**" + (discordAccount ? " (<@" + discordAccount.id + ">)" : ""))
