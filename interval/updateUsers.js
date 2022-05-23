@@ -46,9 +46,10 @@ module.exports = () => {
                 helixUser.profilePictureUrl,
                 helixUser.offlinePlaceholderUrl,
                 helixUser.views,
-                helixUser.id,
                 helixUser.broadcasterType ? null : helixUser.broadcasterType,
+                helixUser.id,
             ], err => {
+                if (err) console.error(err);
                 api.Twitch.getUserById(helixUser.id, true);
             });
         });
