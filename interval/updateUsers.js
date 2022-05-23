@@ -46,7 +46,7 @@ module.exports = () => {
                 helixUser.profilePictureUrl,
                 helixUser.offlinePlaceholderUrl,
                 helixUser.views,
-                helixUser.broadcasterType ? null : helixUser.broadcasterType,
+                helixUser.broadcasterType === "" ? null : helixUser.broadcasterType,
                 helixUser.id,
             ], err => {
                 if (err) console.error(err);
