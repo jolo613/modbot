@@ -49,4 +49,9 @@ module.exports = [
         emoji: "<:rainbowsix:934616817249435708>",
         role: "934617192790630410",
     },
+    {
+      label: "Movie Night",
+      emoji: "📽",
+      role: ""
+    },
 ];
