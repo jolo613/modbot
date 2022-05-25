@@ -52,6 +52,6 @@ module.exports = [
     {
       label: "Movie Night",
       emoji: "📽",
-      role: ""
+      role: "979155501445169272",
     },
 ];
