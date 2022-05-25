@@ -162,7 +162,7 @@ router.get("/twitch", async (req, res) => {
                 twitchUser.offline_image_url = user.offline_image_url;
                 twitchUser.description = user.description;
                 twitchUser.view_count = user.view_count;
-                twitchUser.affiliation = user.affiliation;
+                twitchUser.affiliation = user.broadcaster_type === "" ? null : user.broadcaster_type;
 
                 // catch all, if an identity isn't present, make one.
                 if (!session.identity) {
