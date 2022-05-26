@@ -395,6 +395,23 @@ const command = {
             }
 
             try {
+                let split = query.split("#");
+                if (split.length === 2) {
+                    const userValueEntries = await con.pquery("select archive__users.archive_id from discord__user join archive__users on archive__users.value = discord__user.id where discord__user.name = ? and discord__user.discriminator = ?;", [split[0], split[1]]);
+                    add(userValueEntries);
+                }
+            } catch(e) {
+                console.error(e);
+            }
+
+            try {
+                const userValueEntries = await con.pquery("select archive_id from archive__users where value = ?;", [query]);
+                add(userValueEntries);
+            } catch(e) {
+                console.error(e);
+            }
+
+            try {
                 const messageEntries = await con.pquery("select archive_id from archive__messages where id = ? or archive_id = ?;", [query, query]);
                 add(messageEntries);
             } catch (e) {
