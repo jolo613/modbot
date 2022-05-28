@@ -276,7 +276,7 @@ const command = {
                         interaction: interaction,
                     })
                 } else {
-                    interaction.error({content: "Your account isn't properly linked to TMS. Contact <@267380687345025025>", ephemeral: true});
+                    interaction.error("Your account isn't properly linked to TMS. Contact <@267380687345025025>");
                 }
             }, error => {
                 interaction.error(error);
