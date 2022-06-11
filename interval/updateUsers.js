@@ -27,7 +27,13 @@ module.exports = () => {
 
         let startTime = new Date().getTime();
 
-        let helixUsers = await api.Twitch.Direct.helix.users.getUsersByIds(userIds);
+        let helixUsers;
+        try {
+            helixUsers = await api.Twitch.Direct.helix.users.getUsersByIds(userIds);
+        } catch (err) {
+            console.error(err);
+            return;
+        }
 
         console.log(`Received ${helixUsers.length}/${userIds.length} users: ${new Date().getTime() - startTime} ms`);
         waiting = false;
