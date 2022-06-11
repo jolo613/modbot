@@ -58,9 +58,13 @@ module.exports = () => {
         
         userIds.forEach(async userId => {
 
-            let followers = await api.Twitch.Direct.helix.users.getFollows({followedUser: userId});
+            try {
+                let followers = await api.Twitch.Direct.helix.users.getFollows({followedUser: userId});
 
-            con.query("update twitch__user set follower_count = ? where id = ?;", [followers.total, userId]);
+                con.query("update twitch__user set follower_count = ? where id = ?;", [followers.total, userId]);
+            } catch (err) {
+                console.error(err);
+            }
         });
     });
 };
